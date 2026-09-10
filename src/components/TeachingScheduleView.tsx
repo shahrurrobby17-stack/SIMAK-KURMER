@@ -420,11 +420,14 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
                 <select
                   value={form.className}
                   onChange={(e) => setForm({ ...form, className: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-none p-2.5 font-bold text-slate-800 focus:outline-none focus:border-blue-600"
+                  className={`w-full bg-slate-50 border border-slate-300 rounded-none p-2.5 font-bold focus:outline-none focus:border-blue-600 ${
+                    form.className === 'OFF' ? 'text-red-600' : 'text-slate-800'
+                  }`}
                 >
                   {classList.filter(c => c !== 'Semua Kelas').map(cls => (
-                    <option key={cls} value={cls}>{cls}</option>
+                    <option key={cls} value={cls} className="text-slate-800">{cls}</option>
                   ))}
+                  <option value="OFF" className="text-red-600 font-bold">OFF</option>
                 </select>
               </div>
 
