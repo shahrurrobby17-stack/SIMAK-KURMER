@@ -1881,7 +1881,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   {/* Timestamp info */}
                   <div className="flex items-center justify-start space-x-2 text-[11px] sm:text-xs text-blue-100 font-medium pt-0.5">
                     <Calendar className="w-3.5 h-3.5 text-white" />
-                    <span>Pembaruan terakhir: Minggu, 6 September 2026</span>
+                    <span>Pembaruan terakhir: Kamis, 10 September 2026</span>
                   </div>
                 </div>
 
