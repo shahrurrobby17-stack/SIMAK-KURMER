@@ -1,0 +1,8 @@
+{
+  "name": "SIMAK Merdeka - Sistem Informasi Akademik Kurikulum Merdeka",
+  "description": "Sistem Informasi Akademik Guru modern berstandar Kementerian Pendidikan dengan dashboard analitik nilai siswa, presensi real-time, dan Kurikulum Merdeka.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

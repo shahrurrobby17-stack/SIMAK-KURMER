@@ -1,0 +1,112 @@
+{
+  "entities": {
+    "TeacherProfile": {
+      "title": "TeacherProfile",
+      "description": "Profil guru dan data akademis sekolah",
+      "type": "object",
+      "properties": {
+        "name": { "type": "string" },
+        "title": { "type": "string" },
+        "nip": { "type": "string" },
+        "npsn": { "type": "string" },
+        "schoolName": { "type": "string" },
+        "guardianClass": { "type": "string" },
+        "subjectRole": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "semester": { "type": "string" },
+        "kkm": { "type": "number" },
+        "principalName": { "type": "string" },
+        "principalNip": { "type": "string" }
+      },
+      "required": ["name", "schoolName", "nip"]
+    },
+    "Student": {
+      "title": "Student",
+      "description": "Data peserta didik",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "nis": { "type": "string" },
+        "nisn": { "type": "string" },
+        "name": { "type": "string" },
+        "gender": { "type": "string" },
+        "className": { "type": "string" },
+        "parentName": { "type": "string" },
+        "parentPhone": { "type": "string" },
+        "status": { "type": "string" }
+      },
+      "required": ["id", "nis", "name", "className"]
+    },
+    "StudentGrade": {
+      "title": "StudentGrade",
+      "description": "Nilai capaian pembelajaran siswa",
+      "type": "object",
+      "properties": {
+        "studentId": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "tp1": { "type": "number" },
+        "tp2": { "type": "number" },
+        "tp3": { "type": "number" },
+        "tp4": { "type": "number" },
+        "pts": { "type": "number" },
+        "pas": { "type": "number" },
+        "finalScore": { "type": "number" },
+        "predicate": { "type": "string" },
+        "achievementDescription": { "type": "string" }
+      },
+      "required": ["studentId", "subjectId"]
+    },
+    "AttendanceRecord": {
+      "title": "AttendanceRecord",
+      "description": "Catatan presensi harian siswa",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "studentId": { "type": "string" },
+        "date": { "type": "string" },
+        "status": { "type": "string" },
+        "note": { "type": "string" },
+        "recordedAt": { "type": "string" }
+      },
+      "required": ["id", "studentId", "date", "status"]
+    },
+    "TeachingLog": {
+      "title": "TeachingLog",
+      "description": "Jurnal agenda mengajar guru",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "date": { "type": "string" },
+        "className": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "classPeriod": { "type": "string" },
+        "learningObjective": { "type": "string" },
+        "summaryMaterial": { "type": "string" },
+        "presentCount": { "type": "number" },
+        "absentCount": { "type": "number" },
+        "notes": { "type": "string" }
+      },
+      "required": ["id", "date", "className"]
+    },
+    "StudentTask": {
+      "title": "StudentTask",
+      "description": "Data tugas tambahan, remedial, pengayaan, dan penilaian siswa",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "category": { "type": "string" },
+        "className": { "type": "string" },
+        "subjectId": { "type": "string" },
+        "dueDate": { "type": "string" },
+        "assignedDate": { "type": "string" },
+        "maxScore": { "type": "number" },
+        "status": { "type": "string" },
+        "description": { "type": "string" },
+        "submittedCount": { "type": "number" },
+        "totalStudents": { "type": "number" }
+      },
+      "required": ["id", "title", "category", "className"]
+    }
+  }
+}

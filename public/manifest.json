@@ -1,0 +1,22 @@
+{
+  "short_name": "SIMAK Guru",
+  "name": "SIMAK Guru Merdeka - Aplikasi Laptop & PC",
+  "icons": [
+    {
+      "src": "/kemdikbud_logo.png",
+      "type": "image/png",
+      "sizes": "192x192"
+    },
+    {
+      "src": "/kemdikbud_logo.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "/",
+  "background_color": "#004b87",
+  "theme_color": "#004b87",
+  "display": "standalone",
+  "orientation": "any",
+  "description": "Aplikasi Sistem Informasi Akademik Guru Kurikulum Merdeka untuk Laptop dan PC Desktop."
+}
