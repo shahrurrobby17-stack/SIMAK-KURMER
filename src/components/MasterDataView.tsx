@@ -436,7 +436,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
         <div className="fixed top-6 right-6 z-50 bg-white border border-emerald-200 shadow-2xl rounded-none p-3.5 sm:p-4 flex items-center gap-3.5 animate-in fade-in zoom-in-90 slide-in-from-top-6 duration-300">
           <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 shadow-md text-white ${
             toastMessage.type === 'success' ? 'bg-emerald-500 ring-4 ring-emerald-100' :
-            toastMessage.type === 'error' ? 'bg-rose-500 ring-4 ring-rose-100' : 'bg-blue-600 ring-4 ring-blue-100'
+            toastMessage.type === 'error' ? 'bg-rose-500 ring-4 ring-rose-100' : 'bg-cyan-600 ring-4 ring-cyan-100'
           }`}>
             {toastMessage.type === 'success' ? (
               <Check className="w-6 h-6 stroke-[3] animate-[spin_0.7s_ease-out_1] transition-transform" />
@@ -461,8 +461,8 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full">
             {/* Active System Indicator / Breadcrumb */}
             <div className="flex items-center gap-2">
-              <div className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 text-[#004b87] text-xs font-bold shadow-2xs">
-                <Database className="w-4 h-4 text-[#004b87]" />
+              <div className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 text-[#164e63] text-xs font-bold shadow-2xs">
+                <Database className="w-4 h-4 text-[#164e63]" />
                 <span>Monitoring Seluruh Akun ({totalCount} Pengguna Terdaftar)</span>
               </div>
             </div>
@@ -472,7 +472,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
               <button
                 type="button"
                 onClick={() => handleOpenAddModal()}
-                className="px-4 py-2 bg-[#004b87] hover:bg-blue-800 text-white rounded-none font-bold text-xs flex items-center gap-2 shadow-2xs transition-all cursor-pointer active:scale-95"
+                className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-2 shadow-2xs transition-all cursor-pointer active:scale-95"
               >
                 <UserPlus className="w-4 h-4" />
                 <span>Tambah Akun</span>
@@ -532,7 +532,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
           {/* KPI Metrics Summary */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
-              <div className="p-3 bg-blue-50 text-[#004b87] rounded-none shrink-0">
+              <div className="p-3 bg-cyan-50 text-[#164e63] rounded-none shrink-0">
                 <Users className="w-5 h-5" />
               </div>
               <div>
@@ -583,7 +583,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Cari berdasarkan nama, email, NIP, atau sekolah..."
-              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
             />
             {searchTerm && (
               <button
@@ -602,7 +602,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer"
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-600 cursor-pointer"
             >
               <option value="Semua">Semua Status</option>
               <option value="Aktif">Status: Aktif</option>
@@ -613,7 +613,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             <select
               value={schoolFilter}
               onChange={(e) => setSchoolFilter(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer max-w-[160px] truncate"
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-600 cursor-pointer max-w-[160px] truncate"
             >
               <option value="Semua">Semua Sekolah</option>
               {schoolOptions.map((sch) => (
@@ -627,7 +627,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                 type="button"
                 onClick={() => setViewMode('table')}
                 className={`p-1.5 rounded-none text-xs font-bold transition-all cursor-pointer ${
-                  viewMode === 'table' ? 'bg-white text-[#004b87] shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                  viewMode === 'table' ? 'bg-white text-[#164e63] shadow-xs' : 'text-slate-500 hover:text-slate-800'
                 }`}
                 title="Tampilan Tabel"
               >
@@ -637,7 +637,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                 type="button"
                 onClick={() => setViewMode('grid')}
                 className={`p-1.5 rounded-none text-xs font-bold transition-all cursor-pointer ${
-                  viewMode === 'grid' ? 'bg-white text-[#004b87] shadow-xs' : 'text-slate-500 hover:text-slate-800'
+                  viewMode === 'grid' ? 'bg-white text-[#164e63] shadow-xs' : 'text-slate-500 hover:text-slate-800'
                 }`}
                 title="Tampilan Kartu Grid"
               >
@@ -661,7 +661,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                 setRoleFilter('Semua');
                 setSelectedCategory('Semua');
               }}
-              className="text-[#004b87] font-bold hover:underline cursor-pointer"
+              className="text-[#164e63] font-bold hover:underline cursor-pointer"
             >
               Reset Semua Filter
             </button>
@@ -672,7 +672,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
       {/* Main Monitoring Content */}
       {filteredUsers.length === 0 ? (
         <div className="bg-white rounded-none border border-slate-200/80 p-12 text-center space-y-3">
-          <div className="w-12 h-12 bg-blue-50 text-[#004b87] rounded-none flex items-center justify-center mx-auto">
+          <div className="w-12 h-12 bg-cyan-50 text-[#164e63] rounded-none flex items-center justify-center mx-auto">
             <Search className="w-6 h-6" />
           </div>
           <h3 className="text-base font-bold text-slate-800">Tidak Ada Akun Ditemukan</h3>
@@ -686,7 +686,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
               setStatusFilter('Semua');
               setSchoolFilter('Semua');
             }}
-            className="px-4 py-2 bg-[#004b87] text-white text-xs font-bold rounded-none hover:bg-blue-800 transition-colors cursor-pointer"
+            className="px-4 py-2 bg-[#164e63] text-white text-xs font-bold rounded-none hover:bg-cyan-800 transition-colors cursor-pointer"
           >
             Tampilkan Semua Akun
           </button>
@@ -713,7 +713,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                   const isUserDisabled = user.isMaintenance || user.status === 'Nonaktif';
 
                   return (
-                    <tr key={user.uid || idx} className="hover:bg-blue-50/40 transition-colors">
+                    <tr key={user.uid || idx} className="hover:bg-cyan-50/40 transition-colors">
                       <td className="py-3.5 px-4 text-center font-bold text-slate-400">
                         {idx + 1}
                       </td>
@@ -723,7 +723,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                         <div className="flex items-center gap-3">
                           <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0 shadow-xs ${
                             isMaster ? 'bg-gradient-to-br from-amber-500 to-amber-700' :
-                            isUserDisabled ? 'bg-slate-400' : 'bg-[#004b87]'
+                            isUserDisabled ? 'bg-slate-400' : 'bg-[#164e63]'
                           }`}>
                             {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                           </div>
@@ -760,7 +760,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                       <td className="py-3.5 px-4">
                         <span className={`px-2.5 py-1 rounded-none text-[10px] font-bold border ${
                           isMaster ? 'bg-amber-50 text-amber-900 border-amber-200' :
-                          user.role?.toLowerCase().includes('admin') ? 'bg-blue-50 text-[#004b87] border-blue-200' :
+                          user.role?.toLowerCase().includes('admin') ? 'bg-cyan-50 text-[#164e63] border-cyan-200' :
                           'bg-slate-100 text-slate-700 border-slate-200'
                         }`}>
                           {user.role || 'Guru Pengampu'}
@@ -810,7 +810,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                           <button
                             type="button"
                             onClick={() => handleOpenEditModal(user)}
-                            className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-none text-xs font-bold transition-all cursor-pointer"
+                            className="p-1.5 text-cyan-600 hover:bg-cyan-50 rounded-none text-xs font-bold transition-all cursor-pointer"
                             title="Edit Data Akun"
                           >
                             <Edit3 className="w-4 h-4" />
@@ -845,12 +845,12 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             const isUserDisabled = user.isMaintenance || user.status === 'Nonaktif';
 
             return (
-              <div key={user.uid || idx} className="bg-white rounded-none border border-slate-200/80 p-5 shadow-xs space-y-4 relative hover:border-blue-300 transition-all">
+              <div key={user.uid || idx} className="bg-white rounded-none border border-slate-200/80 p-5 shadow-xs space-y-4 relative hover:border-cyan-300 transition-all">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm text-white shrink-0 shadow-xs ${
                       isMaster ? 'bg-gradient-to-br from-amber-500 to-amber-700' :
-                      isUserDisabled ? 'bg-slate-400' : 'bg-[#004b87]'
+                      isUserDisabled ? 'bg-slate-400' : 'bg-[#164e63]'
                     }`}>
                       {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </div>
@@ -880,7 +880,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400 font-medium">Peran:</span>
-                    <span className="font-semibold text-[#004b87]">{user.role || 'Guru Pengampu'}</span>
+                    <span className="font-semibold text-[#164e63]">{user.role || 'Guru Pengampu'}</span>
                   </div>
                 </div>
 
@@ -888,7 +888,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                 <div className="pt-2.5 pb-1 border-t border-slate-100 space-y-1.5">
                   <div className="text-[10px] font-black text-slate-400 uppercase tracking-wider flex items-center justify-between">
                     <span>Aksi Data Modul Akun</span>
-                    <span className="text-blue-600 font-bold">6 Modul</span>
+                    <span className="text-cyan-600 font-bold">6 Modul</span>
                   </div>
                   <div className="grid grid-cols-3 gap-1.5">
                     <button
@@ -993,7 +993,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                     <button
                       type="button"
                       onClick={() => handleOpenEditModal(user)}
-                      className="p-1.5 text-blue-600 hover:bg-blue-50 rounded-none transition-all cursor-pointer"
+                      className="p-1.5 text-cyan-600 hover:bg-cyan-50 rounded-none transition-all cursor-pointer"
                       title="Edit Akun"
                     >
                       <Edit3 className="w-4 h-4" />
@@ -1025,7 +1025,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             {/* Modal Header */}
             <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-blue-50 text-[#004b87] rounded-none">
+                <div className="p-2 bg-cyan-50 text-[#164e63] rounded-none">
                   <UserPlus className="w-5 h-5" />
                 </div>
                 <div>
@@ -1053,7 +1053,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
                     placeholder="Contoh: Budi Santoso, S.Pd."
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                   />
                 </div>
 
@@ -1066,7 +1066,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                       value={formEmail}
                       onChange={(e) => setFormEmail(e.target.value)}
                       placeholder="email@simakmerdeka.ai.studio"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                   </div>
                   <div>
@@ -1076,7 +1076,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                       value={formNip}
                       onChange={(e) => setFormNip(e.target.value)}
                       placeholder="Nomor identitas (NIP/NUPTK/NISN)..."
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white font-mono"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white font-mono"
                     />
                   </div>
                 </div>
@@ -1089,7 +1089,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                       value={formSchool}
                       onChange={(e) => setFormSchool(e.target.value)}
                       placeholder="SD Negeri 1 SIMAK"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                   </div>
                   <div>
@@ -1097,7 +1097,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                     <select
                       value={formRole}
                       onChange={(e) => setFormRole(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer"
                     >
                       <option value="Guru Pengampu">Guru Pengampu</option>
                       <option value="Guru Kelas">Guru Kelas</option>
@@ -1119,7 +1119,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                         value={formPassword}
                         onChange={(e) => setFormPassword(e.target.value)}
                         placeholder="Minimal 6 karakter"
-                        className="w-full pl-3.5 pr-9 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                        className="w-full pl-3.5 pr-9 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                       />
                       <button
                         type="button"
@@ -1136,7 +1136,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                     <select
                       value={formStatus}
                       onChange={(e) => setFormStatus(e.target.value as 'Aktif' | 'Nonaktif')}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer"
                     >
                       <option value="Aktif">Aktif (Dapat Login)</option>
                       <option value="Nonaktif">Nonaktif (Akses Dibatasi)</option>
@@ -1156,7 +1156,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                 >
                   <Save className="w-4 h-4" />
                   <span>Simpan Akun Baru</span>
@@ -1174,7 +1174,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             {/* Modal Header */}
             <div className="p-4 sm:p-5 border-b border-slate-100 flex items-center justify-between shrink-0 bg-slate-50/50">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-blue-50 text-[#004b87] rounded-none">
+                <div className="p-2 bg-cyan-50 text-[#164e63] rounded-none">
                   <Edit3 className="w-5 h-5" />
                 </div>
                 <div>
@@ -1202,7 +1202,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
                     placeholder="Contoh: Budi Santoso, S.Pd."
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                   />
                 </div>
 
@@ -1215,7 +1215,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                       value={formEmail}
                       onChange={(e) => setFormEmail(e.target.value)}
                       placeholder="email@simakmerdeka.ai.studio"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                   </div>
                   <div>
@@ -1225,7 +1225,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                       value={formNip}
                       onChange={(e) => setFormNip(e.target.value)}
                       placeholder="Nomor identitas (NIP/NUPTK/NISN)..."
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white font-mono"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white font-mono"
                     />
                   </div>
                 </div>
@@ -1238,7 +1238,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                       value={formSchool}
                       onChange={(e) => setFormSchool(e.target.value)}
                       placeholder="SD Negeri 1 SIMAK"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                   </div>
                   <div>
@@ -1246,7 +1246,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                     <select
                       value={formRole}
                       onChange={(e) => setFormRole(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer"
                     >
                       <option value="Guru Pengampu">Guru Pengampu</option>
                       <option value="Guru Kelas">Guru Kelas</option>
@@ -1268,7 +1268,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                         value={formPassword}
                         onChange={(e) => setFormPassword(e.target.value)}
                         placeholder="Biarkan kosong jika tidak diubah"
-                        className="w-full pl-3.5 pr-9 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                        className="w-full pl-3.5 pr-9 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                       />
                       <button
                         type="button"
@@ -1286,7 +1286,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                       value={formStatus}
                       onChange={(e) => setFormStatus(e.target.value as 'Aktif' | 'Nonaktif')}
                       disabled={isMasterAccount(selectedUserForEdit.email, selectedUserForEdit.name)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer disabled:bg-slate-100 disabled:text-slate-400"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer disabled:bg-slate-100 disabled:text-slate-400"
                     >
                       <option value="Aktif">Aktif (Dapat Login)</option>
                       <option value="Nonaktif">Nonaktif (Akses Dibatasi)</option>
@@ -1306,7 +1306,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                 >
                   <Save className="w-4 h-4" />
                   <span>Simpan Perubahan</span>
@@ -1338,7 +1338,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                 value={newResetPassword}
                 onChange={(e) => setNewResetPassword(e.target.value)}
                 placeholder="Password baru..."
-                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium font-mono focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium font-mono focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
               />
               <p className="text-[11px] text-slate-500">
                 Pengguna dapat langsung menggunakan kata sandi baru ini untuk login ke aplikasi SIMAK.
@@ -1410,11 +1410,11 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-4 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-[#004b87] text-white rounded-none flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
+                <div className="w-11 h-11 bg-[#164e63] text-white rounded-none flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
                   {selectedUserForModule.name ? selectedUserForModule.name.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <div>
-                  <div className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-[#004b87] uppercase tracking-wider">
+                  <div className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-[#164e63] uppercase tracking-wider">
                     <Building2 className="w-3 h-3" />
                     <span>{selectedUserForModule.schoolName || 'SD Negeri 1 SIMAK'}</span>
                   </div>
@@ -1565,7 +1565,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
               <button
                 type="button"
                 onClick={() => setShowModuleModal(false)}
-                className="px-5 py-2 bg-[#004b87] hover:bg-blue-800 text-white text-xs font-bold rounded-none transition-colors cursor-pointer shadow-xs"
+                className="px-5 py-2 bg-[#164e63] hover:bg-cyan-800 text-white text-xs font-bold rounded-none transition-colors cursor-pointer shadow-xs"
               >
                 Tutup Inspector
               </button>

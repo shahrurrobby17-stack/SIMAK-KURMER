@@ -19,7 +19,7 @@ import { generatePdfReport } from '../utils/pdfExport';
 interface TeachingJournalProps {
   logs: TeachingLog[];
   subjects: Subject[];
-  teacher: TeacherProfile;
+  teacher?: TeacherProfile;
   selectedClass: string;
   classList?: string[];
   onClassChange?: (cls: string) => void;
@@ -162,19 +162,19 @@ export const TeachingJournal: React.FC<TeachingJournalProps> = ({
 
     generatePdfReport({
       title: 'Laporan Jurnal Mengajar & Agenda Pembelajaran',
-      subtitle: `Guru: ${teacher.name} | Mapel: ${teacher.subjectRole || 'Biologi'} | Filter: ${filterClass === 'SEMUA' ? 'Semua Kelas' : `Kelas ${filterClass}`}`,
-      teacherName: teacher.name,
-      teacherNip: teacher.nip,
-      schoolName: teacher.schoolName,
-      principalName: teacher.principalName,
-      principalNip: teacher.principalNip,
-      city: teacher.city || 'Malang',
-      academicYear: teacher.academicYear,
-      semester: teacher.semester,
+      subtitle: `Guru: ${teacher?.name || 'Guru Pengampu'} | Mapel: ${teacher?.subjectRole || 'Biologi'} | Filter: ${filterClass === 'SEMUA' ? 'Semua Kelas' : `Kelas ${filterClass}`}`,
+      teacherName: teacher?.name || 'Guru Pengampu',
+      teacherNip: teacher?.nip || '-',
+      schoolName: teacher?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+      principalName: teacher?.principalName || 'Kepala Sekolah',
+      principalNip: teacher?.principalNip || '-',
+      city: teacher?.city || 'Malang',
+      academicYear: teacher?.academicYear || '2026/2027',
+      semester: teacher?.semester || 'Ganjil',
       kpiCards: [
         { label: 'Total Sesi Terlaksana', value: `${classLogs.length} Jurnal`, subtext: filterClass === 'SEMUA' ? 'Semua Kelas' : `Kelas ${filterClass}` },
-        { label: 'NIP Guru', value: teacher.nip || '-', subtext: 'Identitas NIP Guru' },
-        { label: 'Tahun Ajaran', value: teacher.academicYear, subtext: teacher.semester }
+        { label: 'NIP Guru', value: teacher?.nip || '-', subtext: 'Identitas NIP Guru' },
+        { label: 'Tahun Ajaran', value: teacher?.academicYear || '2026/2027', subtext: teacher?.semester || 'Ganjil' }
       ],
       tableHeaders,
       tableRows,
@@ -188,15 +188,15 @@ export const TeachingJournal: React.FC<TeachingJournalProps> = ({
       {/* Teaching Logs History Table */}
       <div className="space-y-3">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-4 rounded-none border border-slate-200 shadow-sm">
-          <h3 className="text-sm font-bold text-[#004b87] uppercase tracking-wider flex items-center gap-2">
-            <FileText className="w-4 h-4 text-blue-600" />
+          <h3 className="text-sm font-bold text-[#164e63] uppercase tracking-wider flex items-center gap-2">
+            <FileText className="w-4 h-4 text-cyan-600" />
             Riwayat Jurnal Mengajar Harian
           </h3>
 
           <div className="flex items-center flex-wrap gap-2 shrink-0">
             {/* Dropdown Pilih Kelas disamping kiri Unduh PDF */}
             <div className="flex items-center gap-1.5 bg-slate-50 px-2.5 py-1 rounded-none border border-slate-300 shadow-2xs">
-              <Filter className="w-3.5 h-3.5 text-[#004b87]" />
+              <Filter className="w-3.5 h-3.5 text-[#164e63]" />
               <span className="text-[11px] font-bold text-slate-600">Pilih Kelas:</span>
               <select
                 value={filterClass}
@@ -206,7 +206,7 @@ export const TeachingJournal: React.FC<TeachingJournalProps> = ({
                     onClassChange(e.target.value);
                   }
                 }}
-                className="bg-white text-[#004b87] font-bold text-xs px-2 py-1 rounded-none border border-slate-200 focus:outline-none focus:ring-1 focus:ring-blue-500 cursor-pointer"
+                className="bg-white text-[#164e63] font-bold text-xs px-2 py-1 rounded-none border border-slate-200 focus:outline-none focus:ring-1 focus:ring-cyan-500 cursor-pointer"
               >
                 <option value="SEMUA">Semua Kelas</option>
                 {availableClasses.map((cls) => (
@@ -247,7 +247,7 @@ export const TeachingJournal: React.FC<TeachingJournalProps> = ({
                 setForm(prev => ({ ...prev, className: filterClass !== 'SEMUA' ? filterClass : selectedClass }));
                 setShowAddModal(true);
               }}
-              className="text-xs text-[#004b87] font-bold hover:underline cursor-pointer"
+              className="text-xs text-[#164e63] font-bold hover:underline cursor-pointer"
             >
               + Tambah Jurnal Sekarang
             </button>
@@ -261,10 +261,10 @@ export const TeachingJournal: React.FC<TeachingJournalProps> = ({
               <div key={log.id} className="bg-white p-4 rounded-none border border-slate-200 shadow-sm hover:shadow-md transition-all space-y-2">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b border-slate-100 pb-2">
                   <div className="flex items-center space-x-2">
-                    <span className="bg-blue-100 text-blue-800 font-bold text-[10px] px-2 py-0.5 rounded-none">
+                    <span className="bg-cyan-100 text-cyan-800 font-bold text-[10px] px-2 py-0.5 rounded-none">
                       {log.className}
                     </span>
-                    <h4 className="font-bold text-[#004b87] text-xs">
+                    <h4 className="font-bold text-[#164e63] text-xs">
                       {subject?.name || 'Mata Pelajaran'}
                     </h4>
                     <span className="text-slate-400">•</span>
@@ -317,20 +317,20 @@ export const TeachingJournal: React.FC<TeachingJournalProps> = ({
 
       {/* Delete Confirmation Modal */}
       {logToDelete && (
-        <div className="fixed inset-0 z-50 bg-[#004b87]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#164e63]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-none max-w-sm w-full p-5 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center gap-3 text-red-600">
               <div className="p-2.5 bg-red-100 rounded-none">
                 <Trash2 className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-[#004b87]">Hapus Jurnal Mengajar?</h4>
+                <h4 className="text-sm font-bold text-[#164e63]">Hapus Jurnal Mengajar?</h4>
                 <p className="text-xs text-slate-500">Konfirmasi Penghapusan</p>
               </div>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-none border border-slate-100">
-              Apakah Anda yakin ingin menghapus catatan jurnal mengajar tanggal <span className="font-bold text-[#004b87]">{logToDelete.date}</span> untuk kelas <span className="font-bold text-[#004b87]">{logToDelete.className}</span>?
+              Apakah Anda yakin ingin menghapus catatan jurnal mengajar tanggal <span className="font-bold text-[#164e63]">{logToDelete.date}</span> untuk kelas <span className="font-bold text-[#164e63]">{logToDelete.className}</span>?
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-2">
@@ -364,8 +364,8 @@ export const TeachingJournal: React.FC<TeachingJournalProps> = ({
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-none max-w-lg w-full p-6 shadow-2xl space-y-4 border border-slate-200">
             <div className="flex justify-between items-center border-b pb-2">
-              <h3 className="text-base font-bold text-[#004b87] flex items-center gap-2">
-                <Plus className="w-5 h-5 text-blue-600" />
+              <h3 className="text-base font-bold text-[#164e63] flex items-center gap-2">
+                <Plus className="w-5 h-5 text-cyan-600" />
                 Tambah Jurnal Mengajar Baru
               </h3>
               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-700">
@@ -467,7 +467,7 @@ export const TeachingJournal: React.FC<TeachingJournalProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 text-white font-bold py-2 rounded-none"
+                  className="w-full bg-cyan-600 text-white font-bold py-2 rounded-none"
                 >
                   Simpan Jurnal
                 </button>

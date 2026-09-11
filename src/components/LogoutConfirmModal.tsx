@@ -15,7 +15,7 @@ export const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
   onClose
 }) => {
   return (
-    <div className="fixed inset-0 z-50 bg-[#004b87]/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-hidden animate-fadeIn select-none">
+    <div className="fixed inset-0 z-50 bg-[#164e63]/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-hidden animate-fadeIn select-none">
       <div className="bg-white rounded-none max-w-md w-full p-6 shadow-2xl border border-slate-200 space-y-5 my-auto select-text">
         
         {/* Header */}
@@ -57,7 +57,7 @@ export const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
                 <span className="font-bold text-slate-800 text-xs block truncate">{userName}</span>
                 {userEmail && <span className="text-[11px] text-slate-500 block truncate">{userEmail}</span>}
               </div>
-              <span className="px-2 py-1 bg-blue-100 text-[#004b87] text-[10px] font-bold rounded-none border border-blue-200 shrink-0">
+              <span className="px-2 py-1 bg-cyan-100 text-[#164e63] text-[10px] font-bold rounded-none border border-cyan-200 shrink-0">
                 Aktif
               </span>
             </div>

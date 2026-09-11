@@ -313,7 +313,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
       {/* KPI Cards for Teachers */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
-          <div className="p-3 bg-blue-50 text-[#004b87] rounded-none shrink-0">
+          <div className="p-3 bg-cyan-50 text-[#164e63] rounded-none shrink-0">
             <Users className="w-5 h-5" />
           </div>
           <div>
@@ -420,7 +420,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
               <button
                 type="button"
                 onClick={handleOpenAddLog}
-                className="px-3 py-1.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
+                className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Input Jurnal Baru</span>
@@ -449,10 +449,10 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                       <div>{log.tgl}</div>
                       <div className="text-[10px] text-slate-500">{log.jam}</div>
                     </td>
-                    <td className="p-3 font-bold text-[#004b87]">{log.guru}</td>
+                    <td className="p-3 font-bold text-[#164e63]">{log.guru}</td>
                     <td className="p-3 font-semibold text-slate-800">{log.mapel}</td>
                     <td className="p-3">
-                      <span className="px-2 py-0.5 bg-blue-100 text-blue-800 font-bold text-[10px] rounded-none">
+                      <span className="px-2 py-0.5 bg-cyan-100 text-cyan-800 font-bold text-[10px] rounded-none">
                         {log.kelas}
                       </span>
                     </td>
@@ -516,8 +516,8 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
             </div>
           </div>
 
-          <div className="p-3 bg-slate-50 border-l-4 border-[#004b87] text-xs text-slate-700 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-[#004b87] shrink-0 mt-0.5" />
+          <div className="p-3 bg-slate-50 border-l-4 border-[#164e63] text-xs text-slate-700 flex items-start gap-2">
+            <AlertCircle className="w-4 h-4 text-[#164e63] shrink-0 mt-0.5" />
             <div>
               <p className="font-bold text-slate-800">💡 Sinkronisasi & Penghitungan Otomatis</p>
               <p className="text-slate-600 mt-0.5">Status kelengkapan administrasi dan supervisi di bawah ini dihitung secara real-time berdasarkan aktivitas nyata di sistem: unggahan perangkat ajar guru (Modul, ATP, KKTP), agenda mengajar harian, serta penginputan nilai formatif/sumatif kelas.</p>
@@ -545,7 +545,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                   <tr key={item.id} className="hover:bg-slate-50">
                     <td className="p-3 font-bold text-slate-800">{item.nama}</td>
                     <td className="p-3 text-slate-600 font-mono">{item.nip}</td>
-                    <td className="p-3 font-semibold text-[#004b87]">{item.mapel}</td>
+                    <td className="p-3 font-semibold text-[#164e63]">{item.mapel}</td>
                     <td className="p-3 text-center">
                       {item.modulApproved ? (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-200">
@@ -556,7 +556,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                           ⏳ Meninjau
                         </span>
                       ) : item.modul ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold border border-blue-200">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-100 text-cyan-800 text-[10px] font-bold border border-cyan-200">
                           ✓ Terunggah
                         </span>
                       ) : (
@@ -575,7 +575,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                           ⏳ Meninjau
                         </span>
                       ) : item.atp ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold border border-blue-200">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-100 text-cyan-800 text-[10px] font-bold border border-cyan-200">
                           ✓ Terunggah
                         </span>
                       ) : (
@@ -594,7 +594,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                           ⏳ Meninjau
                         </span>
                       ) : item.kktp ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold border border-blue-200">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-100 text-cyan-800 text-[10px] font-bold border border-cyan-200">
                           ✓ Terunggah
                         </span>
                       ) : (
@@ -638,7 +638,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                           type="button"
                           onClick={() => setActiveTab('uploadModul')}
                           title="Tinjau Berkas Perangkat Ajar"
-                          className="px-2 py-1 bg-[#004b87] text-white hover:bg-blue-800 font-bold text-[11px] border border-[#004b87] rounded-none transition-all cursor-pointer flex items-center gap-1 shadow-xs active:scale-95"
+                          className="px-2 py-1 bg-[#164e63] text-white hover:bg-cyan-800 font-bold text-[11px] border border-[#164e63] rounded-none transition-all cursor-pointer flex items-center gap-1 shadow-xs active:scale-95"
                         >
                           <FolderUp className="w-3.5 h-3.5" />
                           <span>Tinjau</span>
@@ -669,13 +669,13 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Cari guru atau NIP..."
-                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs w-56 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs w-56 focus:outline-none focus:ring-2 focus:ring-cyan-600"
                 />
               </div>
               <button
                 type="button"
                 onClick={() => onOpenAddUserModal && onOpenAddUserModal('Guru Pengampu')}
-                className="px-3 py-1.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Tambah Guru</span>
@@ -739,7 +739,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                         <button
                           type="button"
                           onClick={() => onOpenModuleModal && onOpenModuleModal(user, 'kelolaNilai')}
-                          className="px-2 py-1 bg-blue-50 text-[#004b87] hover:bg-[#004b87] hover:text-white font-bold text-[11px] border border-blue-200 rounded-none transition-all cursor-pointer"
+                          className="px-2 py-1 bg-cyan-50 text-[#164e63] hover:bg-[#164e63] hover:text-white font-bold text-[11px] border border-cyan-200 rounded-none transition-all cursor-pointer"
                         >
                           Nilai
                         </button>
@@ -757,7 +757,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
       {showLogModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-white rounded-none shadow-2xl border border-slate-300 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
-            <div className="bg-[#004b87] text-white px-5 py-3.5 flex items-center justify-between">
+            <div className="bg-[#164e63] text-white px-5 py-3.5 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-emerald-300" />
                 <h3 className="font-bold text-sm">
@@ -782,7 +782,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                   value={logFormGuru}
                   onChange={(e) => setLogFormGuru(e.target.value)}
                   placeholder="Contoh: Shahrur Robby, S.Pd."
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
                 />
               </div>
 
@@ -795,7 +795,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                     value={logFormMapel}
                     onChange={(e) => setLogFormMapel(e.target.value)}
                     placeholder="Contoh: Biologi"
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -806,7 +806,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                     value={logFormKelas}
                     onChange={(e) => setLogFormKelas(e.target.value)}
                     placeholder="Contoh: X-IPA 1"
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
                   />
                 </div>
               </div>
@@ -818,7 +818,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                   value={logFormJam}
                   onChange={(e) => setLogFormJam(e.target.value)}
                   placeholder="Contoh: Jam Ke 1-2 (07.00 - 08.30)"
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
                 />
               </div>
 
@@ -829,7 +829,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                   value={logFormTp}
                   onChange={(e) => setLogFormTp(e.target.value)}
                   placeholder="Ringkasan aktivitas atau materi yang diajarkan..."
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-blue-600 focus:outline-none resize-none"
+                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none resize-none"
                 />
               </div>
 
@@ -841,7 +841,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                     min={0}
                     value={logFormHadir}
                     onChange={(e) => setLogFormHadir(parseInt(e.target.value) || 0)}
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -851,7 +851,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                     min={0}
                     value={logFormAbsen}
                     onChange={(e) => setLogFormAbsen(parseInt(e.target.value) || 0)}
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
                   />
                 </div>
                 <div className="space-y-1">
@@ -859,7 +859,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                   <select
                     value={logFormStatus}
                     onChange={(e) => setLogFormStatus(e.target.value)}
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-blue-600 focus:outline-none"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
                   >
                     <option value="Tuntas">Tuntas</option>
                     <option value="Proses">Proses</option>
@@ -878,7 +878,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#004b87] hover:bg-blue-800 text-white font-bold rounded-none cursor-pointer shadow-xs active:scale-95 transition-all"
+                  className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold rounded-none cursor-pointer shadow-xs active:scale-95 transition-all"
                 >
                   Simpan Jurnal
                 </button>

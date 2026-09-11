@@ -451,7 +451,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
       {/* KPI Cards / Status Bar */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3.5">
         <div className="bg-white p-4 rounded-none border border-slate-200 shadow-xs flex items-center gap-3.5">
-          <div className="p-3 bg-blue-50 text-[#004b87] rounded-none shrink-0">
+          <div className="p-3 bg-cyan-50 text-[#164e63] rounded-none shrink-0">
             <FolderOpen className="w-5 h-5" />
           </div>
           <div>
@@ -501,7 +501,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Cari judul perangkat, materi, topik, atau nama file..."
-              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-600"
+              className="w-full pl-9 pr-4 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-600"
             />
           </div>
 
@@ -518,7 +518,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
             <select
               value={filterCategory}
               onChange={(e) => setFilterCategory(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer"
+              className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 cursor-pointer"
             >
               <option value="Semua">Semua Kategori Perangkat</option>
               <option value="Modul Ajar (RPP Merdeka)">Modul Ajar (RPP)</option>
@@ -533,7 +533,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer"
+              className="px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 cursor-pointer"
             >
               <option value="Semua">Semua Status Verifikasi</option>
               <option value="Disetujui">Disetujui (Valid)</option>
@@ -544,7 +544,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
             <select
               value={filterTeacher}
               onChange={(e) => setFilterTeacher(e.target.value)}
-              className="px-3 py-2 bg-slate-50 border border-[#004b87]/30 text-[#004b87] rounded-none text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer bg-blue-50/50"
+              className="px-3 py-2 bg-slate-50 border border-[#164e63]/30 text-[#164e63] rounded-none text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-600 cursor-pointer bg-cyan-50/50"
             >
               <option value="Semua">🔍 Semua Guru Pengampu</option>
               {uniqueTeachers.map(name => (
@@ -581,7 +581,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                       <td className="p-3 max-w-xs">
                         <div className="font-bold text-slate-800 line-clamp-1">{item.title}</div>
                         <div className="text-[11px] text-slate-500 flex items-center gap-1.5 mt-0.5">
-                          <span className="font-semibold text-blue-700">{item.fase}</span>
+                          <span className="font-semibold text-cyan-700">{item.fase}</span>
                           <span>•</span>
                           <span>Sem. {item.semester}</span>
                         </div>
@@ -589,7 +589,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
 
                       {/* Guru Pengampu */}
                       <td className="p-3 max-w-[150px]">
-                        <div className="font-bold text-[#004b87] truncate">{item.teacherName || 'Guru Pengampu'}</div>
+                        <div className="font-bold text-[#164e63] truncate">{item.teacherName || 'Guru Pengampu'}</div>
                         {item.teacherNip && item.teacherNip !== '-' && (
                           <div className="text-[10px] text-slate-400 font-mono mt-0.5">NIP {item.teacherNip}</div>
                         )}
@@ -597,7 +597,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
 
                       {/* Kategori Badge */}
                       <td className="p-3 whitespace-nowrap">
-                        <span className="px-2 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 font-semibold text-[11px] rounded-none">
+                        <span className="px-2 py-0.5 bg-cyan-50 text-cyan-700 border border-cyan-200 font-semibold text-[11px] rounded-none">
                           {item.category}
                         </span>
                       </td>
@@ -619,7 +619,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                             ) : item.fileType === 'link' ? (
                               <LinkIcon className="w-4 h-4 text-cyan-600" />
                             ) : (
-                              <FileText className="w-4 h-4 text-blue-600" />
+                              <FileText className="w-4 h-4 text-cyan-600" />
                             )}
                           </div>
                           <div className="overflow-hidden max-w-[180px]">
@@ -664,7 +664,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                             type="button"
                             onClick={() => setPreviewDoc(item)}
                             title="Lihat Detail & Catatan Verifikasi"
-                            className="p-1.5 bg-blue-50 text-[#004b87] hover:bg-[#004b87] hover:text-white rounded-none border border-blue-200 transition-colors cursor-pointer"
+                            className="p-1.5 bg-cyan-50 text-[#164e63] hover:bg-[#164e63] hover:text-white rounded-none border border-cyan-200 transition-colors cursor-pointer"
                           >
                             <Eye className="w-3.5 h-3.5" />
                           </button>
@@ -707,7 +707,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
 
       {/* Info Pedoman Kurikulum Merdeka Card */}
       <div className="bg-slate-50 p-4 rounded-none border border-slate-200 flex items-start gap-3 text-xs text-slate-600">
-        <HelpCircle className="w-5 h-5 text-[#004b87] shrink-0 mt-0.5" />
+        <HelpCircle className="w-5 h-5 text-[#164e63] shrink-0 mt-0.5" />
         <div className="space-y-1">
           <span className="font-bold text-slate-800">Pedoman Pengunggahan Perangkat Ajar Mandiri (Kurikulum Merdeka):</span>
           <p className="text-[11px] leading-relaxed text-slate-600">
@@ -723,7 +723,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
             {/* Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-blue-50 text-[#004b87] rounded-none shrink-0">
+                <div className="p-2.5 bg-cyan-50 text-[#164e63] rounded-none shrink-0">
                   <FolderUp className="w-5 h-5" />
                 </div>
                 <div>
@@ -754,7 +754,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                     value={formTitle}
                     onChange={(e) => setFormTitle(e.target.value)}
                     placeholder="Contoh: Modul Ajar Bab 2: Keanekaragaman Hayati & Ekosistem"
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                   />
                 </div>
 
@@ -766,7 +766,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                       required
                       value={formTeacherName}
                       onChange={(e) => setFormTeacherName(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer text-[#004b87] font-bold"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer text-[#164e63] font-bold"
                     >
                       <option value="">-- Pilih Guru Pengampu --</option>
                       {uniqueTeachers.map((name) => (
@@ -780,7 +780,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                       value={formTeacherName}
                       onChange={(e) => setFormTeacherName(e.target.value)}
                       placeholder="Contoh: Shahrur Robby, S.Pd."
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white text-[#004b87] font-bold"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white text-[#164e63] font-bold"
                     />
                   )}
                 </div>
@@ -792,7 +792,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                     <select
                       value={formCategory}
                       onChange={(e) => setFormCategory(e.target.value as ModuleCategory)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer"
                     >
                       <option value="Modul Ajar (RPP Merdeka)">Modul Ajar (RPP Merdeka)</option>
                       <option value="Alur Tujuan Pembelajaran (ATP)">Alur Tujuan Pembelajaran (ATP)</option>
@@ -813,7 +813,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                       value={formSubject}
                       onChange={(e) => setFormSubject(e.target.value)}
                       placeholder="Contoh: Biologi"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                   </div>
                 </div>
@@ -825,7 +825,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                     <select
                       value={formFase}
                       onChange={(e) => setFormFase(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer"
                     >
                       <option value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</option>
                       <option value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</option>
@@ -843,7 +843,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                       value={formClassName}
                       onChange={(e) => setFormClassName(e.target.value)}
                       placeholder="Contoh: X-IPA 1, X-IPA 2 atau Semua Kelas X"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                   </div>
                 </div>
@@ -855,7 +855,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                     <select
                       value={formSemester}
                       onChange={(e) => setFormSemester(e.target.value as any)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer"
                     >
                       <option value="Ganjil">Semester Ganjil</option>
                       <option value="Genap">Semester Genap</option>
@@ -870,7 +870,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                       value={formAcademicYear}
                       onChange={(e) => setFormAcademicYear(e.target.value)}
                       placeholder="2026/2027"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                   </div>
                 </div>
@@ -885,7 +885,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                     className="hidden"
                   />
                   <div className="flex flex-col items-center">
-                    <Upload className="w-8 h-8 text-[#004b87] mb-1" />
+                    <Upload className="w-8 h-8 text-[#164e63] mb-1" />
                     <p className="text-xs font-bold text-slate-800">
                       {formFileName ? formFileName : 'Pilih Berkas Dokumen (PDF, Word, Excel, PPT)'}
                     </p>
@@ -893,7 +893,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="mt-2 px-3 py-1.5 bg-[#004b87] hover:bg-blue-800 text-white font-bold text-xs rounded-none cursor-pointer"
+                      className="mt-2 px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs rounded-none cursor-pointer"
                     >
                       {formFileName ? 'Ganti Berkas' : 'Pilih File Dari Komputer'}
                     </button>
@@ -912,7 +912,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                       value={formDriveUrl}
                       onChange={(e) => setFormDriveUrl(e.target.value)}
                       placeholder="https://drive.google.com/file/d/..."
-                      className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full pl-9 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                   </div>
                 </div>
@@ -925,7 +925,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                     value={formNotes}
                     onChange={(e) => setFormNotes(e.target.value)}
                     placeholder="Contoh: Modul dilengkapi dengan asesmen diagnostik awal dan rubrik portofolio praktikum."
-                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                   />
                 </div>
               </div>
@@ -941,7 +941,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                 >
                   <Upload className="w-4 h-4" />
                   <span>{editingModuleId ? 'Simpan Perubahan' : 'Upload Sekarang'}</span>
@@ -958,7 +958,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
           <div className="bg-white rounded-none max-w-2xl w-full p-5 sm:p-6 shadow-2xl space-y-4 border border-slate-200 animate-in fade-in zoom-in-95 duration-150 my-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-blue-50 text-[#004b87] rounded-none">
+                <div className="p-2.5 bg-cyan-50 text-[#164e63] rounded-none">
                   <FileText className="w-5 h-5" />
                 </div>
                 <div>
@@ -991,7 +991,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                 </div>
                 <div>
                   <span className="text-slate-500 font-medium">Nama File & Ukuran:</span>
-                  <div className="font-bold text-blue-700 font-mono">{previewDoc.fileName} ({previewDoc.fileSize})</div>
+                  <div className="font-bold text-cyan-700 font-mono">{previewDoc.fileName} ({previewDoc.fileSize})</div>
                 </div>
               </div>
 
@@ -1036,7 +1036,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
                   showToast('Mengunduh dokumen perangkat ajar...', 'info');
                   setPreviewDoc(null);
                 }}
-                className="px-4 py-2 bg-[#004b87] hover:bg-blue-800 text-white text-xs font-bold rounded-none flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white text-xs font-bold rounded-none flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <Download className="w-4 h-4" />
                 <span>Unduh Dokumen</span>
@@ -1084,7 +1084,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
         <div className="fixed top-6 right-6 z-50 bg-white border border-emerald-200 shadow-2xl rounded-none p-3.5 sm:p-4 flex items-center gap-3.5 animate-in fade-in zoom-in-90 slide-in-from-top-6 duration-300">
           <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 shadow-md text-white ${
             toastMessage.type === 'success' ? 'bg-emerald-500 ring-4 ring-emerald-100' :
-            toastMessage.type === 'error' ? 'bg-rose-500 ring-4 ring-rose-100' : 'bg-blue-600 ring-4 ring-blue-100'
+            toastMessage.type === 'error' ? 'bg-rose-500 ring-4 ring-rose-100' : 'bg-cyan-600 ring-4 ring-cyan-100'
           }`}>
             {toastMessage.type === 'success' ? (
               <Check className="w-6 h-6 stroke-[3]" />

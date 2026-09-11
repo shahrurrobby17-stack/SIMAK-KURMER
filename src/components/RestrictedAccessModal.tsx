@@ -53,7 +53,7 @@ export const RestrictedAccessModal: React.FC<RestrictedAccessModalProps> = ({
             className="bg-white border border-slate-200 rounded-none shadow-2xl p-6 sm:p-8 max-w-sm w-full flex flex-col items-center text-center space-y-4 relative overflow-hidden"
           >
             {/* Top Accent Line */}
-            <div className={`absolute top-0 left-0 right-0 h-1.5 transition-colors duration-300 ${phase === 'saving' ? 'bg-blue-500' : 'bg-rose-500'}`} />
+            <div className={`absolute top-0 left-0 right-0 h-1.5 transition-colors duration-300 ${phase === 'saving' ? 'bg-cyan-500' : 'bg-rose-500'}`} />
             
             {/* Animation Icon Container */}
             <div className="relative w-20 h-20 flex items-center justify-center my-2">
@@ -71,13 +71,13 @@ export const RestrictedAccessModal: React.FC<RestrictedAccessModalProps> = ({
                     <motion.div
                       animate={{ rotate: 360 }}
                       transition={{ repeat: Infinity, duration: 0.85, ease: "linear" }}
-                      className="w-16 h-16 border-4 border-slate-200 border-t-[#004b87] border-r-[#004b87] rounded-full"
+                      className="w-16 h-16 border-4 border-slate-200 border-t-[#164e63] border-r-[#164e63] rounded-full"
                     />
                     {/* Inner Pulse Circle */}
                     <motion.div
                       animate={{ scale: [0.85, 1.05, 0.85] }}
                       transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
-                      className="absolute w-8 h-8 bg-blue-100 rounded-full"
+                      className="absolute w-8 h-8 bg-cyan-100 rounded-full"
                     />
                   </motion.div>
                 ) : (

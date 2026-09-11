@@ -73,72 +73,72 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
       label: 'Presensi Siswa',
       desc: 'Kehadiran harian',
       icon: UserCheck,
-      color: 'bg-blue-50/80 hover:bg-blue-100/80 border-blue-200/80',
-      iconBg: 'bg-[#004b87] text-white'
+      color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
+      iconBg: 'bg-[#164e63] text-white'
     },
     {
       id: 'grades' as NavTab,
       label: 'Kelola Nilai',
       desc: 'Formatif & Sumatif',
       icon: BookOpenCheck,
-      color: 'bg-blue-50/80 hover:bg-blue-100/80 border-blue-200/80',
-      iconBg: 'bg-[#004b87] text-white'
+      color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
+      iconBg: 'bg-[#164e63] text-white'
     },
     {
       id: 'students' as NavTab,
       label: 'Data Siswa',
       desc: 'Roster & Rapor',
       icon: GraduationCap,
-      color: 'bg-blue-50/80 hover:bg-blue-100/80 border-blue-200/80',
-      iconBg: 'bg-[#004b87] text-white'
+      color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
+      iconBg: 'bg-[#164e63] text-white'
     },
     {
       id: 'journal' as NavTab,
       label: 'Jurnal Guru',
       desc: 'Agenda mengajar',
       icon: CalendarDays,
-      color: 'bg-blue-50/80 hover:bg-blue-100/80 border-blue-200/80',
-      iconBg: 'bg-[#004b87] text-white'
+      color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
+      iconBg: 'bg-[#164e63] text-white'
     },
     {
       id: 'upload-modul' as NavTab,
       label: 'Upload Modul/ATP',
       desc: 'Perangkat & RPP',
       icon: FolderUp,
-      color: 'bg-blue-50/80 hover:bg-blue-100/80 border-blue-200/80',
-      iconBg: 'bg-[#004b87] text-white'
+      color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
+      iconBg: 'bg-[#164e63] text-white'
     },
     ...(isMasterUser ? [{
       id: 'master-data' as NavTab,
       label: 'Master Data',
       desc: 'Monitoring Akun Terdaftar',
       icon: Database,
-      color: 'bg-blue-50/80 hover:bg-blue-100/80 border-blue-200/80',
-      iconBg: 'bg-[#004b87] text-white'
+      color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
+      iconBg: 'bg-[#164e63] text-white'
     }] : []),
     {
       id: 'extracurricular' as NavTab,
       label: 'Presensi Ekstra',
       desc: 'Ekstrakurikuler',
       icon: Trophy,
-      color: 'bg-blue-50/80 hover:bg-blue-100/80 border-blue-200/80',
-      iconBg: 'bg-[#004b87] text-white'
+      color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
+      iconBg: 'bg-[#164e63] text-white'
     },
     {
       id: 'sync' as NavTab,
       label: 'Sinkronisasi',
       desc: 'Kenaikan & Mutasi',
       icon: RefreshCw,
-      color: 'bg-blue-50/80 hover:bg-blue-100/80 border-blue-200/80',
-      iconBg: 'bg-[#004b87] text-white'
+      color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
+      iconBg: 'bg-[#164e63] text-white'
     },
     {
       id: 'ai-assistant' as NavTab,
       label: 'Asisten AI',
       desc: 'Generator Modul',
       icon: Sparkles,
-      color: 'bg-blue-50/80 hover:bg-blue-100/80 border-blue-200/80',
-      iconBg: 'bg-[#004b87] text-white'
+      color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
+      iconBg: 'bg-[#164e63] text-white'
     },
     {
       id: 'settings' as NavTab,
@@ -146,7 +146,7 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
       desc: 'Profil & Sekolah',
       icon: Settings,
       color: 'bg-slate-50 hover:bg-slate-100 border-slate-200',
-      iconBg: 'bg-[#004b87] text-white'
+      iconBg: 'bg-[#164e63] text-white'
     }
   ];
 
@@ -181,7 +181,7 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
 
   // Grade Distribution Counts
   const gradeDistribution = [
-    { name: 'Sangat Baik (A: 90-100)', count: currentGrades.filter(g => g.grade.finalScore >= 90).length, color: '#004b87' },
+    { name: 'Sangat Baik (A: 90-100)', count: currentGrades.filter(g => g.grade.finalScore >= 90).length, color: '#164e63' },
     { name: 'Baik (B: 80-89)', count: currentGrades.filter(g => g.grade.finalScore >= 80 && g.grade.finalScore < 90).length, color: '#1d4ed8' },
     { name: 'Cukup (C: 70-79)', count: currentGrades.filter(g => g.grade.finalScore >= 70 && g.grade.finalScore < 80).length, color: '#3b82f6' },
     { name: 'Perlu Bimbingan (D: <70)', count: currentGrades.filter(g => g.grade.finalScore < 70).length, color: '#93c5fd' },
@@ -333,7 +333,7 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
 
       {/* Header Title Section */}
       {!isLoginView && (
-        <div className="bg-gradient-to-r from-[#002f54] via-[#004b87] to-[#003d6d] text-white p-5 rounded-none shadow-lg border border-blue-800/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
+        <div className="bg-gradient-to-r from-[#002f54] via-[#164e63] to-[#003d6d] text-white p-5 rounded-none shadow-lg border border-cyan-800/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
             <BarChart3 className="w-48 h-48 text-white" />
           </div>
@@ -351,7 +351,7 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
                 Analitik Nilai Rekap Keseluruhan
                 {displaySubjectName ? ` — ${displaySubjectName}` : ''}
               </h2>
-              <p className="text-xs text-blue-200/90 max-w-2xl mt-0.5">
+              <p className="text-xs text-cyan-200/90 max-w-2xl mt-0.5">
                 Pantau ketercapaian KKTP ({selectedSubject.kktp}), distribusi predikat, dan presensi siswa secara real-time.
               </p>
             </div>
@@ -368,11 +368,11 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
           <div>
             <span className="text-xs font-semibold text-slate-500 uppercase">Rata-rata Keseluruhan</span>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-3xl font-bold text-[#004b87]">{avgClassScore}</span>
-              <span className="text-xs text-blue-600 font-bold">+2.4%</span>
+              <span className="text-3xl font-bold text-[#164e63]">{avgClassScore}</span>
+              <span className="text-xs text-cyan-600 font-bold">+2.4%</span>
             </div>
           </div>
-          <div className="w-10 h-10 rounded-none bg-blue-50 text-[#004b87] flex items-center justify-center font-bold text-lg border border-blue-100">
+          <div className="w-10 h-10 rounded-none bg-cyan-50 text-[#164e63] flex items-center justify-center font-bold text-lg border border-cyan-100">
             📊
           </div>
         </div>
@@ -382,11 +382,11 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
           <div>
             <span className="text-xs font-semibold text-slate-500 uppercase">Tuntas KKM/KKTP</span>
             <div className="flex items-baseline gap-2 mt-1">
-              <span className="text-3xl font-bold text-[#004b87]">{passedStudents.length}</span>
+              <span className="text-3xl font-bold text-[#164e63]">{passedStudents.length}</span>
               <span className="text-xs text-slate-400 font-medium">/ {totalStudents} Siswa</span>
             </div>
           </div>
-          <div className="w-10 h-10 rounded-none bg-blue-50 text-[#004b87] flex items-center justify-center font-bold text-lg border border-blue-100">
+          <div className="w-10 h-10 rounded-none bg-cyan-50 text-[#164e63] flex items-center justify-center font-bold text-lg border border-cyan-100">
             🎯
           </div>
         </div>
@@ -394,24 +394,24 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
 
       {/* AI Analysis Insight Output Banner (if generated) */}
       {aiAnalysis && (
-        <div className="bg-gradient-to-r from-slate-900 via-blue-950 to-[#002f54] p-5 rounded-none border border-blue-800 text-white shadow-xl">
-          <div className="flex items-center justify-between mb-3 border-b border-blue-800/60 pb-2">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-blue-200 flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-blue-200" />
+        <div className="bg-gradient-to-r from-slate-900 via-cyan-950 to-[#002f54] p-5 rounded-none border border-cyan-800 text-white shadow-xl">
+          <div className="flex items-center justify-between mb-3 border-b border-cyan-800/60 pb-2">
+            <h3 className="text-sm font-bold uppercase tracking-wider text-cyan-200 flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-cyan-200" />
               Rekomendasi Asesmen & Pedagogis AI (Kurikulum Merdeka)
             </h3>
-            <span className="text-[10px] bg-blue-400/20 text-blue-200 font-mono px-2 py-0.5 rounded-none border border-blue-400/30">
+            <span className="text-[10px] bg-cyan-400/20 text-cyan-200 font-mono px-2 py-0.5 rounded-none border border-cyan-400/30">
               Powered by Gemini 2.5
             </span>
           </div>
 
-          <p className="text-xs text-slate-200 mb-4 leading-relaxed bg-blue-900/40 p-3 rounded-none border border-blue-800/40">
+          <p className="text-xs text-slate-200 mb-4 leading-relaxed bg-cyan-900/40 p-3 rounded-none border border-cyan-800/40">
             {aiAnalysis.ringkasanAnalisis}
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
-            <div className="bg-[#004b87]/80 p-3 rounded-none border border-blue-400/30">
-              <span className="font-bold text-blue-200 block mb-1">💪 Kekuatan Utama Kelas:</span>
+            <div className="bg-[#164e63]/80 p-3 rounded-none border border-cyan-400/30">
+              <span className="font-bold text-cyan-200 block mb-1">💪 Kekuatan Utama Kelas:</span>
               <ul className="list-disc list-inside text-slate-300 space-y-1 text-[11px]">
                 {aiAnalysis.kekuatanUtama?.map((item: string, idx: number) => (
                   <li key={idx}>{item}</li>
@@ -419,8 +419,8 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
               </ul>
             </div>
 
-            <div className="bg-[#004b87]/80 p-3 rounded-none border border-blue-400/30">
-              <span className="font-bold text-blue-200 block mb-1">🎯 Strategi Pengajaran:</span>
+            <div className="bg-[#164e63]/80 p-3 rounded-none border border-cyan-400/30">
+              <span className="font-bold text-cyan-200 block mb-1">🎯 Strategi Pengajaran:</span>
               <ul className="list-disc list-inside text-slate-300 space-y-1 text-[11px]">
                 {aiAnalysis.rekomendasiPedagogis?.map((item: string, idx: number) => (
                   <li key={idx}>{item}</li>
@@ -428,8 +428,8 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
               </ul>
             </div>
 
-            <div className="bg-[#004b87]/80 p-3 rounded-none border border-blue-400/30">
-              <span className="font-bold text-blue-200 block mb-1">🛠️ Langkah Remedial & Diferensiasi:</span>
+            <div className="bg-[#164e63]/80 p-3 rounded-none border border-cyan-400/30">
+              <span className="font-bold text-cyan-200 block mb-1">🛠️ Langkah Remedial & Diferensiasi:</span>
               <p className="text-[11px] text-slate-300 leading-relaxed">
                 {aiAnalysis.rekomendasiRemedial}
               </p>
@@ -444,8 +444,8 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
         <div className="bg-white p-5 rounded-none border border-slate-200 shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-sm font-bold text-[#004b87] flex items-center gap-2">
-                <BarChart className="w-4 h-4 text-[#004b87]" />
+              <h3 className="text-sm font-bold text-[#164e63] flex items-center gap-2">
+                <BarChart className="w-4 h-4 text-[#164e63]" />
                 Distribusi Predikat Capaian Siswa
               </h3>
               <p className="text-xs text-slate-500">Jumlah siswa per rentang predikat nilai (A, B, C, D)</p>
@@ -475,8 +475,8 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
         <div className="bg-white p-5 rounded-none border border-slate-200 shadow-sm">
           <div className="flex justify-between items-center mb-4">
             <div>
-              <h3 className="text-sm font-bold text-[#004b87] flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-[#004b87]" />
+              <h3 className="text-sm font-bold text-[#164e63] flex items-center gap-2">
+                <TrendingUp className="w-4 h-4 text-[#164e63]" />
                 Tren Presensi Minggu Ini
               </h3>
               <p className="text-xs text-slate-500">Rekapitulasi jumlah siswa hadir per hari kerja</p>
@@ -493,7 +493,7 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
                   contentStyle={{ backgroundColor: '#0F172A', borderColor: '#334155', borderRadius: '12px', color: '#fff', fontSize: '12px' }}
                 />
                 <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
-                <Line type="monotone" dataKey="hadir" name="Hadir" stroke="#004b87" strokeWidth={3} dot={{ r: 4 }} />
+                <Line type="monotone" dataKey="hadir" name="Hadir" stroke="#164e63" strokeWidth={3} dot={{ r: 4 }} />
                 <Line type="monotone" dataKey="sakit" name="Sakit" stroke="#3b82f6" strokeWidth={2} />
                 <Line type="monotone" dataKey="alpa" name="Alpa" stroke="#93c5fd" strokeWidth={2} />
               </LineChart>

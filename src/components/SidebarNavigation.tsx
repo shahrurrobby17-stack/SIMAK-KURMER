@@ -47,7 +47,8 @@ export type NavTab =
   | 'maintenance' 
   | 'settings';
 
-import { UserAccount } from '../types';
+import { UserAccount, TeacherProfile, TeachingScheduleItem } from '../types';
+import { subscribeToSchedules } from '../lib/firebaseService';
 
 interface SidebarNavigationProps {
   activeTab: NavTab;
@@ -60,6 +61,7 @@ interface SidebarNavigationProps {
   isAccountDisabled?: boolean;
   onLogout?: () => void;
   currentUser?: UserAccount | null;
+  teacher?: TeacherProfile;
 }
 
 const RESTRICTED_TABS: NavTab[] = ['sync', 'schedule', 'journal', 'upload-modul', 'students', 'attendance', 'extracurricular', 'grades', 'extra-tasks'];
@@ -74,10 +76,51 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   isMasterUser,
   isAccountDisabled = false,
   onLogout,
-  currentUser
+  currentUser,
+  teacher
 }) => {
   const [isMasterDataOpen, setIsMasterDataOpen] = useState(true);
   const mobileNavContainerRef = React.useRef<HTMLDivElement>(null);
+
+  
+  const [schedules, setSchedules] = React.useState<TeachingScheduleItem[]>([]);
+  const settingsScope = teacher?.id && !isMasterUser ? `_${teacher.id}` : '';
+
+  React.useEffect(() => {
+    const savedKey = localStorage.getItem(teacher?.id ? `simak_schedules_${teacher.id}` : 'simak_schedules');
+    if (savedKey) {
+      try {
+        const parsed = JSON.parse(savedKey);
+        if (Array.isArray(parsed)) setSchedules(parsed);
+      } catch (e) {}
+    } else if (isMasterUser) {
+      const savedGen = localStorage.getItem('simak_schedules');
+      if (savedGen) {
+        try {
+          const parsed = JSON.parse(savedGen);
+          if (Array.isArray(parsed) && parsed.length > 0) setSchedules(parsed);
+        } catch (e) {}
+      }
+    }
+  }, [teacher?.id, isMasterUser]);
+
+  React.useEffect(() => {
+    const unsub = subscribeToSchedules((remoteSchedules) => {
+      if (remoteSchedules && Array.isArray(remoteSchedules)) {
+        setSchedules(remoteSchedules);
+      }
+    }, settingsScope);
+    return () => unsub();
+  }, [teacher?.id, isMasterUser, settingsScope]);
+
+  const dayIndex = new Date().getDay();
+  const dayName = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][dayIndex];
+  
+  const activeClasses = Array.from(new Set(
+    schedules.filter(sch => sch.day === dayName).map(sch => sch.className)
+  ));
+  
+  const activeClassText = activeClasses.length > 0 ? activeClasses.join(', ') : 'Tidak ada jadwal hari ini';
 
   const isAdministrator = isAdmin || isMasterUser || Boolean(
     currentUser && (
@@ -361,12 +404,12 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     return (
       <React.Fragment key={item.id}>
         {!isStudentRole && !isKurikulumOnlyMode && !isTuOnlyMode && item.id === 'attendance' && (
-          <div className="pt-3 pb-1 px-2.5 text-[10px] font-bold text-blue-200 uppercase tracking-wider flex items-center gap-1">
+          <div className="pt-3 pb-1 px-2.5 text-[10px] font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1">
             <span>NAVIGASI SISWA</span>
           </div>
         )}
         {!isStudentRole && !isKurikulumOnlyMode && !isTuOnlyMode && item.id === 'ai-assistant' && (
-          <div className="pt-3 pb-1 px-2.5 text-[10px] font-bold text-white uppercase tracking-wider flex items-center gap-1">
+          <div className="pt-3 pb-1 px-2.5 text-[10px] font-bold text-cyan-300 uppercase tracking-wider flex items-center gap-1">
             <span>AI & Sistem</span>
           </div>
         )}
@@ -378,8 +421,8 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
           className={`relative w-full text-left px-3.5 py-2.5 rounded-none transition-colors flex items-center justify-between group cursor-pointer overflow-hidden ${
             isActive
-              ? 'bg-white/15 text-white font-semibold border-l-4 border-white shadow-xs'
-              : 'hover:bg-white/5 text-white/70 hover:text-white font-medium'
+              ? 'bg-cyan-800 text-white font-semibold border-l-4 border-cyan-300 shadow-xs'
+              : 'hover:bg-cyan-800/60 text-cyan-100 hover:text-white font-medium'
           }`}
         >
           {isActive && (
@@ -391,14 +434,14 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           )}
           
           <div className="flex items-center space-x-3 relative z-10">
-            <Icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? 'text-white' : 'opacity-70 group-hover:opacity-100 text-blue-200'}`} />
+            <Icon className={`w-5 h-5 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-cyan-200 group-hover:text-white opacity-80 group-hover:opacity-100'}`} />
             <span className="text-sm font-medium">{item.label}</span>
           </div>
           {item.badge && (
             <span className={`relative z-10 text-[10px] font-bold px-2 py-0.5 rounded-none ${
               item.id === 'ai-assistant'
-                ? 'bg-white text-[#004b87] font-black'
-                : isActive ? 'bg-blue-400/30 text-white' : 'bg-white/10 text-white/80'
+                ? 'bg-white text-cyan-900 font-black'
+                : isActive ? 'bg-cyan-700 text-white' : 'bg-cyan-800 text-cyan-200'
             }`}>
               {item.badge}
             </span>
@@ -434,14 +477,14 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                   aria-label={item.label}
                   className={`relative flex items-center justify-center shrink-0 h-9 sm:h-10 transition-all duration-200 rounded-xl cursor-pointer select-none ${
                     isActive
-                      ? 'px-3 bg-[#004b87] text-white shadow-sm shadow-blue-950/20'
-                      : 'px-2.5 text-slate-500 hover:text-[#004b87] hover:bg-slate-100/80 active:bg-slate-200/60'
+                      ? 'px-3 bg-white text-slate-800 shadow-sm shadow-blue-950/20'
+                      : 'px-2.5 text-slate-500 hover:text-[#164e63] hover:bg-slate-100/80 active:bg-slate-200/60'
                   }`}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="activeMobileNavPill"
-                      className="absolute inset-0 bg-[#004b87] rounded-xl -z-0"
+                      className="absolute inset-0 bg-[#164e63] rounded-xl -z-0"
                       transition={{ type: "spring", stiffness: 450, damping: 35 }}
                     />
                   )}
@@ -468,9 +511,33 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       </nav>
 
       {/* Desktop Sidebar (Only visible on desktop/tablet >= md) */}
-      <aside className="hidden md:flex w-64 lg:w-68 bg-[#004b87] text-white shrink-0 p-4 flex-col justify-between rounded-none shadow-sm md:h-full overflow-y-auto">
+      <aside className="hidden md:flex w-64 lg:w-68 bg-cyan-900 text-white shrink-0 p-4 flex-col justify-between rounded-none shadow-md md:h-full overflow-y-auto border-r border-cyan-800">
         <div className="space-y-3">
-          <div className="px-2 py-1 text-[10px] font-bold text-blue-200 uppercase tracking-wider flex items-center justify-between">
+          <div className="mb-4 pb-4 border-b border-cyan-800">
+            <div className="flex items-start gap-2.5">
+              <div className="w-8 h-8 rounded-none bg-cyan-800/80 border border-cyan-700 flex items-center justify-center shrink-0 text-cyan-200 mt-0.5 shadow-2xs">
+                <GraduationCap className="w-4.5 h-4.5 text-cyan-200" />
+              </div>
+              <div className="flex flex-col text-left min-w-0 flex-1">
+                <p className="text-[12px] font-bold text-white truncate">
+                  {currentUser?.name || teacher?.name || 'Pengguna'}
+                </p>
+                <p className="text-[10px] font-semibold text-white truncate leading-tight mt-0.5">
+                  {currentUser?.role || teacher?.subjectRole || 'Guru Pengampu'}
+                </p>
+                {!isKurikulumOnlyMode && !isTuOnlyMode && !isStudentRole && (
+                  <div className="flex items-center gap-1.5 mt-2">
+                    <div className={`w-1.5 h-1.5 rounded-full ${activeClasses.length > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-cyan-600'}`}></div>
+                    <p className="text-[9px] font-bold truncate text-white">
+                      Status: Kelas Aktif ({activeClassText})
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          
+          <div className="px-2 py-1 text-[10px] font-bold text-cyan-300 uppercase tracking-wider flex items-center justify-between">
             <span>{isStudentRole ? 'LMS Siswa Merdeka' : isKurikulumOnlyMode ? 'Sistem Kurikulum' : isTuOnlyMode ? 'Sistem Tata Usaha' : 'Navigasi Utama'}</span>
           </div>
 
@@ -484,7 +551,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 {renderDesktopItem(kurikulumItem)}
                 {renderDesktopItem(settingsItem)}
                 <div className="pt-2 pb-1 px-1">
-                  <div className="border-b border-blue-400/30 w-full" />
+                  <div className="border-b border-cyan-700/50 w-full" />
                 </div>
               </>
             ) : isTuOnlyMode ? (
@@ -492,7 +559,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                 {renderDesktopItem(tuItem)}
                 {renderDesktopItem(settingsItem)}
                 <div className="pt-2 pb-1 px-1">
-                  <div className="border-b border-blue-400/30 w-full" />
+                  <div className="border-b border-cyan-700/50 w-full" />
                 </div>
               </>
             ) : (
@@ -506,16 +573,16 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                     <button
                       type="button"
                       onClick={() => setIsMasterDataOpen(!isMasterDataOpen)}
-                      className="w-full px-2.5 py-1.5 flex items-center justify-between text-[10px] font-bold text-blue-200 uppercase tracking-wider hover:bg-white/5 transition-colors group cursor-pointer"
+                      className="w-full px-2.5 py-1.5 flex items-center justify-between text-[10px] font-bold text-cyan-200 uppercase tracking-wider hover:bg-cyan-800/60 transition-colors group cursor-pointer"
                     >
                       <div className="flex items-center gap-1.5">
-                        <Database className="w-3.5 h-3.5 text-blue-300" />
+                        <Database className="w-3.5 h-3.5 text-cyan-300" />
                         <span>Master Data</span>
                       </div>
                       {isMasterDataOpen ? (
-                        <ChevronUp className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" />
+                        <ChevronUp className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
                       ) : (
-                        <ChevronDown className="w-3.5 h-3.5 opacity-70 group-hover:opacity-100" />
+                        <ChevronDown className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
                       )}
                     </button>
                     
@@ -526,7 +593,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                           animate={{ height: "auto", opacity: 1 }}
                           exit={{ height: 0, opacity: 0 }}
                           transition={{ duration: 0.2 }}
-                          className="overflow-hidden mt-1 pl-1 space-y-1 border-l border-blue-400/20"
+                          className="overflow-hidden mt-1 pl-1 space-y-1 border-l border-cyan-700/60"
                         >
                           {/* Master Data & System Items */}
                           {masterDataItems.map(renderDesktopItem)}

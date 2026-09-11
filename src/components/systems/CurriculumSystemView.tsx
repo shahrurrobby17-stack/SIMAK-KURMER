@@ -1031,7 +1031,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
       {/* KPI Cards for Curriculum */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
-          <div className="p-3 bg-blue-50 text-[#004b87] rounded-none shrink-0">
+          <div className="p-3 bg-cyan-50 text-[#164e63] rounded-none shrink-0">
             <Layers className="w-5 h-5" />
           </div>
           <div>
@@ -1078,7 +1078,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
           onClick={() => setActiveTab('jjm')}
           className={`px-3.5 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'jjm'
-              ? 'border-[#004b87] text-[#004b87] bg-blue-50/50'
+              ? 'border-[#164e63] text-[#164e63] bg-cyan-50/50'
               : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
@@ -1091,7 +1091,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
           onClick={() => setActiveTab('jadwalMapel')}
           className={`px-3.5 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'jadwalMapel'
-              ? 'border-[#004b87] text-[#004b87] bg-blue-50/50'
+              ? 'border-[#164e63] text-[#164e63] bg-cyan-50/50'
               : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
@@ -1107,7 +1107,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
           onClick={() => setActiveTab('validasiModul')}
           className={`px-3.5 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'validasiModul'
-              ? 'border-[#004b87] text-[#004b87] bg-blue-50/50'
+              ? 'border-[#164e63] text-[#164e63] bg-cyan-50/50'
               : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
@@ -1129,7 +1129,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
           onClick={() => setActiveTab('guruMapel')}
           className={`px-3.5 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'guruMapel'
-              ? 'border-[#004b87] text-[#004b87] bg-blue-50/50'
+              ? 'border-[#164e63] text-[#164e63] bg-cyan-50/50'
               : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
@@ -1142,7 +1142,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
           onClick={() => setActiveTab('perangkat')}
           className={`px-3.5 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'perangkat'
-              ? 'border-[#004b87] text-[#004b87] bg-blue-50/50'
+              ? 'border-[#164e63] text-[#164e63] bg-cyan-50/50'
               : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
@@ -1155,7 +1155,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
           onClick={() => setActiveTab('kalender')}
           className={`px-3.5 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'kalender'
-              ? 'border-[#004b87] text-[#004b87] bg-blue-50/50'
+              ? 'border-[#164e63] text-[#164e63] bg-cyan-50/50'
               : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
@@ -1168,11 +1168,11 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
           onClick={() => setActiveTab('tim')}
           className={`px-3.5 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'tim'
-              ? 'border-[#004b87] text-[#004b87] bg-blue-50/50'
+              ? 'border-[#164e63] text-[#164e63] bg-cyan-50/50'
               : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
-          <Award className="w-4 h-4 text-[#004b87]" />
+          <Award className="w-4 h-4 text-[#164e63]" />
           <span>Akun Tim Kurikulum ({curriculumUsers.length})</span>
         </button>
 
@@ -1180,7 +1180,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
           <button
             type="button"
             onClick={() => onNavigateTab('settings')}
-            className="px-3.5 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-600 hover:text-[#004b87] hover:bg-slate-50 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ml-auto"
+            className="px-3.5 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-600 hover:text-[#164e63] hover:bg-slate-50 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ml-auto"
             title="Buka Pengaturan Sistem"
           >
             <Settings className="w-4 h-4 text-slate-500" />
@@ -1205,13 +1205,13 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                   value={searchMapel}
                   onChange={(e) => setSearchMapel(e.target.value)}
                   placeholder="Cari mata pelajaran / guru..."
-                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs w-48 sm:w-56 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs w-48 sm:w-56 focus:outline-none focus:ring-2 focus:ring-cyan-600"
                 />
               </div>
               <button
                 type="button"
                 onClick={handleOpenAddJjm}
-                className="px-3 py-1.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all"
+                className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 shadow-xs cursor-pointer active:scale-95 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Tambah Mapel & Guru</span>
@@ -1239,7 +1239,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                   <th className="p-3">Tingkat / Fase</th>
                   <th className="p-3 text-center">Intra (JP)</th>
                   <th className="p-3 text-center">P5 (JP)</th>
-                  <th className="p-3 text-center bg-blue-50/50">Total JP</th>
+                  <th className="p-3 text-center bg-cyan-50/50">Total JP</th>
                   <th className="p-3">Guru Pengampu</th>
                   <th className="p-3 text-center">KKTP</th>
                   <th className="p-3 text-center">Status</th>
@@ -1248,14 +1248,14 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredMapels.map((item, idx) => (
-                  <tr key={item.code} className="hover:bg-blue-50/30 transition-colors">
+                  <tr key={item.code} className="hover:bg-cyan-50/30 transition-colors">
                     <td className="p-3 font-semibold text-slate-500">{idx + 1}</td>
-                    <td className="p-3 font-mono font-bold text-[#004b87]">{item.code}</td>
+                    <td className="p-3 font-mono font-bold text-[#164e63]">{item.code}</td>
                     <td className="p-3 font-bold text-slate-800">{item.name}</td>
                     <td className="p-3 text-slate-600 font-medium">{item.fase}</td>
                     <td className="p-3 text-center font-semibold text-slate-700">{item.jjm} JP</td>
                     <td className="p-3 text-center font-semibold text-amber-600">{item.p5} JP</td>
-                    <td className="p-3 text-center font-black text-[#004b87] bg-blue-50/40">{item.total} JP</td>
+                    <td className="p-3 text-center font-black text-[#164e63] bg-cyan-50/40">{item.total} JP</td>
                     <td className="p-3 text-slate-700 font-semibold">{item.guru}</td>
                     <td className="p-3 text-center font-bold text-slate-800">{item.kktp}</td>
                     <td className="p-3 text-center">
@@ -1269,7 +1269,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                           type="button"
                           onClick={() => handleOpenEditJjm(item, idx)}
                           title="Edit Mapel & Alokasi Guru"
-                          className="p-1.5 text-blue-600 hover:text-white hover:bg-blue-600 rounded-none border border-blue-200 transition-all cursor-pointer"
+                          className="p-1.5 text-cyan-600 hover:text-white hover:bg-cyan-600 rounded-none border border-cyan-200 transition-all cursor-pointer"
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
@@ -1291,7 +1291,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                   <td colSpan={4} className="p-3 text-right">Total Jam Pelajaran / Minggu:</td>
                   <td className="p-3 text-center text-slate-800">{totalJJMIntrakurikuler} JP</td>
                   <td className="p-3 text-center text-amber-700">{totalP5} JP</td>
-                  <td className="p-3 text-center text-[#004b87] bg-blue-100/50 font-black">{totalJPMingguan} JP</td>
+                  <td className="p-3 text-center text-[#164e63] bg-cyan-100/50 font-black">{totalJPMingguan} JP</td>
                   <td colSpan={4} className="p-3"></td>
                 </tr>
               </tfoot>
@@ -1317,7 +1317,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
               <p className="text-xs text-slate-500 max-w-3xl leading-relaxed">
                 Penataan jadwal pelajaran mingguan per rombel kelas yang terhubung secara realtime dengan 
                 <span className="font-bold text-indigo-700"> Portal Siswa (LMS)</span>, 
-                <span className="font-bold text-blue-700"> Jurnal Mengajar Guru</span>, dan 
+                <span className="font-bold text-cyan-700"> Jurnal Mengajar Guru</span>, dan 
                 <span className="font-bold text-emerald-700"> Presensi Kelas</span>.
               </p>
             </div>
@@ -1361,7 +1361,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
             </div>
             <div className="bg-white p-3.5 border border-slate-200 rounded-none shadow-xs">
               <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Rombongan Belajar</div>
-              <div className="text-lg font-black text-blue-700 mt-0.5">{scheduleAvailableClasses.length} <span className="text-xs font-semibold text-slate-500">Kelas</span></div>
+              <div className="text-lg font-black text-cyan-700 mt-0.5">{scheduleAvailableClasses.length} <span className="text-xs font-semibold text-slate-500">Kelas</span></div>
             </div>
             <div className="bg-white p-3.5 border border-slate-200 rounded-none shadow-xs">
               <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Guru Pengampu</div>
@@ -1550,7 +1550,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                                 type="button"
                                 onClick={() => handleOpenEditScheduleModal(item)}
                                 title="Edit Sesi Jadwal"
-                                className="p-1.5 bg-white hover:bg-blue-600 hover:text-white text-blue-600 border border-slate-200 rounded-none transition-all cursor-pointer"
+                                className="p-1.5 bg-white hover:bg-cyan-600 hover:text-white text-cyan-600 border border-slate-200 rounded-none transition-all cursor-pointer"
                               >
                                 <Edit3 className="w-3.5 h-3.5" />
                               </button>
@@ -1630,7 +1630,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
           {/* KPI Mini-Cards for Module Validation */}
           <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-5 gap-3">
             <div className="bg-white p-3.5 border border-slate-200 shadow-xs flex items-center gap-3">
-              <div className="p-2.5 bg-blue-50 text-[#004b87] rounded-none">
+              <div className="p-2.5 bg-cyan-50 text-[#164e63] rounded-none">
                 <FolderOpen className="w-4 h-4" />
               </div>
               <div>
@@ -1699,7 +1699,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                   value={searchDoc}
                   onChange={(e) => setSearchDoc(e.target.value)}
                   placeholder="Cari judul, guru, mapel, berkas..."
-                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs w-full focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs w-full focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                 />
               </div>
 
@@ -1707,7 +1707,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                 <select
                   value={filterDocStatus}
                   onChange={(e) => setFilterDocStatus(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer"
                 >
                   <option value="Semua">Semua Status Validasi</option>
                   <option value="Meninjau">⏳ Meninjau (Sedang Ditinjau)</option>
@@ -1720,7 +1720,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                 <select
                   value={filterDocCategory}
                   onChange={(e) => setFilterDocCategory(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer"
                 >
                   <option value="Semua">Semua Kategori Perangkat</option>
                   <option value="Modul Ajar (RPP Merdeka)">Modul Ajar (RPP Merdeka)</option>
@@ -1737,7 +1737,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                 <select
                   value={filterDocTeacher}
                   onChange={(e) => setFilterDocTeacher(e.target.value)}
-                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer"
+                  className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer"
                 >
                   <option value="Semua">Semua Guru Pengampu</option>
                   {Array.from(new Set(teacherModules.map(m => m.teacherName))).map(name => (
@@ -1777,7 +1777,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                     setFilterDocCategory('Semua');
                     setFilterDocTeacher('Semua');
                   }}
-                  className="text-blue-600 hover:text-blue-800 font-bold cursor-pointer"
+                  className="text-cyan-600 hover:text-cyan-800 font-bold cursor-pointer"
                 >
                   Reset Filter
                 </button>
@@ -1823,7 +1823,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                     .map((doc, idx) => (
                       <tr
                         key={doc.id}
-                        className={`hover:bg-blue-50/30 transition-colors ${
+                        className={`hover:bg-cyan-50/30 transition-colors ${
                           doc.status === 'Meninjau' ? 'bg-amber-50/20' : ''
                         }`}
                       >
@@ -1831,7 +1831,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                         <td className="p-3">
                           <div className="font-bold text-slate-800 leading-snug">{doc.title}</div>
                           <div className="flex items-center gap-1.5 mt-1">
-                            <span className="px-2 py-0.5 bg-blue-50 text-[#004b87] font-semibold text-[10px] border border-blue-100">
+                            <span className="px-2 py-0.5 bg-cyan-50 text-[#164e63] font-semibold text-[10px] border border-cyan-100">
                               {doc.category}
                             </span>
                             <span className="text-[10px] text-slate-400 font-mono">Sem. {doc.semester}</span>
@@ -1844,7 +1844,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                           )}
                         </td>
                         <td className="p-3">
-                          <div className="font-bold text-blue-900">{doc.subject}</div>
+                          <div className="font-bold text-cyan-900">{doc.subject}</div>
                           <div className="text-[11px] text-slate-600">{doc.fase} ({doc.className})</div>
                         </td>
                         <td className="p-3">
@@ -1858,7 +1858,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                               onClick={() => {
                                 showToast(`Mengunduh berkas "${doc.fileName}"...`, 'info');
                               }}
-                              className="text-[#004b87] hover:underline font-bold text-[10px] flex items-center gap-0.5 cursor-pointer"
+                              className="text-[#164e63] hover:underline font-bold text-[10px] flex items-center gap-0.5 cursor-pointer"
                             >
                               <Download className="w-3 h-3" /> Unduh
                             </button>
@@ -1926,9 +1926,9 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                               type="button"
                               onClick={() => handleOpenValidationModal(doc)}
                               title="Buka Form Validasi Lengkap & Catatan Evaluasi"
-                              className="p-1.5 bg-slate-100 hover:bg-blue-50 text-slate-700 hover:text-[#004b87] border border-slate-300 rounded-none cursor-pointer"
+                              className="p-1.5 bg-slate-100 hover:bg-cyan-50 text-slate-700 hover:text-[#164e63] border border-slate-300 rounded-none cursor-pointer"
                             >
-                              <ShieldCheck className="w-4 h-4 text-blue-700" />
+                              <ShieldCheck className="w-4 h-4 text-cyan-700" />
                             </button>
                           </div>
                         </td>
@@ -1966,7 +1966,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                             setFilterDocCategory('Semua');
                             setFilterDocTeacher('Semua');
                           }}
-                          className="px-3 py-1.5 bg-blue-50 text-[#004b87] text-xs font-bold border border-blue-200 cursor-pointer"
+                          className="px-3 py-1.5 bg-cyan-50 text-[#164e63] text-xs font-bold border border-cyan-200 cursor-pointer"
                         >
                           Tampilkan Semua Dokumen
                         </button>
@@ -1999,7 +1999,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                   value={searchGuru}
                   onChange={(e) => setSearchGuru(e.target.value)}
                   placeholder="Cari guru, NIP, email..."
-                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs w-48 sm:w-56 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs w-48 sm:w-56 focus:outline-none focus:ring-2 focus:ring-cyan-600"
                 />
               </div>
             </div>
@@ -2032,7 +2032,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                         <td className="p-3 font-bold text-emerald-800">{user.role || 'Guru Pengampu'}</td>
                         <td className="p-3 text-center">
                           {assigned.length > 0 ? (
-                            <span className="px-2.5 py-1 bg-blue-50 text-[#004b87] font-bold text-xs border border-blue-200 rounded-none inline-block">
+                            <span className="px-2.5 py-1 bg-cyan-50 text-[#164e63] font-bold text-xs border border-cyan-200 rounded-none inline-block">
                               {totalJp} JP <span className="text-[10px] text-slate-500 font-normal">({assigned.length} Mapel)</span>
                             </span>
                           ) : (
@@ -2061,7 +2061,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                               type="button"
                               onClick={() => handleModuleClick(user, 'jadwal')}
                               title="Inspeksi Jadwal & Modul"
-                              className="px-2 py-1 bg-blue-50 text-[#004b87] hover:bg-[#004b87] hover:text-white font-bold text-[11px] border border-blue-200 rounded-none transition-all cursor-pointer flex items-center gap-1"
+                              className="px-2 py-1 bg-cyan-50 text-[#164e63] hover:bg-[#164e63] hover:text-white font-bold text-[11px] border border-cyan-200 rounded-none transition-all cursor-pointer flex items-center gap-1"
                             >
                               <Calendar className="w-3 h-3" />
                               <span>Jadwal</span>
@@ -2088,7 +2088,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
       {activeTab === 'perangkat' && (
         <div className="space-y-4">
           {/* Quick Banner to Validasi Modul Guru */}
-          <div className="bg-gradient-to-r from-blue-50 via-amber-50/40 to-emerald-50 border border-slate-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+          <div className="bg-gradient-to-r from-cyan-50 via-amber-50/40 to-emerald-50 border border-slate-200 p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
             <div className="flex items-center gap-3">
               <div className="p-2.5 bg-amber-500 text-white rounded-none shrink-0 shadow-xs">
                 <FolderUp className="w-5 h-5" />
@@ -2110,7 +2110,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
             <button
               type="button"
               onClick={() => setActiveTab('validasiModul')}
-              className="px-4 py-2 bg-[#004b87] hover:bg-blue-800 text-white text-xs font-bold rounded-none shadow-xs flex items-center gap-1.5 shrink-0 transition-all cursor-pointer"
+              className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white text-xs font-bold rounded-none shadow-xs flex items-center gap-1.5 shrink-0 transition-all cursor-pointer"
             >
               <ShieldCheck className="w-4 h-4" />
               <span>Buka Pusat Validasi Modul</span>
@@ -2121,10 +2121,10 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
           <div className="bg-white p-5 rounded-none border border-slate-200 shadow-xs space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <Award className="w-4 h-4 text-[#004b87]" />
+                <Award className="w-4 h-4 text-[#164e63]" />
                 <span>Capaian Pembelajaran (CP) & ATP Standard</span>
               </h3>
-              <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold">BSKAP Kemendikbudristek</span>
+              <span className="px-2 py-0.5 bg-cyan-100 text-cyan-800 text-[10px] font-bold">BSKAP Kemendikbudristek</span>
             </div>
             <p className="text-xs text-slate-600">
               Dokumen Capaian Pembelajaran standar nasional Kurikulum Merdeka yang menjadi acuan penyusunan Tujuan Pembelajaran (TP) dan Alur Tujuan Pembelajaran (ATP).
@@ -2133,7 +2133,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
               {['Fase A (Kelas 1-2 SD)', 'Fase B (Kelas 3-4 SD)', 'Fase C (Kelas 5-6 SD)', 'Fase D (Kelas 7-9 SMP)', 'Fase E (Kelas 10 SMA/SMK)', 'Fase F (Kelas 11-12 SMA/SMK)'].map(fase => (
                 <div key={fase} className="flex items-center justify-between p-2.5 bg-slate-50 border border-slate-200 text-xs">
                   <span className="font-semibold text-slate-700">{fase}</span>
-                  <button type="button" onClick={() => alert(`Mengunduh dokumen panduan CP & ATP untuk ${fase}`)} className="text-[#004b87] font-bold hover:underline flex items-center gap-1 cursor-pointer">
+                  <button type="button" onClick={() => alert(`Mengunduh dokumen panduan CP & ATP untuk ${fase}`)} className="text-[#164e63] font-bold hover:underline flex items-center gap-1 cursor-pointer">
                     <Download className="w-3.5 h-3.5" /> Unduh CP
                   </button>
                 </div>
@@ -2179,7 +2179,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                       >
                         <Trash2 className="w-3 h-3" /> Hapus
                       </button>
-                      <button type="button" onClick={() => alert(`Mengunduh Modul P5: ${p5.tema}`)} className="text-[#004b87] font-bold hover:underline cursor-pointer flex items-center gap-1">
+                      <button type="button" onClick={() => alert(`Mengunduh Modul P5: ${p5.tema}`)} className="text-[#164e63] font-bold hover:underline cursor-pointer flex items-center gap-1">
                         <Download className="w-3 h-3" /> Unduh Modul
                       </button>
                     </div>
@@ -2204,7 +2204,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
               <button
                 type="button"
                 onClick={() => setShowEventModal(true)}
-                className="px-3 py-1.5 bg-[#004b87] hover:bg-blue-800 text-white font-bold text-xs rounded-none shadow-xs flex items-center gap-1.5 cursor-pointer"
+                className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs rounded-none shadow-xs flex items-center gap-1.5 cursor-pointer"
               >
                 <Plus className="w-3.5 h-3.5" /> Tambah Agenda
               </button>
@@ -2245,7 +2245,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                 <tbody className="divide-y divide-slate-100">
                   {rpeEvents.map((ev, idx) => (
                     <tr key={idx} className="hover:bg-slate-50">
-                      <td className="p-3 font-mono font-bold text-[#004b87]">{ev.date}</td>
+                      <td className="p-3 font-mono font-bold text-[#164e63]">{ev.date}</td>
                       <td className="p-3 font-bold text-slate-800">{ev.event}</td>
                       <td className="p-3">
                         <span className={`px-2 py-0.5 text-[10px] font-bold rounded-none ${
@@ -2309,7 +2309,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                       <td className="p-3 font-mono text-slate-600">{user.email}</td>
                       <td className="p-3 text-slate-600 font-mono">{user.nip || '-'}</td>
                       <td className="p-3 text-slate-700">{user.schoolName || 'SD Negeri 1 SIMAK'}</td>
-                      <td className="p-3 font-bold text-[#004b87]">{user.role}</td>
+                      <td className="p-3 font-bold text-[#164e63]">{user.role}</td>
                       <td className="p-3 text-center">
                         <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold text-[10px] rounded-none">
                           {user.status || 'Aktif'}
@@ -2339,7 +2339,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                             type="button"
                             onClick={() => handleModuleClick(user, 'jadwal')}
                             title="Inspeksi Jadwal & Modul"
-                            className="px-2 py-1 bg-blue-50 text-[#004b87] hover:bg-[#004b87] hover:text-white font-bold text-[11px] border border-blue-200 rounded-none transition-all cursor-pointer flex items-center gap-1"
+                            className="px-2 py-1 bg-cyan-50 text-[#164e63] hover:bg-[#164e63] hover:text-white font-bold text-[11px] border border-cyan-200 rounded-none transition-all cursor-pointer flex items-center gap-1"
                           >
                             <Calendar className="w-3 h-3" />
                             <span>Jadwal</span>
@@ -2367,7 +2367,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
           <div className="bg-white rounded-none max-w-lg w-full shadow-2xl animate-in fade-in zoom-in-95 duration-150 my-auto max-h-[90vh] flex flex-col border border-slate-200">
             <div className="p-5 border-b border-slate-100 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-blue-50 text-[#004b87] rounded-none">
+                <div className="p-2 bg-cyan-50 text-[#164e63] rounded-none">
                   {editingJjmIndex !== null ? <Edit3 className="w-5 h-5" /> : <Plus className="w-5 h-5" />}
                 </div>
                 <div>
@@ -2397,7 +2397,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                       value={jjmCode}
                       onChange={(e) => setJjmCode(e.target.value)}
                       placeholder="Contoh: MAT-01"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-mono font-bold focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                   </div>
                   <div className="sm:col-span-2">
@@ -2408,7 +2408,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                       value={jjmName}
                       onChange={(e) => setJjmName(e.target.value)}
                       placeholder="Contoh: Matematika Tingkat Lanjut"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                   </div>
                 </div>
@@ -2419,7 +2419,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                     <select
                       value={jjmFase}
                       onChange={(e) => setJjmFase(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer"
                     >
                       <option value="Fase A (Kelas 1-2 SD)">Fase A (Kelas 1-2 SD)</option>
                       <option value="Fase B (Kelas 3-4 SD)">Fase B (Kelas 3-4 SD)</option>
@@ -2438,7 +2438,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                       max={100}
                       value={jjmKktp}
                       onChange={(e) => setJjmKktp(Number(e.target.value))}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                   </div>
                 </div>
@@ -2452,7 +2452,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                       max={10}
                       value={jjmIntra}
                       onChange={(e) => setJjmIntra(Number(e.target.value))}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-none text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600"
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-none text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-600"
                     />
                   </div>
                   <div>
@@ -2466,7 +2466,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                       className="w-full px-3 py-2 bg-white border border-slate-300 rounded-none text-xs font-bold text-amber-700 focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                   </div>
-                  <div className="col-span-2 text-right text-xs font-bold text-[#004b87]">
+                  <div className="col-span-2 text-right text-xs font-bold text-[#164e63]">
                     Total Alokasi: {Number(jjmIntra) + Number(jjmP5)} JP / Minggu
                   </div>
                 </div>
@@ -2479,7 +2479,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                       value={jjmGuru}
                       onChange={(e) => setJjmGuru(e.target.value)}
                       placeholder="Nama guru pengampu..."
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                     {teacherUsers.length > 0 && (
                       <div className="flex flex-wrap gap-1 items-center pt-1">
@@ -2489,7 +2489,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                             key={u.uid || u.email}
                             type="button"
                             onClick={() => setJjmGuru(u.name)}
-                            className="px-2 py-0.5 bg-slate-100 hover:bg-blue-100 hover:text-[#004b87] text-slate-700 text-[10px] font-bold rounded-none border border-slate-200 cursor-pointer"
+                            className="px-2 py-0.5 bg-slate-100 hover:bg-cyan-100 hover:text-[#164e63] text-slate-700 text-[10px] font-bold rounded-none border border-slate-200 cursor-pointer"
                           >
                             {u.name}
                           </button>
@@ -2510,7 +2510,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#004b87] hover:bg-blue-800 text-white rounded-none text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                  className="px-5 py-2 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                 >
                   <Save className="w-4 h-4" />
                   <span>Simpan Alokasi JJM</span>
@@ -2649,7 +2649,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
           <div className="bg-white rounded-none max-w-md w-full shadow-2xl p-5 border border-slate-200 space-y-4">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                <Plus className="w-4 h-4 text-[#004b87]" />
+                <Plus className="w-4 h-4 text-[#164e63]" />
                 <span>Tambah Agenda Kalender Akademik</span>
               </h3>
               <button type="button" onClick={() => setShowEventModal(false)} className="text-slate-400 hover:text-slate-600">
@@ -2666,7 +2666,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                   value={newEventName}
                   onChange={(e) => setNewEventName(e.target.value)}
                   placeholder="Contoh: Asesmen Bakat Minat (ABM)"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600"
                 />
               </div>
 
@@ -2678,7 +2678,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                   value={newEventDate}
                   onChange={(e) => setNewEventDate(e.target.value)}
                   placeholder="Contoh: 10 - 14 November 2026"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-mono font-medium focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-mono font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600"
                 />
               </div>
 
@@ -2687,7 +2687,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                 <select
                   value={newEventCategory}
                   onChange={(e) => setNewEventCategory(e.target.value)}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600"
                 >
                   <option value="Asesmen">Asesmen & Penilaian</option>
                   <option value="Pelaporan">Pelaporan & Rapor</option>
@@ -2702,7 +2702,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                   value={newEventDesc}
                   onChange={(e) => setNewEventDesc(e.target.value)}
                   placeholder="Deskripsi singkat kegiatan..."
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 h-20 resize-none"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 h-20 resize-none"
                 />
               </div>
 
@@ -2716,7 +2716,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#004b87] hover:bg-blue-800 text-white font-bold text-xs shadow-xs"
+                  className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs shadow-xs"
                 >
                   Simpan Agenda
                 </button>
@@ -2884,7 +2884,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                     value={formEditName}
                     onChange={(e) => setFormEditName(e.target.value)}
                     placeholder="Contoh: Shahrur Robby, S.Pd."
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                   />
                 </div>
 
@@ -2898,7 +2898,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                       onChange={(e) => setFormEditEmail(e.target.value)}
                       disabled={isMasterAccount(selectedUserForEdit.email, selectedUserForEdit.name)}
                       placeholder="email@simakmerdeka.ai.studio"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white disabled:bg-slate-100 disabled:text-slate-400"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white disabled:bg-slate-100 disabled:text-slate-400"
                     />
                   </div>
                   <div>
@@ -2908,7 +2908,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                       value={formEditNip}
                       onChange={(e) => setFormEditNip(e.target.value)}
                       placeholder="19870512 201001 1 003"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-mono focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                   </div>
                 </div>
@@ -2921,7 +2921,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                       value={formEditSchool}
                       onChange={(e) => setFormEditSchool(e.target.value)}
                       placeholder="SD Negeri 1 SIMAK"
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                     />
                   </div>
                   <div>
@@ -2929,7 +2929,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                     <select
                       value={formEditRole}
                       onChange={(e) => setFormEditRole(e.target.value)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer"
                     >
                       <option value="Guru Pengampu">Guru Pengampu</option>
                       <option value="Guru Kelas">Guru Kelas</option>
@@ -2951,7 +2951,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                         value={formEditPassword}
                         onChange={(e) => setFormEditPassword(e.target.value)}
                         placeholder="Biarkan kosong jika tidak diubah"
-                        className="w-full pl-3.5 pr-9 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                        className="w-full pl-3.5 pr-9 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                       />
                       <button
                         type="button"
@@ -2969,7 +2969,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                       value={formEditStatus}
                       onChange={(e) => setFormEditStatus(e.target.value as 'Aktif' | 'Nonaktif')}
                       disabled={isMasterAccount(selectedUserForEdit.email, selectedUserForEdit.name)}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white cursor-pointer disabled:bg-slate-100 disabled:text-slate-400"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-none text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white cursor-pointer disabled:bg-slate-100 disabled:text-slate-400"
                     >
                       <option value="Aktif">Aktif (Dapat Login)</option>
                       <option value="Nonaktif">Nonaktif (Akses Dibatasi)</option>
@@ -2989,7 +2989,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                  className="px-5 py-2.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                 >
                   <Save className="w-4 h-4" />
                   <span>Simpan Perubahan</span>
@@ -3007,11 +3007,11 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-4 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="w-11 h-11 bg-[#004b87] text-white rounded-none flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
+                <div className="w-11 h-11 bg-[#164e63] text-white rounded-none flex items-center justify-center font-black text-sm shrink-0 shadow-xs">
                   {selectedUserForModule.name ? selectedUserForModule.name.charAt(0).toUpperCase() : 'U'}
                 </div>
                 <div>
-                  <div className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-[#004b87] uppercase tracking-wider">
+                  <div className="inline-flex items-center gap-1.5 text-[10px] font-extrabold text-[#164e63] uppercase tracking-wider">
                     <Building2 className="w-3 h-3" />
                     <span>{selectedUserForModule.schoolName || 'SD Negeri 1 SIMAK'}</span>
                   </div>
@@ -3141,10 +3141,10 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                       <>
                         {/* Summary JJM Cards */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                          <div className="p-3.5 bg-blue-50 border border-blue-200">
-                            <div className="text-[11px] font-bold text-blue-900 uppercase">Total Jam Mengajar (JJM)</div>
-                            <div className="text-2xl font-black text-[#004b87] mt-1">{totalAssignedJp} JP <span className="text-xs font-medium text-slate-500">/ Minggu</span></div>
-                            <div className="text-[10px] text-blue-700 mt-1 font-semibold">
+                          <div className="p-3.5 bg-cyan-50 border border-cyan-200">
+                            <div className="text-[11px] font-bold text-cyan-900 uppercase">Total Jam Mengajar (JJM)</div>
+                            <div className="text-2xl font-black text-[#164e63] mt-1">{totalAssignedJp} JP <span className="text-xs font-medium text-slate-500">/ Minggu</span></div>
+                            <div className="text-[10px] text-cyan-700 mt-1 font-semibold">
                               {totalAssignedJp >= 24 ? '✓ Memenuhi Beban Linier Sertifikasi' : '⚠️ Kurang dari 24 JP standar sertifikasi'}
                             </div>
                           </div>
@@ -3166,7 +3166,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                         <div className="bg-slate-50 p-4 border border-slate-200 space-y-3">
                           <div className="flex items-center justify-between">
                             <h4 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                              <BookOpen className="w-4 h-4 text-blue-700" />
+                              <BookOpen className="w-4 h-4 text-cyan-700" />
                               <span>Daftar Mata Pelajaran yang Diampu</span>
                             </h4>
                             <span className="text-[11px] text-slate-500 font-medium">Beban Mengajar Resmi</span>
@@ -3182,7 +3182,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                                     <th className="p-2.5">Fase / Kelas</th>
                                     <th className="p-2.5 text-center">Intra</th>
                                     <th className="p-2.5 text-center">P5</th>
-                                    <th className="p-2.5 text-center font-black text-blue-900">Total JJM</th>
+                                    <th className="p-2.5 text-center font-black text-cyan-900">Total JJM</th>
                                     <th className="p-2.5 text-center">KKTP</th>
                                   </tr>
                                 </thead>
@@ -3194,7 +3194,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                                       <td className="p-2.5 text-slate-600">{m.fase}</td>
                                       <td className="p-2.5 text-center font-mono">{m.jjm} JP</td>
                                       <td className="p-2.5 text-center font-mono">{m.p5} JP</td>
-                                      <td className="p-2.5 text-center font-mono font-bold text-blue-900 bg-blue-50/50">{m.total} JP</td>
+                                      <td className="p-2.5 text-center font-mono font-bold text-cyan-900 bg-cyan-50/50">{m.total} JP</td>
                                       <td className="p-2.5 text-center font-mono font-bold text-emerald-700">{m.kktp}</td>
                                     </tr>
                                   ))}
@@ -3235,7 +3235,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                             ].map((slot, idx) => (
                               <div key={idx} className="p-3 bg-white border border-slate-200 space-y-1">
                                 <div className="flex items-center justify-between text-xs">
-                                  <span className="font-extrabold text-[#004b87]">{slot.day}</span>
+                                  <span className="font-extrabold text-[#164e63]">{slot.day}</span>
                                   <span className="font-mono text-[11px] text-slate-500">{slot.time}</span>
                                 </div>
                                 <div className="text-xs font-bold text-slate-800 truncate">{slot.mapel}</div>
@@ -3259,7 +3259,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
               <button
                 type="button"
                 onClick={() => setShowModuleModal(false)}
-                className="px-5 py-2 bg-[#004b87] hover:bg-blue-800 text-white text-xs font-bold rounded-none transition-colors cursor-pointer shadow-xs"
+                className="px-5 py-2 bg-[#164e63] hover:bg-cyan-800 text-white text-xs font-bold rounded-none transition-colors cursor-pointer shadow-xs"
               >
                 Tutup Inspector
               </button>
@@ -3275,7 +3275,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
             {/* Modal Header */}
             <div className="flex items-center justify-between border-b border-slate-100 pb-3 shrink-0">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-blue-50 text-[#004b87] rounded-none shrink-0">
+                <div className="p-2.5 bg-cyan-50 text-[#164e63] rounded-none shrink-0">
                   <ShieldCheck className="w-5 h-5" />
                 </div>
                 <div>
@@ -3298,7 +3298,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
             {/* Document Info Card */}
             <div className="bg-slate-50 p-3.5 border border-slate-200 space-y-2 text-xs shrink-0">
               <div className="flex items-center justify-between">
-                <span className="px-2 py-0.5 bg-blue-100 text-[#004b87] font-bold text-[10px]">
+                <span className="px-2 py-0.5 bg-cyan-100 text-[#164e63] font-bold text-[10px]">
                   {selectedDocForValidation.category}
                 </span>
                 <span className="font-mono text-slate-500 text-[11px]">ID: {selectedDocForValidation.id}</span>
@@ -3319,7 +3319,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                 </div>
                 <div>
                   <span className="text-slate-400 font-medium">Nama File:</span>
-                  <div className="font-mono text-[#004b87] font-bold truncate">{selectedDocForValidation.fileName}</div>
+                  <div className="font-mono text-[#164e63] font-bold truncate">{selectedDocForValidation.fileName}</div>
                 </div>
               </div>
             </div>
@@ -3408,7 +3408,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                   value={valVerifier}
                   onChange={(e) => setValVerifier(e.target.value)}
                   placeholder="Contoh: Shahrur Robby, S.Pd. (Waka Kurikulum)"
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
                 />
               </div>
 
@@ -3425,7 +3425,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                   onChange={(e) => setValNotes(e.target.value)}
                   rows={3}
                   placeholder="Tuliskan catatan evaluasi, kekuatan modul, atau hal-hal yang perlu diperbaiki oleh guru..."
-                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 focus:bg-white resize-none"
+                  className="w-full px-3.5 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white resize-none"
                 />
 
                 {/* Quick Recommendation Chips */}
@@ -3444,7 +3444,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                         onClick={() => {
                           setValNotes(prev => prev ? `${prev} ${snippet}` : snippet);
                         }}
-                        className="px-2 py-1 bg-slate-100 hover:bg-blue-50 hover:text-blue-700 text-slate-600 text-[10px] font-medium border border-slate-200 transition-colors cursor-pointer"
+                        className="px-2 py-1 bg-slate-100 hover:bg-cyan-50 hover:text-cyan-700 text-slate-600 text-[10px] font-medium border border-slate-200 transition-colors cursor-pointer"
                       >
                         + {snippet}
                       </button>
@@ -3467,7 +3467,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-5 py-2 bg-[#004b87] hover:bg-blue-800 text-white font-bold text-xs rounded-none shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-5 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs rounded-none shadow-xs flex items-center gap-1.5 transition-all cursor-pointer"
                 >
                   <Save className="w-4 h-4" />
                   <span>Simpan & Terapkan Validasi</span>
@@ -3483,7 +3483,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white rounded-none shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Modal Header */}
-            <div className="bg-[#004b87] text-white p-4 flex items-center justify-between">
+            <div className="bg-[#164e63] text-white p-4 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="p-1.5 bg-white/10 rounded-none">
                   <Clock className="w-5 h-5 text-amber-300" />
@@ -3492,7 +3492,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                   <h3 className="font-bold text-sm">
                     {editingScheduleItem ? 'Edit Sesi Jadwal Mata Pelajaran' : 'Tambah Sesi Jadwal Baru'}
                   </h3>
-                  <p className="text-[11px] text-blue-200">
+                  <p className="text-[11px] text-cyan-200">
                     Atur jadwal tatap muka 1 minggu per rombel kelas
                   </p>
                 </div>
@@ -3597,7 +3597,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                         setSchSubject(m.name);
                         if (m.guru) setSchTeacher(m.guru);
                       }}
-                      className="px-1.5 py-0.5 bg-slate-100 hover:bg-blue-100 hover:text-blue-800 text-[10px] text-slate-600 border border-slate-200 cursor-pointer truncate max-w-[160px]"
+                      className="px-1.5 py-0.5 bg-slate-100 hover:bg-cyan-100 hover:text-cyan-800 text-[10px] text-slate-600 border border-slate-200 cursor-pointer truncate max-w-[160px]"
                     >
                       {m.name}
                     </button>
@@ -3757,7 +3757,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white rounded-none shadow-2xl border border-slate-200 w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden animate-in zoom-in-95 duration-200">
             {/* Header */}
-            <div className="bg-[#004b87] text-white p-4 flex items-center justify-between shrink-0">
+            <div className="bg-[#164e63] text-white p-4 flex items-center justify-between shrink-0">
               <div className="flex items-center gap-2">
                 <Printer className="w-5 h-5 text-amber-300" />
                 <h3 className="font-bold text-sm">Pratinjau Cetak: Jadwal Pelajaran 1 Minggu</h3>
@@ -3847,7 +3847,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
         <div className="fixed top-6 right-6 z-50 bg-white border border-emerald-200 shadow-2xl rounded-none p-3.5 sm:p-4 flex items-center gap-3.5 animate-in fade-in zoom-in-90 slide-in-from-top-6 duration-300">
           <div className={`w-11 h-11 rounded-full flex items-center justify-center shrink-0 shadow-md text-white ${
             toastMessage.type === 'success' ? 'bg-emerald-500 ring-4 ring-emerald-100' :
-            toastMessage.type === 'error' ? 'bg-rose-500 ring-4 ring-rose-100' : 'bg-blue-600 ring-4 ring-blue-100'
+            toastMessage.type === 'error' ? 'bg-rose-500 ring-4 ring-rose-100' : 'bg-cyan-600 ring-4 ring-cyan-100'
           }`}>
             {toastMessage.type === 'success' ? (
               <Check className="w-6 h-6 stroke-[3] animate-[spin_0.7s_ease-out_1] transition-transform" />

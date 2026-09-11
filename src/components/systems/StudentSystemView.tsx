@@ -446,12 +446,12 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
         </div>
 
         <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
-          <div className="p-3 bg-blue-50 text-[#004b87] rounded-none shrink-0">
+          <div className="p-3 bg-cyan-50 text-[#164e63] rounded-none shrink-0">
             <Users className="w-5 h-5" />
           </div>
           <div>
             <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Rasio Gender</div>
-            <div className="text-xl font-black text-[#004b87]">{totalLaki} L <span className="text-xs font-normal text-slate-500">•</span> {totalPerempuan} P</div>
+            <div className="text-xl font-black text-[#164e63]">{totalLaki} L <span className="text-xs font-normal text-slate-500">•</span> {totalPerempuan} P</div>
           </div>
         </div>
 
@@ -603,7 +603,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                   value={searchStudent}
                   onChange={(e) => setSearchStudent(e.target.value)}
                   placeholder="Cari nama, NIS, atau NISN..."
-                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs w-48 sm:w-56 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs w-48 sm:w-56 focus:outline-none focus:ring-2 focus:ring-cyan-600"
                 />
               </div>
               <select
@@ -622,7 +622,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
               <button
                 type="button"
                 onClick={() => setShowAddStudentModal(true)}
-                className="px-3 py-1.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+                className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
               >
                 <UserPlus className="w-3.5 h-3.5" />
                 <span>Tambah Siswa</span>
@@ -666,10 +666,10 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                   filteredStudentList.map(s => (
                     <tr key={s.id} className="hover:bg-slate-50">
                       <td className="p-3 font-mono font-bold text-slate-700">{s.nis}</td>
-                      <td className="p-3 font-mono text-[#004b87]">{s.nisn}</td>
+                      <td className="p-3 font-mono text-[#164e63]">{s.nisn}</td>
                       <td className="p-3 font-bold text-slate-800">{s.name}</td>
                       <td className="p-3 text-center font-bold">
-                        <span className={`px-1.5 py-0.5 text-[10px] ${s.gender === 'L' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'}`}>
+                        <span className={`px-1.5 py-0.5 text-[10px] ${s.gender === 'L' ? 'bg-cyan-100 text-cyan-800' : 'bg-pink-100 text-pink-800'}`}>
                           {s.gender}
                         </span>
                       </td>
@@ -733,7 +733,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
             <button
               type="button"
               onClick={() => onNavigateTab && onNavigateTab('attendance')}
-              className="px-3 py-1.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+              className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
             >
               <ClipboardCheck className="w-3.5 h-3.5" />
               <span>Buka Presensi Lengkap</span>
@@ -746,10 +746,10 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
               <div className="text-2xl font-black text-emerald-900">{dynamicPresensiStats.hadir}</div>
               <p className="text-[11px] text-emerald-700">Tingkat kehadiran siswa</p>
             </div>
-            <div className="p-4 bg-blue-50 border border-blue-200 space-y-1">
-              <div className="text-xs font-bold text-blue-800 uppercase">Sakit (S)</div>
-              <div className="text-2xl font-black text-blue-900">{dynamicPresensiStats.sakit}</div>
-              <p className="text-[11px] text-blue-700">Dengan surat keterangan dokter</p>
+            <div className="p-4 bg-cyan-50 border border-cyan-200 space-y-1">
+              <div className="text-xs font-bold text-cyan-800 uppercase">Sakit (S)</div>
+              <div className="text-2xl font-black text-cyan-900">{dynamicPresensiStats.sakit}</div>
+              <p className="text-[11px] text-cyan-700">Dengan surat keterangan dokter</p>
             </div>
             <div className="p-4 bg-amber-50 border border-amber-200 space-y-1">
               <div className="text-xs font-bold text-amber-800 uppercase">Izin (I)</div>
@@ -778,7 +778,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                     <th className="p-3 text-center">Sakit (S)</th>
                     <th className="p-3 text-center">Izin (I)</th>
                     <th className="p-3 text-center">Alpa (A)</th>
-                    <th className="p-3 text-center bg-blue-50/50">Persentase Kehadiran</th>
+                    <th className="p-3 text-center bg-cyan-50/50">Persentase Kehadiran</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -795,10 +795,10 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                         <td className="p-3 font-bold text-slate-800">{student.name}</td>
                         <td className="p-3 text-slate-600 font-medium">{student.className}</td>
                         <td className="p-3 text-center font-semibold text-emerald-600">{h}</td>
-                        <td className="p-3 text-center font-semibold text-blue-600">{s}</td>
+                        <td className="p-3 text-center font-semibold text-cyan-600">{s}</td>
                         <td className="p-3 text-center font-semibold text-amber-600">{i}</td>
                         <td className="p-3 text-center font-semibold text-rose-600">{a}</td>
-                        <td className="p-3 text-center font-black text-[#004b87] bg-blue-50/40">{rate}</td>
+                        <td className="p-3 text-center font-black text-[#164e63] bg-cyan-50/40">{rate}</td>
                       </tr>
                     );
                   })}
@@ -829,7 +829,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
               <button
                 type="button"
                 onClick={() => onNavigateTab && onNavigateTab('grades')}
-                className="px-3 py-1.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Cetak Rapor Siswa</span>
@@ -846,7 +846,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                   <th className="p-3">Kelas</th>
                   <th className="p-3 text-center">Formatif (40%)</th>
                   <th className="p-3 text-center">Sumatif (60%)</th>
-                  <th className="p-3 text-center bg-blue-50/50">Nilai Akhir</th>
+                  <th className="p-3 text-center bg-cyan-50/50">Nilai Akhir</th>
                   <th className="p-3 text-center">Predikat</th>
                   <th className="p-3 text-center">Status</th>
                 </tr>
@@ -859,7 +859,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                     <td className="p-3 font-semibold text-slate-600">{l.kelas}</td>
                     <td className="p-3 text-center font-semibold text-slate-700">{l.formatif}</td>
                     <td className="p-3 text-center font-semibold text-slate-700">{l.sumatif}</td>
-                    <td className="p-3 text-center font-black text-[#004b87] bg-blue-50/40">{l.nilaiAkhir}</td>
+                    <td className="p-3 text-center font-black text-[#164e63] bg-cyan-50/40">{l.nilaiAkhir}</td>
                     <td className="p-3 text-center font-bold text-emerald-700">{l.predikat}</td>
                     <td className="p-3 text-center">
                       <span className={`px-2 py-0.5 font-bold text-[10px] rounded-none ${
@@ -1028,7 +1028,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
       {showAddStudentModal && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white border border-slate-300 w-full max-w-lg shadow-2xl rounded-none overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="bg-[#004b87] text-white p-4 flex items-center justify-between">
+            <div className="bg-[#164e63] text-white p-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <UserPlus className="w-5 h-5 text-cyan-300" />
                 <h3 className="font-bold text-sm">Tambah Data Siswa Baru</h3>
@@ -1051,7 +1051,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                   value={newStudentForm.name}
                   onChange={(e) => setNewStudentForm({ ...newStudentForm, name: e.target.value })}
                   placeholder="Contoh: Ahmad Rizky Pratama"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-600 font-medium"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-600 font-medium"
                 />
               </div>
 
@@ -1063,7 +1063,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                     value={newStudentForm.nis}
                     onChange={(e) => setNewStudentForm({ ...newStudentForm, nis: e.target.value })}
                     placeholder="Contoh: 21221001"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-600 font-mono"
                   />
                 </div>
                 <div>
@@ -1073,7 +1073,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                     value={newStudentForm.nisn}
                     onChange={(e) => setNewStudentForm({ ...newStudentForm, nisn: e.target.value })}
                     placeholder="Contoh: 0071829301"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-600 font-mono"
                   />
                 </div>
               </div>
@@ -1084,7 +1084,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                   <select
                     value={newStudentForm.gender}
                     onChange={(e) => setNewStudentForm({ ...newStudentForm, gender: e.target.value as 'L' | 'P' })}
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-600 font-bold cursor-pointer"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-600 font-bold cursor-pointer"
                   >
                     <option value="L">Laki-Laki (L)</option>
                     <option value="P">Perempuan (P)</option>
@@ -1098,7 +1098,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                     value={newStudentForm.className}
                     onChange={(e) => setNewStudentForm({ ...newStudentForm, className: e.target.value })}
                     placeholder="Contoh: X-IPA 2"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-600 font-bold"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-600 font-bold"
                   />
                 </div>
               </div>
@@ -1111,7 +1111,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                     value={newStudentForm.parentName}
                     onChange={(e) => setNewStudentForm({ ...newStudentForm, parentName: e.target.value })}
                     placeholder="Contoh: H. Bambang Subagyo"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-600"
                   />
                 </div>
                 <div>
@@ -1121,7 +1121,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                     value={newStudentForm.parentPhone}
                     onChange={(e) => setNewStudentForm({ ...newStudentForm, parentPhone: e.target.value })}
                     placeholder="Contoh: 081234567890"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-600 font-mono"
                   />
                 </div>
               </div>
@@ -1131,7 +1131,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                 <select
                   value={newStudentForm.status}
                   onChange={(e) => setNewStudentForm({ ...newStudentForm, status: e.target.value as 'Aktif' | 'Mutasi' | 'Cuti' })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-600 font-bold cursor-pointer"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-600 font-bold cursor-pointer"
                 >
                   <option value="Aktif">Aktif</option>
                   <option value="Mutasi">Mutasi / Pindah</option>
@@ -1149,7 +1149,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#004b87] hover:bg-blue-800 text-white font-bold text-xs rounded-none cursor-pointer flex items-center gap-1.5"
+                  className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs rounded-none cursor-pointer flex items-center gap-1.5"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Simpan Data Siswa</span>

@@ -243,12 +243,12 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
         </div>
 
         <div className="bg-white p-4 rounded-none border border-slate-200 shadow-xs flex items-center gap-3.5 border-l-4 border-l-blue-600">
-          <div className="p-3 bg-blue-50 text-blue-700 shrink-0">
+          <div className="p-3 bg-cyan-50 text-cyan-700 shrink-0">
             <TrendingUp className="w-6 h-6" />
           </div>
           <div>
             <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Penerimaan Dana BOS</div>
-            <div className="text-lg font-black text-blue-800">Rp 120.000.000</div>
+            <div className="text-lg font-black text-cyan-800">Rp 120.000.000</div>
             <div className="text-[10px] text-emerald-600 font-bold">Pencairan Tahap II (100%)</div>
           </div>
         </div>
@@ -297,13 +297,13 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
             onClick={() => setActiveTab('spp')}
             className={`px-4 py-3 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
               activeTab === 'spp'
-                ? 'border-[#004b87] text-[#004b87] bg-blue-50/50'
+                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/50'
                 : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
             }`}
           >
             <CreditCard className="w-4 h-4" />
             <span>Pembayaran SPP / Komite Siswa</span>
-            <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-extrabold rounded-none">
+            <span className="px-2 py-0.5 bg-cyan-100 text-cyan-800 text-[10px] font-extrabold rounded-none">
               {sppRecords.length} Siswa
             </span>
           </button>
@@ -366,7 +366,7 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     placeholder="Cari nama siswa / kuitansi..."
-                    className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 text-xs w-48 sm:w-56 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 text-xs w-48 sm:w-56 focus:outline-none focus:ring-2 focus:ring-cyan-600"
                   />
                 </div>
 
@@ -412,7 +412,7 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
                   {filteredSppRecords.length > 0 ? (
                     filteredSppRecords.map(r => (
                       <tr key={r.id} className="hover:bg-slate-50">
-                        <td className="p-3 font-mono font-bold text-[#004b87]">{r.receiptNo}</td>
+                        <td className="p-3 font-mono font-bold text-[#164e63]">{r.receiptNo}</td>
                         <td className="p-3 font-bold text-slate-800">{r.studentName}</td>
                         <td className="p-3 font-semibold text-slate-700">{r.className}</td>
                         <td className="p-3 text-slate-600">{r.month}</td>
@@ -434,7 +434,7 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
                                 setSelectedPaySpp(r);
                                 setShowPayModal(true);
                               }}
-                              className="px-3 py-1 bg-[#004b87] hover:bg-blue-800 text-white font-bold text-[11px] cursor-pointer shadow-2xs transition-all flex items-center justify-center gap-1 mx-auto"
+                              className="px-3 py-1 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-[11px] cursor-pointer shadow-2xs transition-all flex items-center justify-center gap-1 mx-auto"
                             >
                               <CreditCard className="w-3 h-3" />
                               <span>Bayar SPP</span>
@@ -517,7 +517,7 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
                       </td>
                       <td className="p-3">
                         <span className={`px-2 py-0.5 font-bold text-[10px] ${
-                          exp.source === 'Dana BOS' ? 'bg-blue-100 text-blue-800' : 'bg-emerald-100 text-emerald-800'
+                          exp.source === 'Dana BOS' ? 'bg-cyan-100 text-cyan-800' : 'bg-emerald-100 text-emerald-800'
                         }`}>
                           {exp.source}
                         </span>
@@ -544,7 +544,7 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="px-3 py-1.5 bg-[#004b87] hover:bg-blue-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Cetak Laporan Keuangan PDF</span>
@@ -602,7 +602,7 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
       {showPayModal && selectedPaySpp && (
         <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
           <div className="bg-white border border-slate-300 w-full max-w-md shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="bg-[#004b87] text-white p-4 flex items-center justify-between">
+            <div className="bg-[#164e63] text-white p-4 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <CreditCard className="w-5 h-5 text-amber-300" />
                 <h3 className="font-bold text-sm">Catat Pembayaran SPP Siswa</h3>
@@ -613,11 +613,11 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
             </div>
 
             <form onSubmit={handleConfirmPayment} className="p-5 space-y-4 text-xs">
-              <div className="p-3 bg-blue-50 border border-blue-200 space-y-1 font-medium text-slate-800">
+              <div className="p-3 bg-cyan-50 border border-cyan-200 space-y-1 font-medium text-slate-800">
                 <div><strong>Nama Siswa:</strong> {selectedPaySpp.studentName}</div>
                 <div><strong>Kelas:</strong> {selectedPaySpp.className}</div>
                 <div><strong>Bulan Tagihan:</strong> {selectedPaySpp.month}</div>
-                <div><strong>Nominal Tagihan:</strong> <span className="font-mono font-bold text-blue-900">{formatRupiah(selectedPaySpp.amount)}</span></div>
+                <div><strong>Nominal Tagihan:</strong> <span className="font-mono font-bold text-cyan-900">{formatRupiah(selectedPaySpp.amount)}</span></div>
               </div>
 
               <div>
@@ -627,7 +627,7 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
                   required
                   value={payForm.date}
                   onChange={(e) => setPayForm({ ...payForm, date: e.target.value })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 font-mono"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 font-mono"
                 />
               </div>
 
@@ -636,7 +636,7 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
                 <select
                   value={payForm.method}
                   onChange={(e) => setPayForm({ ...payForm, method: e.target.value as any })}
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-600 font-bold cursor-pointer"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 font-bold cursor-pointer"
                 >
                   <option value="Tunai">Tunai (Kasir Sekolah)</option>
                   <option value="Transfer Bank">Transfer Bank / VA</option>
@@ -654,7 +654,7 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#004b87] hover:bg-blue-800 text-white font-bold cursor-pointer flex items-center gap-1.5"
+                  className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold cursor-pointer flex items-center gap-1.5"
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Simpan & Terbitkan Kuitansi</span>

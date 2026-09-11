@@ -14,7 +14,7 @@ import {
 import { UserAccount, TeacherProfile } from '../types';
 
 interface MaintenanceScreenProps {
-  teacher: TeacherProfile;
+  teacher?: TeacherProfile;
   currentUser?: UserAccount | null;
   onRefreshStatus?: () => void;
   onOpenLogin?: () => void;
@@ -40,15 +40,15 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
     }, 1000);
   };
 
-  const displayName = currentUser?.name || teacher.name;
-  const displaySchool = currentUser?.schoolName || teacher.schoolName;
+  const displayName = currentUser?.name || teacher?.name || 'Pengguna';
+  const displaySchool = currentUser?.schoolName || teacher?.schoolName || 'SIMAK';
   const displayEmail = currentUser?.email || 'Akses Akun Terkunci';
 
   return (
-    <div className="min-h-screen bg-[#004b87] text-white flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden font-sans">
+    <div className="min-h-screen bg-[#164e63] text-white flex flex-col items-center justify-center p-4 sm:p-6 relative overflow-hidden font-sans">
       {/* Background Decorative Lighting */}
       <div className="absolute -top-32 -left-32 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-32 -right-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
       {/* Main Maintenance Card */}
       <div className="max-w-xl w-full bg-slate-800/90 backdrop-blur-md rounded-none border border-amber-500/30 p-6 sm:p-8 shadow-2xl relative z-10 text-center space-y-6">
@@ -78,7 +78,7 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
         </div>
 
         {/* User Account Info Box */}
-        <div className="bg-[#004b87]/80 rounded-none p-4 border border-slate-700/80 text-left space-y-2.5">
+        <div className="bg-[#164e63]/80 rounded-none p-4 border border-slate-700/80 text-left space-y-2.5">
           <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-1 flex justify-between items-center">
             <span>Detail Akun Terdampak</span>
             <span className="text-rose-300 bg-rose-500/20 px-2.5 py-0.5 rounded font-black border border-rose-500/30 text-[10px] animate-pulse">
@@ -96,7 +96,7 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
             </div>
 
             <div className="flex items-center space-x-2 text-slate-300">
-              <School className="w-4 h-4 text-blue-400 shrink-0" />
+              <School className="w-4 h-4 text-cyan-400 shrink-0" />
               <div className="truncate">
                 <div className="text-[10px] text-slate-500">Sekolah / Instansi</div>
                 <div className="font-semibold text-white truncate">{displaySchool}</div>
@@ -127,8 +127,8 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
         </div>
 
         {/* Automatic Realtime Info Alert */}
-        <div className="bg-blue-950/60 border border-blue-800/80 rounded-none p-3 text-left flex items-start space-x-2 text-xs text-blue-200">
-          <HelpCircle className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+        <div className="bg-cyan-950/60 border border-cyan-800/80 rounded-none p-3 text-left flex items-start space-x-2 text-xs text-cyan-200">
+          <HelpCircle className="w-4 h-4 text-cyan-400 shrink-0 mt-0.5" />
           <p className="leading-snug text-[11px]">
             <strong>Sinkronisasi Realtime:</strong> Sesaat setelah Administrator mengaktifkan kembali akun Anda, halaman ini akan langsung terbuka otomatis secara realtime.
           </p>

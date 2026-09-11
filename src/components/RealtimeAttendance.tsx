@@ -333,10 +333,10 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
     <div className="space-y-6">
       {/* Real-Time Attendance Counter Bar */}
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-        <div className="bg-[#004b87] text-white p-3 rounded-none flex flex-col justify-center border border-blue-900 shadow-2xs">
-          <span className="text-[10px] text-blue-200 uppercase font-bold tracking-wider">Tingkat Kehadiran</span>
+        <div className="bg-[#164e63] text-white p-3 rounded-none flex flex-col justify-center border border-cyan-900 shadow-2xs">
+          <span className="text-[10px] text-cyan-200 uppercase font-bold tracking-wider">Tingkat Kehadiran</span>
           <div className="text-2xl font-black text-amber-400 mt-0.5">{attendancePercentage}%</div>
-          <span className="text-[10px] text-blue-200">Total: {total} Siswa</span>
+          <span className="text-[10px] text-cyan-200">Total: {total} Siswa</span>
         </div>
 
         <div className="bg-white border border-slate-200 p-3 rounded-none shadow-2xs border-l-4 border-l-emerald-600">
@@ -384,7 +384,7 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
               <select
                 value={manualClass || (selectedClass !== 'Semua Kelas' ? selectedClass : '')}
                 onChange={(e) => setManualClass(e.target.value)}
-                className="h-9 bg-slate-50 border border-slate-300 text-xs px-3 rounded-none focus:outline-none focus:border-blue-500 text-slate-800 font-semibold cursor-pointer shrink-0"
+                className="h-9 bg-slate-50 border border-slate-300 text-xs px-3 rounded-none focus:outline-none focus:border-cyan-500 text-slate-800 font-semibold cursor-pointer shrink-0"
               >
                 <option value="">Semua Kelas</option>
                 {Array.from(new Set([...(classList || []), ...students.map(s => s.className)])).filter(c => Boolean(c) && c !== 'Semua Kelas' && c !== 'SEMUA').sort().map(cls => (
@@ -423,8 +423,8 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
         {/* Baris Pertemuan (Dibawah Tombol Tambah Presensi) dan Tombol Hapus Pertemuan */}
         <div className="flex flex-wrap items-center justify-between gap-2.5 pt-3 border-t border-slate-100">
           <div className="flex items-center space-x-2 flex-wrap gap-y-1.5">
-            <div className="flex items-center space-x-1.5 text-xs font-bold text-[#004b87]">
-              <BookOpen className="w-4 h-4 text-blue-600 shrink-0" />
+            <div className="flex items-center space-x-1.5 text-xs font-bold text-[#164e63]">
+              <BookOpen className="w-4 h-4 text-cyan-600 shrink-0" />
               <span>Pertemuan:</span>
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
@@ -435,7 +435,7 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
                   onClick={() => handleMeetingChange(mNo)}
                   className={`px-3 py-1 text-xs font-bold rounded-none transition-all cursor-pointer border ${
                     selectedMeetingNo === mNo
-                      ? 'bg-[#004b87] text-white border-blue-900 shadow-xs'
+                      ? 'bg-[#164e63] text-white border-cyan-900 shadow-xs'
                       : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
                   }`}
                   title={`Tampilkan Presensi Pertemuan Ke-${mNo}`}
@@ -560,14 +560,14 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-white border border-slate-300 rounded-none shadow-2xl w-full max-w-lg overflow-hidden">
             {/* Modal Header */}
-            <div className="bg-[#004b87] text-white p-4 flex items-center justify-between border-b border-blue-900">
+            <div className="bg-[#164e63] text-white p-4 flex items-center justify-between border-b border-cyan-900">
               <div className="flex items-center space-x-2.5">
                 <div className="w-8 h-8 bg-white/10 rounded-none flex items-center justify-center border border-white/20">
                   <PlusCircle className="w-4 h-4 text-amber-300" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold tracking-tight">Tambah / Buka Sesi Presensi Baru</h3>
-                  <p className="text-[11px] text-blue-200">Inisialisasi presensi kelas untuk pertemuan pembelajaran</p>
+                  <p className="text-[11px] text-cyan-200">Inisialisasi presensi kelas untuk pertemuan pembelajaran</p>
                 </div>
               </div>
               <button
@@ -588,7 +588,7 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
                     value={modalClass}
                     onChange={(e) => handleModalClassChange(e.target.value)}
                     required
-                    className="w-full bg-slate-50 border border-slate-300 px-3 py-2 rounded-none text-xs font-semibold focus:outline-none focus:border-blue-600"
+                    className="w-full bg-slate-50 border border-slate-300 px-3 py-2 rounded-none text-xs font-semibold focus:outline-none focus:border-cyan-600"
                   >
                     <option value="">-- Pilih Kelas --</option>
                     {Array.from(new Set([...(classList || []), ...students.map(s => s.className)])).filter(c => Boolean(c) && c !== 'Semua Kelas' && c !== 'SEMUA').sort().map(cls => (
@@ -609,7 +609,7 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
                     value={modalMeetingNo}
                     onChange={(e) => setModalMeetingNo(Math.max(1, parseInt(e.target.value) || 1))}
                     required
-                    className="w-full bg-slate-50 border border-slate-300 px-3 py-2 rounded-none text-xs font-bold focus:outline-none focus:border-blue-600"
+                    className="w-full bg-slate-50 border border-slate-300 px-3 py-2 rounded-none text-xs font-bold focus:outline-none focus:border-cyan-600"
                   />
                 </div>
               </div>
@@ -621,7 +621,7 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
                   <select
                     value={modalDefaultStatus}
                     onChange={(e) => setModalDefaultStatus(e.target.value as AttendanceStatus)}
-                    className="w-full bg-slate-50 border border-slate-300 px-3 py-2 rounded-none text-xs font-semibold focus:outline-none focus:border-blue-600"
+                    className="w-full bg-slate-50 border border-slate-300 px-3 py-2 rounded-none text-xs font-semibold focus:outline-none focus:border-cyan-600"
                   >
                     <option value="HADIR">Semua Hadir (Default)</option>
                     <option value="IZIN">Izin</option>
@@ -638,7 +638,7 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
                     placeholder="Contoh: Bab 1 - Pembelajaran"
                     value={modalNote}
                     onChange={(e) => setModalNote(e.target.value)}
-                    className="w-full bg-slate-50 border border-slate-300 px-3 py-2 rounded-none text-xs focus:outline-none focus:border-blue-600"
+                    className="w-full bg-slate-50 border border-slate-300 px-3 py-2 rounded-none text-xs focus:outline-none focus:border-cyan-600"
                   />
                 </div>
               </div>
@@ -654,7 +654,7 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#004b87] hover:bg-[#003d6d] text-white text-xs font-bold rounded-none shadow-md transition-colors cursor-pointer flex items-center space-x-1.5"
+                  className="px-4 py-2 bg-[#164e63] hover:bg-[#003d6d] text-white text-xs font-bold rounded-none shadow-md transition-colors cursor-pointer flex items-center space-x-1.5"
                 >
                   <CheckCircle2 className="w-4 h-4 text-white" />
                   <span>Simpan & Buka Presensi</span>
@@ -684,7 +684,7 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[#004b87] text-slate-200 uppercase tracking-wider text-[11px] font-bold">
+              <tr className="bg-[#164e63] text-slate-200 uppercase tracking-wider text-[11px] font-bold">
                 <th className="p-3.5 border-b border-slate-800 w-12 text-center">No</th>
                 <th className="p-3.5 border-b border-slate-800">Nama Siswa</th>
                 <th className="p-3.5 border-b border-slate-800 text-center w-16">L/P</th>
@@ -712,11 +712,11 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
                     <tr key={student.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="p-3.5 text-center font-bold text-slate-500">{index + 1}</td>
                       <td className="p-3.5">
-                        <div className="font-bold text-[#004b87] text-xs">{student.name}</div>
+                        <div className="font-bold text-[#164e63] text-xs">{student.name}</div>
                       </td>
                       <td className="p-3.5 text-center">
                         <span className={`px-2 py-0.5 rounded-none text-[10px] font-bold ${
-                          student.gender === 'L' ? 'bg-blue-100 text-blue-700' : 'bg-pink-100 text-pink-700'
+                          student.gender === 'L' ? 'bg-cyan-100 text-cyan-700' : 'bg-pink-100 text-pink-700'
                         }`}>
                           {student.gender}
                         </span>
@@ -724,7 +724,7 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
 
                       {/* Kolom Pertemuan Ke- */}
                       <td className="p-3.5 text-center">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-none text-[11px] font-bold bg-blue-50 text-blue-800 border border-blue-200">
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-none text-[11px] font-bold bg-cyan-50 text-cyan-800 border border-cyan-200">
                           Pertemuan {selectedMeetingNo}
                         </span>
                       </td>
@@ -782,7 +782,7 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
                           placeholder="Tambah keterangan..."
                           value={currentNote}
                           onChange={(e) => onUpdateAttendance(student.id, currentStatus, e.target.value, selectedDate, selectedMeetingNo)}
-                          className="w-full bg-slate-50 border border-slate-200 text-xs px-2.5 py-1 rounded-none focus:bg-white focus:border-blue-500 text-slate-800"
+                          className="w-full bg-slate-50 border border-slate-200 text-xs px-2.5 py-1 rounded-none focus:bg-white focus:border-cyan-500 text-slate-800"
                         />
                       </td>
 

@@ -175,7 +175,7 @@ export const PRESET_THEMES: {
     from: '#18568c',
     via: '#2372ab',
     to: '#114371',
-    previewGradient: 'from-blue-900 via-indigo-900 to-slate-950',
+    previewGradient: 'from-cyan-900 via-indigo-900 to-slate-950',
     showGrid: false,
     showMosaic: false
   }
@@ -512,15 +512,15 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
     <div className="space-y-6 max-w-4xl animate-fadeIn">
       
       {/* Top Header Card */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-none bg-gradient-to-r from-blue-50 via-slate-50 to-indigo-50 border border-blue-200 shadow-2xs">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-none bg-gradient-to-r from-cyan-50 via-slate-50 to-indigo-50 border border-cyan-200 shadow-2xs">
         <div className="flex items-center gap-3">
-          <div className="p-2.5 bg-[#004b87] text-white rounded-none shadow-xs">
+          <div className="p-2.5 bg-[#164e63] text-white rounded-none shadow-xs">
             <Palette className="w-5 h-5 text-amber-300" />
           </div>
           <div>
             <div className="flex items-center gap-2">
               <h2 className="text-sm font-bold text-slate-800">Pengaturan Background Halaman Login</h2>
-              <span className="px-2 py-0.5 bg-blue-100 text-[#004b87] font-bold text-[10px] rounded-none border border-blue-200">
+              <span className="px-2 py-0.5 bg-cyan-100 text-[#164e63] font-bold text-[10px] rounded-none border border-cyan-200">
                 Administrator
               </span>
             </div>
@@ -543,7 +543,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
           <button
             type="button"
             onClick={() => handleSave()}
-            className="px-4 py-2 bg-[#004b87] hover:bg-blue-800 text-white font-bold text-xs rounded-none flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95"
+            className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs rounded-none flex items-center gap-1.5 cursor-pointer shadow-xs transition-all active:scale-95"
           >
             <Save className="w-4 h-4 text-amber-300" />
             <span>Terapkan Latar</span>
@@ -609,7 +609,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
               <button
                 type="button"
                 onClick={handleConfirmResetToDefault}
-                className="px-4 py-2 bg-[#004b87] hover:bg-blue-800 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white text-xs font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
               >
                 <Check className="w-3.5 h-3.5 text-amber-300" />
                 <span>Ya, Reset ke Default</span>
@@ -632,7 +632,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
               onClick={() => setActiveSettingsTab('preset')}
               className={`flex-1 py-2 px-3 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeSettingsTab === 'preset'
-                  ? 'bg-[#004b87] text-white shadow-xs'
+                  ? 'bg-[#164e63] text-white shadow-xs'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -645,7 +645,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
               onClick={() => setActiveSettingsTab('colors')}
               className={`flex-1 py-2 px-3 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeSettingsTab === 'colors'
-                  ? 'bg-[#004b87] text-white shadow-xs'
+                  ? 'bg-[#164e63] text-white shadow-xs'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -658,7 +658,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
               onClick={() => setActiveSettingsTab('image')}
               className={`flex-1 py-2 px-3 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeSettingsTab === 'image'
-                  ? 'bg-[#004b87] text-white shadow-xs'
+                  ? 'bg-[#164e63] text-white shadow-xs'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -671,7 +671,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
               onClick={() => setActiveSettingsTab('effects')}
               className={`flex-1 py-2 px-3 text-xs font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 activeSettingsTab === 'effects'
-                  ? 'bg-[#004b87] text-white shadow-xs'
+                  ? 'bg-[#164e63] text-white shadow-xs'
                   : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
               }`}
             >
@@ -703,8 +703,8 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       onClick={() => handleSelectPreset(theme.id)}
                       className={`text-left p-3 border transition-all cursor-pointer relative flex flex-col justify-between ${
                         isSelected 
-                          ? 'border-[#004b87] ring-2 ring-blue-500 bg-blue-50/40 shadow-xs' 
-                          : 'border-slate-200 hover:border-blue-300 hover:bg-slate-50/80 bg-white'
+                          ? 'border-[#164e63] ring-2 ring-cyan-500 bg-cyan-50/40 shadow-xs' 
+                          : 'border-slate-200 hover:border-cyan-300 hover:bg-slate-50/80 bg-white'
                       }`}
                     >
                       <div>
@@ -721,7 +721,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                             )}
                           </div>
                           {isSelected && (
-                            <div className="absolute top-1.5 right-1.5 p-1 bg-[#004b87] text-white shadow-xs">
+                            <div className="absolute top-1.5 right-1.5 p-1 bg-[#164e63] text-white shadow-xs">
                               <Check className="w-3 h-3 stroke-[3]" />
                             </div>
                           )}
@@ -738,7 +738,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       <div className="mt-3 pt-2 border-t border-slate-100 flex items-center justify-between text-[10px]">
                         <span className="text-slate-400 font-mono text-[9px]">{theme.from} • {theme.to}</span>
                         {isSelected ? (
-                          <span className="text-[#004b87] font-bold flex items-center gap-1">
+                          <span className="text-[#164e63] font-bold flex items-center gap-1">
                             <CheckCircle2 className="w-3 h-3" /> Terpilih
                           </span>
                         ) : (
@@ -887,7 +887,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                         }))}
                         className={`p-2 text-center text-[10px] font-bold border transition-all cursor-pointer ${
                           config.gradientDirection === dir.id
-                            ? 'bg-[#004b87] text-white border-[#004b87]'
+                            ? 'bg-[#164e63] text-white border-[#164e63]'
                             : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                         }`}
                       >
@@ -920,8 +920,8 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       onClick={() => handleSelectPresetWallpaper(wp.url)}
                       className={`text-left border p-1.5 transition-all cursor-pointer relative group ${
                         config.imageUrl === wp.url && config.themePreset === 'custom-image'
-                          ? 'border-[#004b87] ring-2 ring-blue-500 bg-blue-50'
-                          : 'border-slate-200 hover:border-blue-300 bg-slate-50'
+                          ? 'border-[#164e63] ring-2 ring-cyan-500 bg-cyan-50'
+                          : 'border-slate-200 hover:border-cyan-300 bg-slate-50'
                       }`}
                     >
                       <div className="h-16 w-full overflow-hidden relative">
@@ -931,7 +931,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                         />
                         {config.imageUrl === wp.url && config.themePreset === 'custom-image' && (
-                          <div className="absolute top-1 right-1 p-0.5 bg-[#004b87] text-white">
+                          <div className="absolute top-1 right-1 p-0.5 bg-[#164e63] text-white">
                             <Check className="w-3 h-3" />
                           </div>
                         )}
@@ -1020,7 +1020,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                           }
                         }}
                         placeholder="https://contoh-domain.com/foto-sekolah.jpg"
-                        className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 text-xs font-mono focus:bg-white focus:outline-hidden focus:border-[#004b87]"
+                        className="flex-1 px-3 py-2 bg-slate-50 border border-slate-200 text-xs font-mono focus:bg-white focus:outline-hidden focus:border-[#164e63]"
                       />
                       <button
                         type="button"
@@ -1030,7 +1030,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                         Pasang URL
                       </button>
                     </div>
-                    <label className="px-4 py-2 bg-[#004b87] hover:bg-blue-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0 shadow-2xs">
+                    <label className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center justify-center gap-1.5 cursor-pointer shrink-0 shadow-2xs">
                       <Upload className="w-3.5 h-3.5" />
                       <span>Upload Foto Baru</span>
                       <input 
@@ -1044,10 +1044,10 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                 </div>
 
                 {/* Helpful Tip for Google Chrome 100% Zoom */}
-                <div className="p-3 bg-blue-50 border border-blue-200 text-blue-900 rounded-none text-xs flex items-start gap-2">
-                  <Info className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
+                <div className="p-3 bg-cyan-50 border border-cyan-200 text-cyan-900 rounded-none text-xs flex items-start gap-2">
+                  <Info className="w-4 h-4 text-cyan-700 shrink-0 mt-0.5" />
                   <div className="text-[11px] leading-relaxed">
-                    <span className="font-bold text-blue-900">Solusi Gambar Terlalu Besar pada Zoom Chrome 100%:</span>
+                    <span className="font-bold text-cyan-900">Solusi Gambar Terlalu Besar pada Zoom Chrome 100%:</span>
                     <p className="text-slate-700 mt-0.5">
                       Gunakan mode <strong>"Pas Lebar Layar (100% Lebar)"</strong> atau atur <strong>Skala Zoom Gambar ke 75% atau 50%</strong> di bawah agar foto pas proporsional dan tidak terpotong.
                     </p>
@@ -1098,10 +1098,10 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                 <div className="p-3 bg-slate-50 border border-slate-200 space-y-2">
                   <div className="flex justify-between items-center font-bold text-slate-700">
                     <span className="flex items-center gap-1.5">
-                      <Sliders className="w-3.5 h-3.5 text-[#004b87]" />
+                      <Sliders className="w-3.5 h-3.5 text-[#164e63]" />
                       <span>Skala Zoom Gambar Latar (Perkecil / Perbesar)</span>
                     </span>
-                    <span className="text-[#004b87] font-mono text-xs px-2 py-0.5 bg-blue-100 border border-blue-200 font-bold">
+                    <span className="text-[#164e63] font-mono text-xs px-2 py-0.5 bg-cyan-100 border border-cyan-200 font-bold">
                       {config.imageScale ?? 75}%
                     </span>
                   </div>
@@ -1116,7 +1116,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       ...prev,
                       imageScale: Number(e.target.value)
                     }))}
-                    className="w-full h-2 bg-slate-200 rounded-none accent-[#004b87]"
+                    className="w-full h-2 bg-slate-200 rounded-none accent-[#164e63]"
                   />
 
                   {/* Preset Scale Buttons */}
@@ -1135,7 +1135,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                         onClick={() => setConfig(prev => ({ ...prev, imageScale: btn.val }))}
                         className={`px-2 py-1 text-[10px] font-bold border transition-all cursor-pointer ${
                           (config.imageScale ?? 75) === btn.val
-                            ? 'bg-[#004b87] text-white border-[#004b87]'
+                            ? 'bg-[#164e63] text-white border-[#164e63]'
                             : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                         }`}
                       >
@@ -1149,7 +1149,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                 <div className="p-3 bg-slate-50 border border-slate-200 space-y-1.5">
                   <div className="flex justify-between font-bold text-slate-700">
                     <span>Opasitas Gambar</span>
-                    <span className="text-[#004b87] font-mono">{config.imageOpacity ?? 100}%</span>
+                    <span className="text-[#164e63] font-mono">{config.imageOpacity ?? 100}%</span>
                   </div>
                   <input
                     type="range"
@@ -1160,7 +1160,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       ...prev,
                       imageOpacity: Number(e.target.value)
                     }))}
-                    className="w-full h-2 bg-slate-200 rounded-none accent-[#004b87]"
+                    className="w-full h-2 bg-slate-200 rounded-none accent-[#164e63]"
                   />
                 </div>
 
@@ -1173,13 +1173,13 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       onClick={() => setConfig(prev => ({ ...prev, backgroundScrollMode: 'scroll' }))}
                       className={`p-2 text-left border text-xs font-bold transition-all cursor-pointer ${
                         (config.backgroundScrollMode ?? 'scroll') === 'scroll'
-                          ? 'bg-[#004b87] text-white border-[#004b87]'
+                          ? 'bg-[#164e63] text-white border-[#164e63]'
                           : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                       }`}
                     >
                       <span className="block">Ikut Ter-Scroll (Standar)</span>
                       <span className={`text-[10px] font-normal block ${
-                        (config.backgroundScrollMode ?? 'scroll') === 'scroll' ? 'text-blue-100' : 'text-slate-500'
+                        (config.backgroundScrollMode ?? 'scroll') === 'scroll' ? 'text-cyan-100' : 'text-slate-500'
                       }`}>
                         Background bergerak selaras konten
                       </span>
@@ -1190,13 +1190,13 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       onClick={() => setConfig(prev => ({ ...prev, backgroundScrollMode: 'fixed' }))}
                       className={`p-2 text-left border text-xs font-bold transition-all cursor-pointer ${
                         config.backgroundScrollMode === 'fixed'
-                          ? 'bg-[#004b87] text-white border-[#004b87]'
+                          ? 'bg-[#164e63] text-white border-[#164e63]'
                           : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                       }`}
                     >
                       <span className="block">Tetap / Diam (Fixed)</span>
                       <span className={`text-[10px] font-normal block ${
-                        config.backgroundScrollMode === 'fixed' ? 'text-blue-100' : 'text-slate-500'
+                        config.backgroundScrollMode === 'fixed' ? 'text-cyan-100' : 'text-slate-500'
                       }`}>
                         Background statis di layar
                       </span>
@@ -1220,7 +1220,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                 {/* Tech Grid Toggle */}
                 <div className="p-3 bg-slate-50 border border-slate-200 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <Grid className="w-4 h-4 text-[#004b87]" />
+                    <Grid className="w-4 h-4 text-[#164e63]" />
                     <div>
                       <span className="block font-bold text-slate-800">Grid Garis Digital Tech</span>
                       <span className="text-[10px] text-slate-500">Pola garis kotak modern di seluruh latar</span>
@@ -1233,14 +1233,14 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       ...prev,
                       showTechGrid: e.target.checked
                     }))}
-                    className="w-4 h-4 text-[#004b87] rounded-none cursor-pointer"
+                    className="w-4 h-4 text-[#164e63] rounded-none cursor-pointer"
                   />
                 </div>
 
                 {/* Pixel Mosaic Cluster Toggle */}
                 <div className="p-3 bg-slate-50 border border-slate-200 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <Layers className="w-4 h-4 text-[#004b87]" />
+                    <Layers className="w-4 h-4 text-[#164e63]" />
                     <div>
                       <span className="block font-bold text-slate-800">Mozaik Piksel Pojok Kiri Atas</span>
                       <span className="text-[10px] text-slate-500">Blok piksel transparan modern di atas logo</span>
@@ -1253,14 +1253,14 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       ...prev,
                       showPixelMosaic: e.target.checked
                     }))}
-                    className="w-4 h-4 text-[#004b87] rounded-none cursor-pointer"
+                    className="w-4 h-4 text-[#164e63] rounded-none cursor-pointer"
                   />
                 </div>
 
                 {/* Floating Tiles Toggle */}
                 <div className="p-3 bg-slate-50 border border-slate-200 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <Sparkles className="w-4 h-4 text-[#004b87]" />
+                    <Sparkles className="w-4 h-4 text-[#164e63]" />
                     <div>
                       <span className="block font-bold text-slate-800">Blok Transparan Melayang (Floating Tiles)</span>
                       <span className="text-[10px] text-slate-500">Kotak aksen futuristik di area tengah</span>
@@ -1273,7 +1273,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       ...prev,
                       showFloatingTiles: e.target.checked
                     }))}
-                    className="w-4 h-4 text-[#004b87] rounded-none cursor-pointer"
+                    className="w-4 h-4 text-[#164e63] rounded-none cursor-pointer"
                   />
                 </div>
 
@@ -1284,7 +1284,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       <SunMedium className="w-3.5 h-3.5 text-slate-600" />
                       Kegelapan Lapisan Latar (Overlay Dimmer)
                     </span>
-                    <span className="text-[#004b87] font-mono">{config.overlayDarkness ?? 0}%</span>
+                    <span className="text-[#164e63] font-mono">{config.overlayDarkness ?? 0}%</span>
                   </div>
                   <input
                     type="range"
@@ -1295,7 +1295,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       ...prev,
                       overlayDarkness: Number(e.target.value)
                     }))}
-                    className="w-full h-2 bg-slate-200 rounded-none accent-[#004b87]"
+                    className="w-full h-2 bg-slate-200 rounded-none accent-[#164e63]"
                   />
                   <p className="text-[10px] text-slate-500">
                     Meningkatkan nilai kegelapan akan membuat teks putih dan kartu login lebih jelas dan mudah terbaca.
@@ -1306,7 +1306,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                 <div className="p-3 bg-slate-50 border border-slate-200 space-y-1.5">
                   <div className="flex justify-between font-bold text-slate-800">
                     <span>Efek Blur Gambar Latar (Blur Intensity)</span>
-                    <span className="text-[#004b87] font-mono">{config.overlayBlur ?? 0}px</span>
+                    <span className="text-[#164e63] font-mono">{config.overlayBlur ?? 0}px</span>
                   </div>
                   <input
                     type="range"
@@ -1317,7 +1317,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       ...prev,
                       overlayBlur: Number(e.target.value)
                     }))}
-                    className="w-full h-2 bg-slate-200 rounded-none accent-[#004b87]"
+                    className="w-full h-2 bg-slate-200 rounded-none accent-[#164e63]"
                   />
                   <p className="text-[10px] text-slate-500">
                     Memberikan efek blur halus pada wallpaper foto agar fokus tertuju ke elemen login.
@@ -1334,13 +1334,13 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       onClick={() => setConfig(prev => ({ ...prev, backgroundScrollMode: 'scroll' }))}
                       className={`p-2 text-left border text-xs font-bold transition-all cursor-pointer ${
                         (config.backgroundScrollMode ?? 'scroll') === 'scroll'
-                          ? 'bg-[#004b87] text-white border-[#004b87]'
+                          ? 'bg-[#164e63] text-white border-[#164e63]'
                           : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                       }`}
                     >
                       <span className="block">Ikut Ter-Scroll (Standar)</span>
                       <span className={`text-[10px] font-normal block ${
-                        (config.backgroundScrollMode ?? 'scroll') === 'scroll' ? 'text-blue-100' : 'text-slate-500'
+                        (config.backgroundScrollMode ?? 'scroll') === 'scroll' ? 'text-cyan-100' : 'text-slate-500'
                       }`}>
                         Background bergerak saat scroll
                       </span>
@@ -1351,13 +1351,13 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                       onClick={() => setConfig(prev => ({ ...prev, backgroundScrollMode: 'fixed' }))}
                       className={`p-2 text-left border text-xs font-bold transition-all cursor-pointer ${
                         config.backgroundScrollMode === 'fixed'
-                          ? 'bg-[#004b87] text-white border-[#004b87]'
+                          ? 'bg-[#164e63] text-white border-[#164e63]'
                           : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-100'
                       }`}
                     >
                       <span className="block">Tetap Diam (Fixed)</span>
                       <span className={`text-[10px] font-normal block ${
-                        config.backgroundScrollMode === 'fixed' ? 'text-blue-100' : 'text-slate-500'
+                        config.backgroundScrollMode === 'fixed' ? 'text-cyan-100' : 'text-slate-500'
                       }`}>
                         Background diam di viewport
                       </span>
@@ -1375,13 +1375,13 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
         <div className="lg:col-span-5 space-y-3">
           <div className="flex items-center justify-between">
             <h3 className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-              <Eye className="w-3.5 h-3.5 text-[#004b87]" />
+              <Eye className="w-3.5 h-3.5 text-[#164e63]" />
               <span>Pratinjau Langsung (Live Preview)</span>
             </h3>
             <button
               type="button"
               onClick={() => setShowFullPreviewModal(true)}
-              className="text-[11px] text-[#004b87] hover:underline font-bold flex items-center gap-1 cursor-pointer"
+              className="text-[11px] text-[#164e63] hover:underline font-bold flex items-center gap-1 cursor-pointer"
             >
               <Maximize2 className="w-3 h-3" />
               <span>Layar Penuh</span>
@@ -1451,7 +1451,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
               {/* Mini Simulated Header */}
               <div className="relative z-10 w-full bg-transparent backdrop-blur-xs border-b border-white/20 p-1.5 flex items-center justify-between text-white">
                 <div className="flex items-center gap-1.5">
-                  <TutWuriHandayaniLogo className="w-4 h-4 text-blue-200" />
+                  <TutWuriHandayaniLogo className="w-4 h-4 text-cyan-200" />
                   <span className="text-[9px] font-bold tracking-tight">Sistem Informasi Akademik</span>
                 </div>
                 <div className="px-2 py-0.5 bg-white/20 text-white text-[8px] font-bold rounded-none">Masuk</div>
@@ -1462,14 +1462,14 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                 <h4 className="text-sm sm:text-base font-bold leading-tight drop-shadow-sm">
                   Sistem Informasi Akademik
                 </h4>
-                <p className="text-[9px] text-blue-100 max-w-xs mx-auto line-clamp-2 leading-tight">
+                <p className="text-[9px] text-cyan-100 max-w-xs mx-auto line-clamp-2 leading-tight">
                   Manajemen terpadu administrasi mengajar & asesmen Kurikulum Merdeka.
                 </p>
 
                 {/* Mini Login Card Mockup */}
                 <div className="mt-2 bg-white/95 text-slate-800 p-2.5 shadow-lg max-w-[200px] mx-auto text-left border border-white/40">
                   <div className="text-[9px] font-bold text-slate-800 flex items-center gap-1 mb-1">
-                    <span className="w-1.5 h-1.5 bg-[#004b87] rounded-none"></span>
+                    <span className="w-1.5 h-1.5 bg-[#164e63] rounded-none"></span>
                     Login Portal Guru
                   </div>
                   <div className="space-y-1">
@@ -1479,7 +1479,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                     <div className="h-4 bg-slate-100 border border-slate-200 px-1 text-[7px] text-slate-400 flex items-center">
                       ••••••••
                     </div>
-                    <div className="h-4 bg-[#004b87] text-white text-[8px] font-bold flex items-center justify-center">
+                    <div className="h-4 bg-[#164e63] text-white text-[8px] font-bold flex items-center justify-center">
                       Masuk ke Sistem
                     </div>
                   </div>
@@ -1487,7 +1487,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
               </div>
 
               {/* Mini Running Info Footer */}
-              <div className="relative z-10 w-full bg-black/40 backdrop-blur-xs border-t border-white/10 px-2 py-1 flex items-center justify-between text-[8px] text-blue-100">
+              <div className="relative z-10 w-full bg-black/40 backdrop-blur-xs border-t border-white/10 px-2 py-1 flex items-center justify-between text-[8px] text-cyan-100">
                 <span>SIMAK v3.7.0</span>
                 <span>Kemdikbudristek RI</span>
               </div>
@@ -1497,7 +1497,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
             <div className="bg-slate-100 px-3 py-2 border-t border-slate-200 flex items-center justify-between text-[11px]">
               <div className="flex items-center gap-4">
                 <span className="font-bold text-slate-700">
-                  Tema Aktif: <span className="text-[#004b87] font-semibold">{PRESET_THEMES.find(t => t.id === config.themePreset)?.name || 'Kustom'}</span>
+                  Tema Aktif: <span className="text-[#164e63] font-semibold">{PRESET_THEMES.find(t => t.id === config.themePreset)?.name || 'Kustom'}</span>
                 </span>
                 
                 <div className="hidden sm:flex items-center gap-2 px-2 border-l border-slate-300">
@@ -1516,7 +1516,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
               <button
                 type="button"
                 onClick={() => handleSave()}
-                className={`px-3 py-1 ${isAutoApplyEnabled ? 'bg-slate-300 text-slate-500 hover:bg-slate-400 hover:text-white' : 'bg-[#004b87] hover:bg-blue-800 text-white'} font-bold text-xs rounded-none flex items-center gap-1 shadow-2xs transition-colors`}
+                className={`px-3 py-1 ${isAutoApplyEnabled ? 'bg-slate-300 text-slate-500 hover:bg-slate-400 hover:text-white' : 'bg-[#164e63] hover:bg-cyan-800 text-white'} font-bold text-xs rounded-none flex items-center gap-1 shadow-2xs transition-colors`}
               >
                 <Save className="w-3 h-3" />
                 <span>Simpan Manual</span>
@@ -1584,10 +1584,10 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
               {/* Modal Top Header */}
               <div className="relative z-10 w-full bg-slate-900/60 backdrop-blur-xs border-b border-white/20 p-3 flex items-center justify-between text-white">
                 <div className="flex items-center gap-2">
-                  <TutWuriHandayaniLogo className="w-6 h-6 text-blue-200" />
+                  <TutWuriHandayaniLogo className="w-6 h-6 text-cyan-200" />
                   <span className="text-sm font-bold">Sistem Informasi Akademik</span>
                 </div>
-                <div className="px-3 py-1 bg-blue-600 text-xs font-bold">Masuk Portal</div>
+                <div className="px-3 py-1 bg-cyan-600 text-xs font-bold">Masuk Portal</div>
               </div>
 
               {/* Modal Hero Content */}
@@ -1595,13 +1595,13 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                 <h2 className="text-3xl font-bold leading-tight drop-shadow-md">
                   Sistem Informasi Akademik
                 </h2>
-                <p className="text-sm text-blue-100">
+                <p className="text-sm text-cyan-100">
                   Sistem manajemen terpadu pengelolaan administrasi mengajar, perangkat pembelajaran Kurikulum Merdeka.
                 </p>
               </div>
 
               {/* Modal Bottom Bar */}
-              <div className="relative z-10 w-full bg-black/40 backdrop-blur-xs border-t border-white/10 p-2 flex items-center justify-between text-xs text-blue-100">
+              <div className="relative z-10 w-full bg-black/40 backdrop-blur-xs border-t border-white/10 p-2 flex items-center justify-between text-xs text-cyan-100">
                 <span>SIMAK Merdeka v3.7.0</span>
                 <button
                   type="button"
@@ -1609,7 +1609,7 @@ export const LoginBackgroundSettings: React.FC<LoginBackgroundSettingsProps> = (
                     handleSave();
                     setShowFullPreviewModal(false);
                   }}
-                  className="px-3 py-1 bg-[#004b87] hover:bg-blue-800 text-white font-bold"
+                  className="px-3 py-1 bg-[#164e63] hover:bg-cyan-800 text-white font-bold"
                 >
                   Terapkan Tema Ini
                 </button>

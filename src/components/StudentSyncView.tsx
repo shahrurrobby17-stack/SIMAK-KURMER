@@ -404,8 +404,8 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
     <div className="space-y-4">
       {/* Sync Progress Indicator */}
       {isSyncing && (
-        <div className="bg-[#004b87] text-white p-4 rounded-none space-y-2 border border-blue-900 shadow-sm">
-          <div className="flex justify-between text-xs text-blue-200">
+        <div className="bg-[#164e63] text-white p-4 rounded-none space-y-2 border border-cyan-900 shadow-sm">
+          <div className="flex justify-between text-xs text-cyan-200">
             <span className="flex items-center gap-2">
               <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
               {syncStatusText}
@@ -440,7 +440,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
       {/* Overview Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-white p-4 rounded-none border border-slate-200 shadow-sm flex items-center gap-3">
-          <div className="w-10 h-10 rounded-none bg-blue-50 text-[#004b87] flex items-center justify-center font-bold">
+          <div className="w-10 h-10 rounded-none bg-cyan-50 text-[#164e63] flex items-center justify-center font-bold">
             <Users className="w-5 h-5" />
           </div>
           <div>
@@ -485,7 +485,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
         {/* Panel Header & Controls */}
         <div className="p-4 border-b border-slate-200 bg-slate-50/50 flex flex-col md:flex-row md:items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <CloudDownload className="w-5 h-5 text-[#004b87]" />
+            <CloudDownload className="w-5 h-5 text-[#164e63]" />
             <div>
               <h2 className="text-sm font-bold text-slate-800">Daftar Siswa Kenaikan Kelas & Pemutakhiran Rombel</h2>
               <p className="text-[11px] text-slate-500">Pilih siswa yang akan dipindahkan atau dinaikkan ke kelas berikutnya</p>
@@ -502,7 +502,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
                   setActiveFilterClass(val);
                   if (onClassChange && val) onClassChange(val);
                 }}
-                className="px-2.5 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500 text-slate-800 cursor-pointer"
+                className="px-2.5 py-1.5 text-xs font-semibold bg-white border border-slate-200 rounded-none focus:outline-none focus:ring-1 focus:ring-cyan-500 text-slate-800 cursor-pointer"
               >
                 <option value="">Pilih Kelas Terlebih Dahulu</option>
                 <option value="SEMUA">Semua Rombel</option>
@@ -520,7 +520,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
                 placeholder="Cari nama / NIS..." 
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-none focus:outline-none focus:ring-1 focus:ring-blue-500 w-36 sm:w-48"
+                className="pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-200 rounded-none focus:outline-none focus:ring-1 focus:ring-cyan-500 w-36 sm:w-48"
               />
             </div>
 
@@ -529,21 +529,21 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
               onClick={handleExportPdf}
               className="flex items-center space-x-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 px-3 py-1.5 rounded-none text-xs font-bold transition-all active:scale-95 cursor-pointer shrink-0 shadow-xs"
             >
-              <FileDown className="w-3.5 h-3.5 text-blue-600" />
+              <FileDown className="w-3.5 h-3.5 text-cyan-600" />
               <span className="hidden sm:inline">Unduh PDF</span>
             </button>
           </div>
         </div>
 
         {/* Promotion Action Toolbar (Shown when students selected) */}
-        <div className="px-4 py-3 bg-blue-50/70 border-b border-blue-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="px-4 py-3 bg-cyan-50/70 border-b border-cyan-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
           <div className="flex items-center gap-2 text-slate-700">
             <button 
               onClick={toggleSelectAll}
-              className="flex items-center gap-1.5 font-semibold text-[#004b87] hover:underline cursor-pointer"
+              className="flex items-center gap-1.5 font-semibold text-[#164e63] hover:underline cursor-pointer"
             >
               {selectedStudentIds.length === filteredStudents.length && filteredStudents.length > 0 ? (
-                <CheckSquare className="w-4 h-4 text-[#004b87]" />
+                <CheckSquare className="w-4 h-4 text-[#164e63]" />
               ) : (
                 <Square className="w-4 h-4 text-slate-400" />
               )}
@@ -558,7 +558,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
             <select
               value={targetClass}
               onChange={(e) => setTargetClass(e.target.value)}
-              className="bg-white border border-slate-300 font-bold text-slate-800 px-2.5 py-1 rounded-none text-xs focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+              className="bg-white border border-slate-300 font-bold text-slate-800 px-2.5 py-1 rounded-none text-xs focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
             >
               {availableClasses.map(cls => (
                 <option key={cls} value={cls}>{cls}</option>
@@ -569,7 +569,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
             <button
               onClick={handlePromoteSelected}
               disabled={selectedStudentIds.length === 0}
-              className="px-3 py-1.5 bg-[#004b87] hover:bg-[#003d6d] text-white font-semibold rounded-none text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-40"
+              className="px-3 py-1.5 bg-[#164e63] hover:bg-[#003d6d] text-white font-semibold rounded-none text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer disabled:opacity-40"
             >
               <span>Proses Kenaikan Kelas</span>
               <ArrowRight className="w-3.5 h-3.5" />
@@ -616,17 +616,17 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
                     <tr 
                       key={student.id}
                       onClick={() => toggleSelectStudent(student.id)}
-                      className={`hover:bg-blue-50/50 transition-colors cursor-pointer ${
-                        isSelected ? 'bg-blue-50/80 font-medium' : ''
+                      className={`hover:bg-cyan-50/50 transition-colors cursor-pointer ${
+                        isSelected ? 'bg-cyan-50/80 font-medium' : ''
                       }`}
                     >
                       <td className="p-3.5 text-center" onClick={(e) => e.stopPropagation()}>
                         <button
                           onClick={() => toggleSelectStudent(student.id)}
-                          className="text-slate-400 hover:text-blue-600 cursor-pointer"
+                          className="text-slate-400 hover:text-cyan-600 cursor-pointer"
                         >
                           {isSelected ? (
-                            <CheckSquare className="w-4 h-4 text-[#004b87]" />
+                            <CheckSquare className="w-4 h-4 text-[#164e63]" />
                           ) : (
                             <Square className="w-4 h-4 text-slate-300" />
                           )}
@@ -640,7 +640,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
                       </td>
                       <td className="p-3.5">
                         <span className={`px-1.5 py-0.5 rounded-none font-bold text-[10px] ${
-                          student.gender === 'L' ? 'bg-blue-100 text-blue-800' : 'bg-pink-100 text-pink-800'
+                          student.gender === 'L' ? 'bg-cyan-100 text-cyan-800' : 'bg-pink-100 text-pink-800'
                         }`}>
                           {student.gender}
                         </span>
@@ -674,7 +674,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
       <div className="bg-white rounded-none border border-slate-200 shadow-sm p-4 space-y-3">
         <div className="flex items-center justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
-            <History className="w-4 h-4 text-[#004b87]" />
+            <History className="w-4 h-4 text-[#164e63]" />
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
               Riwayat Aktivitas Sinkronisasi Server
             </h3>
@@ -702,7 +702,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
                 <div className="space-y-0.5">
                   <div className="font-semibold text-slate-800 flex items-center gap-2">
                     <span>{log.action}</span>
-                    <span className="bg-blue-100 text-[#004b87] text-[10px] px-1.5 py-0.2 rounded-none font-bold">
+                    <span className="bg-cyan-100 text-[#164e63] text-[10px] px-1.5 py-0.2 rounded-none font-bold">
                       {log.count} Data
                     </span>
                   </div>
@@ -721,20 +721,20 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
 
       {/* Single Student Delete Confirmation Modal */}
       {studentToDelete && (
-        <div className="fixed inset-0 z-50 bg-[#004b87]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#164e63]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-none max-w-sm w-full p-5 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center gap-3 text-red-600">
               <div className="p-2.5 bg-red-100 rounded-none">
                 <Trash2 className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-[#004b87]">Hapus Data Siswa?</h4>
+                <h4 className="text-sm font-bold text-[#164e63]">Hapus Data Siswa?</h4>
                 <p className="text-xs text-slate-500">Konfirmasi Penghapusan</p>
               </div>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-none border border-slate-100">
-              Apakah Anda yakin ingin menghapus siswa <span className="font-bold text-[#004b87]">{studentToDelete.name}</span> (NIS: {studentToDelete.nis}) dari sistem?
+              Apakah Anda yakin ingin menghapus siswa <span className="font-bold text-[#164e63]">{studentToDelete.name}</span> (NIS: {studentToDelete.nis}) dari sistem?
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-2">
@@ -765,20 +765,20 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
 
       {/* Batch Students Delete Confirmation Modal */}
       {showBatchDeleteModal && (
-        <div className="fixed inset-0 z-50 bg-[#004b87]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#164e63]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-none max-w-sm w-full p-5 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center gap-3 text-red-600">
               <div className="p-2.5 bg-red-100 rounded-none">
                 <Trash2 className="w-6 h-6" />
               </div>
               <div>
-                <h4 className="text-sm font-bold text-[#004b87]">Hapus {selectedStudentIds.length} Siswa Terpilih?</h4>
+                <h4 className="text-sm font-bold text-[#164e63]">Hapus {selectedStudentIds.length} Siswa Terpilih?</h4>
                 <p className="text-xs text-slate-500">Penghapusan Banyak Data Sekaligus</p>
               </div>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed bg-slate-50 p-3 rounded-none border border-slate-100">
-              Apakah Anda yakin ingin menghapus <span className="font-bold text-[#004b87]">{selectedStudentIds.length} siswa</span> yang telah Anda centang dari sistem SIMAK?
+              Apakah Anda yakin ingin menghapus <span className="font-bold text-[#164e63]">{selectedStudentIds.length} siswa</span> yang telah Anda centang dari sistem SIMAK?
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-2">

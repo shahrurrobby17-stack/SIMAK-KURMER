@@ -95,7 +95,7 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
     <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-4">
       <div className="bg-white rounded-none max-w-3xl w-full p-6 shadow-2xl space-y-4 border border-slate-200 text-slate-800 max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="flex justify-between items-center border-b border-slate-200 pb-3 bg-[#004b87] -mx-6 -mt-6 p-6 rounded-t-xl ">
+        <div className="flex justify-between items-center border-b border-slate-200 pb-3 bg-[#164e63] -mx-6 -mt-6 p-6 rounded-t-xl ">
           <div className="flex items-center space-x-3">
             <div className="w-10 h-10 rounded-none bg-[#00AEEF] flex items-center justify-center text-white font-black shadow-sm">
               <Sparkles className="w-6 h-6 fill-white" />
@@ -104,13 +104,13 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 Asisten AI Guru — SIMAK Kemendikbud
               </h3>
-              <p className="text-[11px] text-blue-100 font-medium">
+              <p className="text-[11px] text-cyan-100 font-medium">
                 Generator Modul Ajar, Soal HOTS, dan Deskripsi Capaian Rapor berbasis Gemini 2.5 AI
               </p>
             </div>
           </div>
 
-          <button onClick={onClose} className="p-1.5 text-blue-200 hover:text-white rounded-none hover:bg-white/10 transition-colors">
+          <button onClick={onClose} className="p-1.5 text-cyan-200 hover:text-white rounded-none hover:bg-white/10 transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -128,9 +128,9 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
                   setPromptInput(t.prompt);
                   handleGenerate(t.prompt);
                 }}
-                className="text-left bg-slate-50 hover:bg-blue-50 p-3 rounded-none border border-slate-200 hover:border-indigo-500 transition-all text-xs cursor-pointer group"
+                className="text-left bg-slate-50 hover:bg-cyan-50 p-3 rounded-none border border-slate-200 hover:border-indigo-500 transition-all text-xs cursor-pointer group"
               >
-                <div className="font-bold text-[#004b87] group-hover:text-blue-700">{t.title}</div>
+                <div className="font-bold text-[#164e63] group-hover:text-cyan-700">{t.title}</div>
                 <div className="text-[10px] text-slate-500 line-clamp-1 mt-0.5">{t.prompt}</div>
               </button>
             ))}
@@ -164,15 +164,15 @@ export const AIAssistantModal: React.FC<AIAssistantModalProps> = ({
 
         {/* Response Viewer */}
         {loading && (
-          <div className="p-8 text-center bg-blue-50/50 rounded-none border border-blue-100 space-y-2">
+          <div className="p-8 text-center bg-cyan-50/50 rounded-none border border-cyan-100 space-y-2">
             <RefreshCw className="w-8 h-8 text-indigo-400 animate-spin mx-auto" />
-            <p className="text-xs font-bold text-[#004b87]">Gemini 2.5 sedang menyusun dokumen Kurikulum Merdeka...</p>
+            <p className="text-xs font-bold text-[#164e63]">Gemini 2.5 sedang menyusun dokumen Kurikulum Merdeka...</p>
             <p className="text-[10px] text-slate-500">Harap tunggu beberapa detik.</p>
           </div>
         )}
 
         {responseOutput && !loading && (
-          <div className="bg-[#004b87] p-4 rounded-none border border-slate-800 text-white space-y-3 relative">
+          <div className="bg-[#164e63] p-4 rounded-none border border-slate-800 text-white space-y-3 relative">
             <div className="flex justify-between items-center border-b border-slate-800 pb-2">
               <span className="text-[10px] font-bold text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Lightbulb className="w-3.5 h-3.5 text-amber-400" />

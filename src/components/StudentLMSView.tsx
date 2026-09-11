@@ -548,7 +548,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
       )}
 
       {/* STUDENT PROFILE & HERO HEADER */}
-      <div className="bg-gradient-to-r from-[#003865] via-[#004b87] to-[#00609c] text-white p-4 sm:p-5 rounded-none shadow-xs border-b-4 border-amber-400">
+      <div className="bg-gradient-to-r from-[#003865] via-[#164e63] to-[#00609c] text-white p-4 sm:p-5 rounded-none shadow-xs border-b-4 border-amber-400">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="flex items-start sm:items-center gap-3.5">
             <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-white/15 p-1 border-2 border-amber-300/80 flex items-center justify-center shrink-0 shadow-inner">
@@ -561,30 +561,30 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                 <span className="px-2.5 py-0.5 bg-amber-400 text-slate-900 font-black text-[10px] uppercase tracking-wider">
                   Learning Management System
                 </span>
-                <span className="px-2 py-0.5 bg-blue-900/60 border border-blue-300/30 text-blue-100 font-bold text-[10px]">
+                <span className="px-2 py-0.5 bg-cyan-900/60 border border-cyan-300/30 text-cyan-100 font-bold text-[10px]">
                   Kelas: {activeStudent.className}
                 </span>
               </div>
               <h1 className="text-lg sm:text-2xl font-black tracking-tight text-white mt-1 truncate">
                 {activeStudent.name}
               </h1>
-              <p className="text-xs text-blue-100/90 flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
+              <p className="text-xs text-cyan-100/90 flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-0.5">
                 <span>NISN: <strong className="text-amber-200 font-mono">{activeStudent.nisn || '0071829301'}</strong></span>
                 <span>•</span>
-                <span>NIS: <strong className="text-blue-100 font-mono">{activeStudent.nis || '24251001'}</strong></span>
+                <span>NIS: <strong className="text-cyan-100 font-mono">{activeStudent.nis || '24251001'}</strong></span>
               </p>
             </div>
           </div>
         </div>
 
         {/* 4 Quick Stat Metric Tiles */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4 pt-3 border-t border-blue-400/30 text-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-4 pt-3 border-t border-cyan-400/30 text-xs">
           <div className="bg-white/10 backdrop-blur-xs border border-white/15 p-2.5 rounded-none flex items-center gap-2.5">
             <div className="p-2 bg-amber-400/20 text-amber-300 rounded-none shrink-0">
               <TrendingUp className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] text-blue-200 uppercase font-bold tracking-wider">Rata-Rata Nilai</div>
+              <div className="text-[10px] text-cyan-200 uppercase font-bold tracking-wider">Rata-Rata Nilai</div>
               <div className="text-base sm:text-lg font-black text-white">{overallGradeAverage} <span className="text-[11px] font-normal text-amber-300">(Predikat A)</span></div>
             </div>
           </div>
@@ -594,7 +594,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
               <UserCheck className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] text-blue-200 uppercase font-bold tracking-wider">Kehadiran Siswa</div>
+              <div className="text-[10px] text-cyan-200 uppercase font-bold tracking-wider">Kehadiran Siswa</div>
               <div className="text-base sm:text-lg font-black text-white">{attendanceStats.percentage}% <span className="text-[11px] font-normal text-emerald-300">({attendanceStats.hadir} Hadir)</span></div>
             </div>
           </div>
@@ -604,7 +604,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
               <ClipboardCheck className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] text-blue-200 uppercase font-bold tracking-wider">Tugas Mandiri</div>
+              <div className="text-[10px] text-cyan-200 uppercase font-bold tracking-wider">Tugas Mandiri</div>
               <div className="text-base sm:text-lg font-black text-white">{taskStats.completed}/{taskStats.total} <span className="text-[11px] font-normal text-cyan-200">Tuntas</span></div>
             </div>
           </div>
@@ -614,7 +614,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
               <BookOpen className="w-4 h-4" />
             </div>
             <div className="min-w-0">
-              <div className="text-[10px] text-blue-200 uppercase font-bold tracking-wider">Bahan Ajar & Modul</div>
+              <div className="text-[10px] text-cyan-200 uppercase font-bold tracking-wider">Bahan Ajar & Modul</div>
               <div className="text-base sm:text-lg font-black text-white">{storedModules.length} <span className="text-[11px] font-normal text-purple-200">Modul</span></div>
             </div>
           </div>
@@ -643,7 +643,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setCurrentTab('tasks')}
-                    className="px-3 py-1.5 bg-[#004b87] hover:bg-blue-800 text-white font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white font-bold flex items-center gap-1.5 cursor-pointer shadow-xs"
                   >
                     <ClipboardCheck className="w-3.5 h-3.5" />
                     <span>Lihat Tugas ({taskStats.pending} Menunggu)</span>
@@ -653,7 +653,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                     onClick={() => setCurrentTab('modules')}
                     className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold border border-slate-300 flex items-center gap-1.5 cursor-pointer"
                   >
-                    <BookOpen className="w-3.5 h-3.5 text-blue-700" />
+                    <BookOpen className="w-3.5 h-3.5 text-cyan-700" />
                     <span>Akses Modul Bahan Ajar</span>
                   </button>
                   <button
@@ -676,13 +676,13 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
               <div>
                 <div className="flex items-center justify-between pb-3 border-b border-slate-100">
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-[#004b87]" />
+                    <Calendar className="w-4 h-4 text-[#164e63]" />
                     <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">Jadwal Kelas Hari Ini ({new Date().toLocaleDateString('id-ID', { weekday: 'long' })})</h3>
                   </div>
                   <button
                     type="button"
                     onClick={() => setCurrentTab('schedule')}
-                    className="text-[11px] font-bold text-[#004b87] hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] font-bold text-[#164e63] hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <span>Lihat Semua</span>
                     <ChevronRight className="w-3 h-3" />
@@ -693,7 +693,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                   {classSchedules.slice(0, 3).map((sch, idx) => (
                     <div key={sch.id} className="p-2.5 bg-slate-50 border border-slate-200 rounded-none flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <div className="w-6 h-6 rounded-none bg-[#004b87] text-white flex items-center justify-center font-bold text-xs shrink-0">
+                        <div className="w-6 h-6 rounded-none bg-[#164e63] text-white flex items-center justify-center font-bold text-xs shrink-0">
                           {idx + 1}
                         </div>
                         <div className="min-w-0">
@@ -729,7 +729,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setCurrentTab('tasks')}
-                    className="text-[11px] font-bold text-[#004b87] hover:underline flex items-center gap-1 cursor-pointer"
+                    className="text-[11px] font-bold text-[#164e63] hover:underline flex items-center gap-1 cursor-pointer"
                   >
                     <span>Kumpulkan Tugas</span>
                     <ChevronRight className="w-3 h-3" />
@@ -751,7 +751,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                         <div key={task.id} className="p-2.5 bg-slate-50 border border-slate-200 rounded-none flex items-center justify-between gap-3">
                           <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-1.5">
-                              <span className="px-1.5 py-0.2 bg-blue-100 text-blue-800 text-[9px] font-bold uppercase">{task.category}</span>
+                              <span className="px-1.5 py-0.2 bg-cyan-100 text-cyan-800 text-[9px] font-bold uppercase">{task.category}</span>
                               <h4 className="text-xs font-bold text-slate-800 truncate">{task.title}</h4>
                             </div>
                             <p className="text-[11px] text-slate-500 mt-0.5">Tenggat: <strong className="text-rose-600">{task.dueDate}</strong></p>
@@ -763,8 +763,8 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                                 Nilai: {studentGrade.score}
                               </span>
                             ) : isSubmitted ? (
-                              <span className="px-2 py-1 bg-blue-100 text-blue-800 text-[10px] font-bold rounded-none flex items-center gap-1">
-                                <Check className="w-3 h-3 text-blue-600" />
+                              <span className="px-2 py-1 bg-cyan-100 text-cyan-800 text-[10px] font-bold rounded-none flex items-center gap-1">
+                                <Check className="w-3 h-3 text-cyan-600" />
                                 Terkirim
                               </span>
                             ) : (
@@ -804,7 +804,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
               <button
                 type="button"
                 onClick={() => setCurrentTab('modules')}
-                className="text-[11px] font-bold text-[#004b87] hover:underline flex items-center gap-1 cursor-pointer"
+                className="text-[11px] font-bold text-[#164e63] hover:underline flex items-center gap-1 cursor-pointer"
               >
                 <span>Lihat Semua Modul</span>
                 <ChevronRight className="w-3 h-3" />
@@ -813,7 +813,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3">
               {storedModules.slice(0, 4).map((mod) => (
-                <div key={mod.id} className="p-3 bg-slate-50 border border-slate-200 rounded-none flex items-start justify-between gap-3 hover:border-blue-400 transition-colors">
+                <div key={mod.id} className="p-3 bg-slate-50 border border-slate-200 rounded-none flex items-start justify-between gap-3 hover:border-cyan-400 transition-colors">
                   <div className="flex items-start gap-2.5 min-w-0">
                     <div className="p-2 bg-purple-100 text-purple-700 rounded-none shrink-0 mt-0.5">
                       <FileText className="w-4 h-4" />
@@ -830,7 +830,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                       alert(`Mengunduh berkas: ${mod.fileName}`);
                       toggleModuleRead(mod.id);
                     }}
-                    className="px-2 py-1 bg-white hover:bg-slate-100 text-[#004b87] border border-slate-300 text-[10px] font-bold rounded-none shrink-0 flex items-center gap-1 cursor-pointer"
+                    className="px-2 py-1 bg-white hover:bg-slate-100 text-[#164e63] border border-slate-300 text-[10px] font-bold rounded-none shrink-0 flex items-center gap-1 cursor-pointer"
                   >
                     <Download className="w-3 h-3" />
                     <span>Unduh</span>
@@ -859,7 +859,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                 <select
                   value={selectedSubjectFilter}
                   onChange={(e) => setSelectedSubjectFilter(e.target.value)}
-                  className="bg-white border border-slate-300 text-xs font-bold text-[#004b87] px-2.5 py-1.5 rounded-none focus:outline-none focus:border-blue-500 cursor-pointer shadow-2xs"
+                  className="bg-white border border-slate-300 text-xs font-bold text-[#164e63] px-2.5 py-1.5 rounded-none focus:outline-none focus:border-cyan-500 cursor-pointer shadow-2xs"
                 >
                   <option value="Semua">Semua Pelajaran</option>
                   <option value="Biologi">Biologi</option>
@@ -880,7 +880,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                 placeholder="Cari judul materi, bab pembelajaran, atau nama modul..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-none focus:bg-white focus:outline-none focus:border-blue-500"
+                className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-none focus:bg-white focus:outline-none focus:border-cyan-500"
               />
             </div>
           </div>
@@ -897,13 +897,13 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                   <div 
                     key={mod.id}
                     className={`bg-white border p-4 rounded-none shadow-xs flex flex-col justify-between transition-all ${
-                      isRead ? 'border-emerald-300 bg-emerald-50/20' : 'border-slate-200 hover:border-blue-300'
+                      isRead ? 'border-emerald-300 bg-emerald-50/20' : 'border-slate-200 hover:border-cyan-300'
                     }`}
                   >
                     <div>
                       <div className="flex items-start justify-between gap-2">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="px-2 py-0.5 bg-[#004b87] text-white text-[10px] font-bold uppercase tracking-wider">
+                          <span className="px-2 py-0.5 bg-[#164e63] text-white text-[10px] font-bold uppercase tracking-wider">
                             {mod.subject}
                           </span>
                           <span className="px-2 py-0.5 bg-purple-100 text-purple-800 text-[10px] font-semibold">
@@ -946,7 +946,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                           alert(`Membuka berkas dokumen: ${mod.fileName}`);
                           toggleModuleRead(mod.id);
                         }}
-                        className="px-3 py-1 bg-[#004b87] hover:bg-blue-800 text-white font-bold text-xs rounded-none shadow-2xs flex items-center gap-1.5 cursor-pointer"
+                        className="px-3 py-1 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs rounded-none shadow-2xs flex items-center gap-1.5 cursor-pointer"
                       >
                         <Download className="w-3.5 h-3.5" />
                         <span>Unduh / Buka Dokumen</span>
@@ -980,7 +980,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                   onClick={() => setTaskFilter(filter)}
                   className={`px-2.5 py-1 text-[11px] font-bold rounded-none cursor-pointer transition-all ${
                     taskFilter === filter
-                      ? 'bg-white text-[#004b87] shadow-xs'
+                      ? 'bg-white text-[#164e63] shadow-xs'
                       : 'text-slate-600 hover:text-slate-900'
                   }`}
                 >
@@ -1012,7 +1012,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                   <div key={task.id} className="bg-white border border-slate-200 p-4 rounded-none shadow-xs space-y-3">
                     <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2.5 border-b border-slate-100">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold uppercase">
+                        <span className="px-2 py-0.5 bg-cyan-100 text-cyan-800 text-[10px] font-bold uppercase">
                           {task.category}
                         </span>
                         <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px] font-semibold">
@@ -1053,7 +1053,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                               Nilai Diperoleh: {studentGrade.score} / {task.maxScore || 100} ({studentGrade.status})
                             </span>
                           ) : isSubmitted ? (
-                            <span className="px-2.5 py-1 bg-blue-600 text-white font-bold text-xs rounded-none flex items-center gap-1.5">
+                            <span className="px-2.5 py-1 bg-cyan-600 text-white font-bold text-xs rounded-none flex items-center gap-1.5">
                               <Check className="w-3.5 h-3.5" />
                               Terkirim ({studentGrade.submittedDate}) • Menunggu Penilaian Guru
                             </span>
@@ -1103,13 +1103,13 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
           <div className="bg-white border border-slate-200 p-5 rounded-none shadow-xs space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
-                <div className="p-2.5 bg-blue-50 text-[#004b87] border border-blue-200 shrink-0">
+                <div className="p-2.5 bg-cyan-50 text-[#164e63] border border-cyan-200 shrink-0">
                   <UserCheck className="w-5 h-5" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold text-slate-800 flex items-center gap-2">
                     <span>Rekapitulasi Presensi & Kehadiran Siswa</span>
-                    <span className="px-2 py-0.5 bg-blue-100 text-blue-800 text-[10px] font-bold">Input Resmi Guru</span>
+                    <span className="px-2 py-0.5 bg-cyan-100 text-cyan-800 text-[10px] font-bold">Input Resmi Guru</span>
                   </h3>
                   <p className="text-xs text-slate-500">
                     Menampilkan rekapitulasi kehadiran resmi yang diinput oleh Guru Mata Pelajaran / Wali Kelas ke dalam SIMAK.
@@ -1126,7 +1126,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                       : todayAttendance.status === 'SAKIT'
                       ? 'bg-amber-50 text-amber-800 border-amber-300'
                       : todayAttendance.status === 'IZIN'
-                      ? 'bg-blue-50 text-blue-800 border-blue-300'
+                      ? 'bg-cyan-50 text-cyan-800 border-cyan-300'
                       : 'bg-rose-50 text-rose-800 border-rose-300'
                   }`}>
                     <CheckCircle2 className="w-4 h-4" />
@@ -1149,10 +1149,10 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
 
             {/* 5 Summary Stat Metrics */}
             <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5 pt-1">
-              <div className="p-3 bg-blue-50/60 border border-blue-200">
-                <div className="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Persentase Kehadiran</div>
-                <div className="text-xl font-black text-[#004b87] mt-0.5">{attendanceStats.percentage}%</div>
-                <div className="text-[10px] text-blue-600 mt-0.5">{attendanceStats.hadir} dari {attendanceStats.total} total sesi</div>
+              <div className="p-3 bg-cyan-50/60 border border-cyan-200">
+                <div className="text-[10px] font-bold text-cyan-700 uppercase tracking-wider">Persentase Kehadiran</div>
+                <div className="text-xl font-black text-[#164e63] mt-0.5">{attendanceStats.percentage}%</div>
+                <div className="text-[10px] text-cyan-600 mt-0.5">{attendanceStats.hadir} dari {attendanceStats.total} total sesi</div>
               </div>
 
               <div className="p-3 bg-emerald-50/60 border border-emerald-200">
@@ -1182,7 +1182,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
 
             {/* Note & Information from Academic System */}
             <div className="p-3 bg-slate-50 border border-slate-200 text-xs flex items-start gap-2.5">
-              <Info className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
+              <Info className="w-4 h-4 text-cyan-700 shrink-0 mt-0.5" />
               <div className="text-slate-600 leading-relaxed text-[11px]">
                 Presensi dicatat secara resmi oleh <strong>Guru Mata Pelajaran</strong> pada saat jam pelajaran dimulai atau oleh <strong>Wali Kelas</strong> saat apel/pagi hari. Jika terdapat ketidaksesuaian catatan absensi atau ingin mengajukan surat izin/sakit, silakan menghubungi Wali Kelas.
               </div>
@@ -1206,7 +1206,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                     onClick={() => setAttendanceStatusFilter(filter)}
                     className={`px-2.5 py-1 text-xs font-bold transition-all cursor-pointer rounded-none ${
                       attendanceStatusFilter === filter
-                        ? 'bg-[#004b87] text-white shadow-xs'
+                        ? 'bg-[#164e63] text-white shadow-xs'
                         : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
                     }`}
                   >
@@ -1223,13 +1223,13 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
             <div className="overflow-x-auto border border-slate-200">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-[#004b87] text-white font-bold text-[11px]">
-                    <th className="p-2.5 border-r border-blue-700 text-center w-12">No</th>
-                    <th className="p-2.5 border-r border-blue-700">Tanggal</th>
-                    <th className="p-2.5 border-r border-blue-700 text-center">Pertemuan Ke</th>
-                    <th className="p-2.5 border-r border-blue-700 text-center">Status Kehadiran</th>
-                    <th className="p-2.5 border-r border-blue-700">Keterangan / Catatan Guru</th>
-                    <th className="p-2.5 border-r border-blue-700">Waktu Rekam</th>
+                  <tr className="bg-[#164e63] text-white font-bold text-[11px]">
+                    <th className="p-2.5 border-r border-cyan-700 text-center w-12">No</th>
+                    <th className="p-2.5 border-r border-cyan-700">Tanggal</th>
+                    <th className="p-2.5 border-r border-cyan-700 text-center">Pertemuan Ke</th>
+                    <th className="p-2.5 border-r border-cyan-700 text-center">Status Kehadiran</th>
+                    <th className="p-2.5 border-r border-cyan-700">Keterangan / Catatan Guru</th>
+                    <th className="p-2.5 border-r border-cyan-700">Waktu Rekam</th>
                     <th className="p-2.5 text-center">Verifikasi</th>
                   </tr>
                 </thead>
@@ -1258,7 +1258,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                             <span className={`px-2.5 py-0.5 text-[10px] font-black rounded-none inline-block ${
                               rec.status === 'HADIR' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
                               rec.status === 'SAKIT' ? 'bg-amber-100 text-amber-800 border border-amber-300' :
-                              rec.status === 'IZIN' ? 'bg-blue-100 text-blue-800 border border-blue-300' :
+                              rec.status === 'IZIN' ? 'bg-cyan-100 text-cyan-800 border border-cyan-300' :
                               'bg-rose-100 text-rose-800 border border-rose-300'
                             }`}>
                               {rec.status}
@@ -1301,7 +1301,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                     setShowReportCardModal(true);
                   }
                 }}
-                className="px-4 py-2 bg-[#004b87] hover:bg-blue-800 text-white font-bold text-xs rounded-none shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
+                className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs rounded-none shadow-xs flex items-center gap-1.5 cursor-pointer shrink-0"
               >
                 <Printer className="w-4 h-4" />
                 <span>Cetak / Unduh e-Rapor Digital</span>
@@ -1311,16 +1311,16 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
             <div className="overflow-x-auto border border-slate-200">
               <table className="w-full text-left border-collapse text-xs">
                 <thead>
-                  <tr className="bg-[#004b87] text-white font-bold text-[11px]">
-                    <th className="p-2.5 border-r border-blue-700">Mata Pelajaran</th>
-                    <th className="p-2.5 border-r border-blue-700 text-center">TP 1</th>
-                    <th className="p-2.5 border-r border-blue-700 text-center">TP 2</th>
-                    <th className="p-2.5 border-r border-blue-700 text-center">TP 3</th>
-                    <th className="p-2.5 border-r border-blue-700 text-center">TP 4</th>
-                    <th className="p-2.5 border-r border-blue-700 text-center">STS</th>
-                    <th className="p-2.5 border-r border-blue-700 text-center">SAS</th>
-                    <th className="p-2.5 border-r border-blue-700 text-center">Nilai Akhir</th>
-                    <th className="p-2.5 border-r border-blue-700 text-center">Predikat</th>
+                  <tr className="bg-[#164e63] text-white font-bold text-[11px]">
+                    <th className="p-2.5 border-r border-cyan-700">Mata Pelajaran</th>
+                    <th className="p-2.5 border-r border-cyan-700 text-center">TP 1</th>
+                    <th className="p-2.5 border-r border-cyan-700 text-center">TP 2</th>
+                    <th className="p-2.5 border-r border-cyan-700 text-center">TP 3</th>
+                    <th className="p-2.5 border-r border-cyan-700 text-center">TP 4</th>
+                    <th className="p-2.5 border-r border-cyan-700 text-center">STS</th>
+                    <th className="p-2.5 border-r border-cyan-700 text-center">SAS</th>
+                    <th className="p-2.5 border-r border-cyan-700 text-center">Nilai Akhir</th>
+                    <th className="p-2.5 border-r border-cyan-700 text-center">Predikat</th>
                     <th className="p-2.5">Deskripsi Capaian Kompetensi</th>
                   </tr>
                 </thead>
@@ -1337,13 +1337,13 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                       <td className="p-2.5 border-r border-slate-200 text-center font-semibold">{grade.tp4 || '-'}</td>
                       <td className="p-2.5 border-r border-slate-200 text-center font-semibold">{grade.pts || '-'}</td>
                       <td className="p-2.5 border-r border-slate-200 text-center font-semibold">{grade.pas || '-'}</td>
-                      <td className="p-2.5 border-r border-slate-200 text-center font-black text-blue-900 bg-blue-50/50">
+                      <td className="p-2.5 border-r border-slate-200 text-center font-black text-cyan-900 bg-cyan-50/50">
                         {grade.finalScore || 85}
                       </td>
                       <td className="p-2.5 border-r border-slate-200 text-center font-black">
                         <span className={`px-2 py-0.5 text-[10px] rounded-none ${
                           grade.predicate === 'A' ? 'bg-emerald-100 text-emerald-800' :
-                          grade.predicate === 'B' ? 'bg-blue-100 text-blue-800' :
+                          grade.predicate === 'B' ? 'bg-cyan-100 text-cyan-800' :
                           'bg-amber-100 text-amber-800'
                         }`}>
                           {grade.predicate || 'A'}
@@ -1370,7 +1370,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
               <div>
                 <div className="flex items-center gap-2">
-                  <Clock className="w-4 h-4 text-[#004b87]" />
+                  <Clock className="w-4 h-4 text-[#164e63]" />
                   <h3 className="text-sm font-bold text-slate-800">Jadwal Mata Pelajaran 1 Minggu ({activeStudent.className || 'Kelas X'})</h3>
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">
@@ -1397,8 +1397,8 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                   <div key={day} className="bg-slate-50 border border-slate-200 p-3.5 rounded-none space-y-2.5 flex flex-col justify-between">
                     <div>
                       <div className="flex items-center justify-between pb-2 border-b border-slate-200">
-                        <span className="font-extrabold text-xs text-[#004b87] uppercase tracking-wider flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-[#004b87]" />
+                        <span className="font-extrabold text-xs text-[#164e63] uppercase tracking-wider flex items-center gap-1.5">
+                          <span className="w-2 h-2 rounded-full bg-[#164e63]" />
                           <span>Hari {day}</span>
                         </span>
                         <span className="text-[10px] font-bold text-slate-600 bg-slate-200 px-1.5 py-0.5 rounded-none">
@@ -1413,18 +1413,18 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                           </div>
                         ) : (
                           daySchedules.map((sch, idx) => (
-                            <div key={sch.id || idx} className="p-2.5 bg-white border border-slate-200 hover:border-blue-300 rounded-none text-xs transition-colors shadow-2xs">
+                            <div key={sch.id || idx} className="p-2.5 bg-white border border-slate-200 hover:border-cyan-300 rounded-none text-xs transition-colors shadow-2xs">
                               <div className="flex items-center justify-between gap-1.5 mb-1">
                                 <span className="font-mono text-slate-700 font-bold text-[11px] bg-slate-100 px-1.5 py-0.2">
                                   {sch.time}
                                 </span>
-                                <span className="text-[10px] text-blue-700 font-bold truncate max-w-[120px]">
+                                <span className="text-[10px] text-cyan-700 font-bold truncate max-w-[120px]">
                                   {sch.room || `R. ${activeStudent.className}`}
                                 </span>
                               </div>
                               <div className="font-bold text-slate-900 leading-snug">{sch.subject}</div>
                               <div className="text-[11px] text-slate-600 mt-1 flex items-center gap-1 truncate">
-                                <UserCheck className="w-3 h-3 text-[#004b87] shrink-0" />
+                                <UserCheck className="w-3 h-3 text-[#164e63] shrink-0" />
                                 <span className="truncate">{sch.teacher}</span>
                               </div>
                               {sch.notes && (
@@ -1457,7 +1457,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
           <div className="bg-white border border-slate-200 p-5 rounded-none shadow-xs space-y-5">
             <div className="pb-3 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
-                <div className="p-2 bg-blue-50 text-[#004b87] border border-blue-200">
+                <div className="p-2 bg-cyan-50 text-[#164e63] border border-cyan-200">
                   <User className="w-5 h-5" />
                 </div>
                 <div>
@@ -1474,7 +1474,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
               {/* Kolom 1: Data Identitas Siswa */}
               <div className="space-y-3 p-4 bg-slate-50 border border-slate-200">
                 <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] border-b border-slate-200 pb-1.5 flex items-center gap-1.5">
-                  <BookmarkCheck className="w-4 h-4 text-[#004b87]" />
+                  <BookmarkCheck className="w-4 h-4 text-[#164e63]" />
                   Data Pokok Siswa
                 </h4>
                 <div className="space-y-2">
@@ -1506,7 +1506,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
               {/* Kolom 2: Data Rombel & Lembaga */}
               <div className="space-y-3 p-4 bg-slate-50 border border-slate-200">
                 <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] border-b border-slate-200 pb-1.5 flex items-center gap-1.5">
-                  <GraduationCap className="w-4 h-4 text-[#004b87]" />
+                  <GraduationCap className="w-4 h-4 text-[#164e63]" />
                   Rombel & Satuan Pendidikan
                 </h4>
                 <div className="space-y-2">
@@ -1535,9 +1535,9 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
             </div>
 
             {/* Catatan Keamanan Akun */}
-            <div className="p-3.5 bg-blue-50/70 border border-blue-200 text-xs flex items-start gap-2.5">
-              <Info className="w-4 h-4 text-blue-700 shrink-0 mt-0.5" />
-              <div className="text-blue-900 leading-relaxed">
+            <div className="p-3.5 bg-cyan-50/70 border border-cyan-200 text-xs flex items-start gap-2.5">
+              <Info className="w-4 h-4 text-cyan-700 shrink-0 mt-0.5" />
+              <div className="text-cyan-900 leading-relaxed">
                 Untuk perubahan biodata resmi (Nama, NISN, Rombel, atau Nomor Kontak Orang Tua), silakan hubungi bagian <strong>Tata Usaha (TU)</strong> sekolah.
               </div>
             </div>
@@ -1575,7 +1575,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
               </div>
             ) : (
               <form onSubmit={handleSendTaskSubmission} className="space-y-3">
-                <div className="p-3 bg-blue-50/60 border border-blue-200 text-xs text-blue-950">
+                <div className="p-3 bg-cyan-50/60 border border-cyan-200 text-xs text-cyan-950">
                   <strong>Petunjuk Pengerjaan:</strong> {selectedTaskForSubmission.instructions || selectedTaskForSubmission.description}
                 </div>
 
@@ -1588,7 +1588,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                     value={submissionAnswerText}
                     onChange={(e) => setSubmissionAnswerText(e.target.value)}
                     placeholder="Tuliskan rangkuman, jawaban soal, atau catatan pengerjaan tugas Anda di sini..."
-                    className="w-full p-2.5 text-xs bg-slate-50 border border-slate-300 rounded-none focus:bg-white focus:outline-none focus:border-blue-500 font-sans"
+                    className="w-full p-2.5 text-xs bg-slate-50 border border-slate-300 rounded-none focus:bg-white focus:outline-none focus:border-cyan-500 font-sans"
                   />
                 </div>
 
@@ -1601,7 +1601,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
                     value={submissionFileLink}
                     onChange={(e) => setSubmissionFileLink(e.target.value)}
                     placeholder="https://drive.google.com/... atau https://docs.google.com/..."
-                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-none focus:bg-white focus:outline-none focus:border-blue-500 font-sans"
+                    className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 rounded-none focus:bg-white focus:outline-none focus:border-cyan-500 font-sans"
                   />
                   <p className="text-[10px] text-slate-400 mt-1">Pastikan link Google Drive atau berkas dapat diakses oleh guru pengampu.</p>
                 </div>

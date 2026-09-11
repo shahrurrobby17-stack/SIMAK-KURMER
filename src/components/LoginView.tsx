@@ -1430,23 +1430,23 @@ export const LoginView: React.FC<LoginViewProps> = ({
     if (!searchQuery.trim()) return false;
     const q = searchQuery.toLowerCase();
     return (
-      p.name.toLowerCase().includes(q) ||
-      p.schoolName.toLowerCase().includes(q) ||
-      p.nip.toLowerCase().includes(q) ||
-      p.title.toLowerCase().includes(q)
+      (p.name && p.name.toLowerCase().includes(q)) ||
+      (p.schoolName && p.schoolName.toLowerCase().includes(q)) ||
+      (p.nip && p.nip.toLowerCase().includes(q)) ||
+      (p.title && p.title.toLowerCase().includes(q))
     );
   });
 
   return (
     <div 
-      className="min-h-[100dvh] w-full text-slate-100 flex flex-col selection:bg-blue-600 selection:text-white relative overflow-x-hidden transition-all duration-300"
+      className="min-h-[100dvh] w-full text-slate-100 flex flex-col selection:bg-cyan-600 selection:text-white relative overflow-x-hidden transition-all duration-300"
       style={{ 
         fontFamily: 'Arial, Helvetica, sans-serif'
       }}
     >
       {/* Mobile Dedicated Blue Background Layer (Only on Mobile HP: sm:hidden) */}
       <div 
-        className="sm:hidden fixed inset-0 pointer-events-none z-0 bg-[#004b87]"
+        className="sm:hidden fixed inset-0 pointer-events-none z-0 bg-[#164e63]"
       />
 
       {/* Dynamic Background Image & Color Base Layer (Desktop: hidden sm:block) */}
@@ -1477,7 +1477,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
           {/* Logo & Portal Identity */}
           <div className="flex items-center space-x-3 shrink-0">
             <div className="flex items-center justify-center shrink-0">
-              <TutWuriHandayaniLogo className={`h-8 w-8 sm:h-9 sm:w-9 transition-colors duration-300 ${isHeaderLight ? 'text-[#004b87]' : 'text-blue-200'}`} />
+              <TutWuriHandayaniLogo className={`h-8 w-8 sm:h-9 sm:w-9 transition-colors duration-300 ${isHeaderLight ? 'text-[#164e63]' : 'text-cyan-200'}`} />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
@@ -1485,8 +1485,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   Sistem Informasi Akademik
                 </span>
               </div>
-              <span className={`text-[10px] sm:text-[11px] font-semibold mt-1 leading-none transition-colors duration-300 ${isHeaderLight ? 'text-[#004b87]' : 'text-blue-200'}`}>
-                Kurikulum Merdeka Terpadu v.3.7.0
+              <span className={`text-[10px] sm:text-[11px] font-semibold mt-1 leading-none transition-colors duration-300 ${isHeaderLight ? 'text-slate-800' : 'text-white'}`}>
+                Kurikulum Merdeka Terpadu v.3.8.1
               </span>
             </div>
           </div>
@@ -1501,8 +1501,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
               }}
               className={`px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
                 portalTab === 'beranda' 
-                  ? (isHeaderLight ? 'bg-[#004b87] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
-                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-blue-50 hover:text-white hover:bg-white/15 font-bold')
+                  ? (isHeaderLight ? 'bg-[#164e63] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
+                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-cyan-50 hover:text-white hover:bg-white/15 font-bold')
               }`}
             >
               Beranda
@@ -1518,8 +1518,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
               }}
               className={`px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
                 portalTab === 'analitik' 
-                  ? (isHeaderLight ? 'bg-[#004b87] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
-                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-blue-50 hover:text-white hover:bg-white/15 font-bold')
+                  ? (isHeaderLight ? 'bg-[#164e63] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
+                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-cyan-50 hover:text-white hover:bg-white/15 font-bold')
               }`}
             >
               Analitik
@@ -1532,8 +1532,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
               }}
               className={`px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
                 portalTab === 'aktivasi' 
-                  ? (isHeaderLight ? 'bg-[#004b87] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
-                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-blue-50 hover:text-white hover:bg-white/15 font-bold')
+                  ? (isHeaderLight ? 'bg-[#164e63] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
+                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-cyan-50 hover:text-white hover:bg-white/15 font-bold')
               }`}
             >
               Cek Aktivasi
@@ -1549,8 +1549,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
               }}
               className={`px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
                 portalTab === 'tentang' 
-                  ? (isHeaderLight ? 'bg-[#004b87] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
-                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-blue-50 hover:text-white hover:bg-white/15 font-bold')
+                  ? (isHeaderLight ? 'bg-[#164e63] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
+                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-cyan-50 hover:text-white hover:bg-white/15 font-bold')
               }`}
             >
               Tentang Sistem
@@ -1566,8 +1566,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
               }}
               className={`px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
                 portalTab === 'faq' 
-                  ? (isHeaderLight ? 'bg-[#004b87] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
-                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-blue-50 hover:text-white hover:bg-white/15 font-bold')
+                  ? (isHeaderLight ? 'bg-[#164e63] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
+                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-cyan-50 hover:text-white hover:bg-white/15 font-bold')
               }`}
             >
               FAQ
@@ -1583,8 +1583,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
               }}
               className={`px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
                 portalTab === 'helpdesk' 
-                  ? (isHeaderLight ? 'bg-[#004b87] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
-                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-blue-50 hover:text-white hover:bg-white/15 font-bold')
+                  ? (isHeaderLight ? 'bg-[#164e63] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
+                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-cyan-50 hover:text-white hover:bg-white/15 font-bold')
               }`}
             >
               Helpdesk
@@ -1599,13 +1599,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
               onClick={() => setShowLoginDropdown(prev => !prev)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
                 isHeaderLight 
-                  ? 'bg-[#004b87] hover:bg-[#003865] text-white' 
+                  ? 'bg-[#164e63] hover:bg-[#003865] text-white' 
                   : 'bg-white hover:bg-slate-100 text-[#0f457b]'
               }`}
             >
-              <LogIn className={`w-4 h-4 stroke-[2.5] ${isHeaderLight ? 'text-white' : 'text-[#004b87]'}`} />
+              <LogIn className={`w-4 h-4 stroke-[2.5] ${isHeaderLight ? 'text-white' : 'text-[#164e63]'}`} />
               <span>Masuk ke Sistem</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showLoginDropdown ? 'rotate-180' : ''} ${isHeaderLight ? 'text-blue-200' : 'text-slate-500'}`} />
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showLoginDropdown ? 'rotate-180' : ''} ${isHeaderLight ? 'text-cyan-200' : 'text-slate-500'}`} />
             </button>
 
             {showLoginDropdown && (
@@ -1633,7 +1633,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       setShowLoginDropdown(false);
                       setSuccessNotification(null);
                     }}
-                    className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#004b87]"
+                    className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#164e63]"
                   >
                     Masuk Akun SSO
                   </button>
@@ -1653,7 +1653,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       setShowLoginDropdown(false);
                       setSuccessNotification(null);
                     }}
-                    className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#004b87]"
+                    className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#164e63]"
                   >
                     Masuk LMS Siswa
                   </button>
@@ -1670,7 +1670,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       setShowLoginDropdown(false);
                       setSuccessNotification(null);
                     }}
-                    className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#004b87]"
+                    className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#164e63]"
                   >
                     Daftar Akun Baru
                   </button>
@@ -1754,7 +1754,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <p className="font-jakarta text-base font-extrabold text-amber-300 mt-2 tracking-wide" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
               Kurikulum Merdeka
             </p>
-            <p className="text-xs text-blue-200 mt-1 font-medium">
+            <p className="text-xs text-cyan-200 mt-1 font-medium">
               SIMAK Merdeka
             </p>
 
@@ -1763,11 +1763,11 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <button
                 type="button"
                 onClick={() => setShowLoginDropdown(prev => !prev)}
-                className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-100 text-[#004b87] px-6 py-3.5 rounded-xl font-bold text-sm shadow-xl active:scale-95 transition-all cursor-pointer border border-white/80"
+                className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-100 text-[#164e63] px-6 py-3.5 rounded-xl font-bold text-sm shadow-xl active:scale-95 transition-all cursor-pointer border border-white/80"
               >
-                <LogIn className="w-4 h-4 text-[#004b87] stroke-[2.5]" />
+                <LogIn className="w-4 h-4 text-[#164e63] stroke-[2.5]" />
                 <span>Masuk ke Sistem</span>
-                <ChevronDown className={`w-4 h-4 text-[#004b87] transition-transform duration-200 ${showLoginDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 text-[#164e63] transition-transform duration-200 ${showLoginDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               {showLoginDropdown && (
@@ -1795,7 +1795,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                         setShowLoginDropdown(false);
                         setSuccessNotification(null);
                       }}
-                      className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#004b87] flex items-center justify-between border-b border-slate-100"
+                      className="w-full text-left px-4 py-3 hover:bg-cyan-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#164e63] flex items-center justify-between border-b border-slate-100"
                     >
                       <span>Masuk Akun SSO (Guru & Tendik)</span>
                       <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
@@ -1834,7 +1834,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                         setShowLoginDropdown(false);
                         setSuccessNotification(null);
                       }}
-                      className="w-full text-left px-4 py-3 hover:bg-blue-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#004b87] flex items-center justify-between"
+                      className="w-full text-left px-4 py-3 hover:bg-cyan-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#164e63] flex items-center justify-between"
                     >
                       <span>Daftar Akun Baru</span>
                       <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
@@ -1879,7 +1879,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   </div>
 
                   {/* Timestamp info */}
-                  <div className="flex items-center justify-start space-x-2 text-[11px] sm:text-xs text-blue-100 font-medium pt-0.5">
+                  <div className="flex items-center justify-start space-x-2 text-[11px] sm:text-xs text-cyan-100 font-medium pt-0.5">
                     <Calendar className="w-3.5 h-3.5 text-white" />
                     <span>Pembaruan terakhir: Kamis, 10 September 2026</span>
                   </div>
@@ -2020,7 +2020,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
                 {/* Step 1: Pilih Peran */}
                 <div className="relative z-10 flex flex-col items-center" title="Tahap 1: Pilih Peran Pengguna">
-                  <div className="w-10 h-10 rounded-full bg-[#004b87] text-white border-2 border-white shadow-md flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-[#164e63] text-white border-2 border-white shadow-md flex items-center justify-center">
                     <UserPlus className="w-4 h-4 text-white" />
                   </div>
                   <div className="mt-2 text-center">
@@ -2036,7 +2036,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
                 {/* Step 2: Isi Formulir */}
                 <div className="relative z-10 flex flex-col items-center" title="Tahap 2: Pengisian Biodata Akun">
-                  <div className="w-10 h-10 rounded-full bg-blue-700 text-white border-2 border-white shadow-md flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-cyan-700 text-white border-2 border-white shadow-md flex items-center justify-center">
                     <FileText className="w-4 h-4 text-white" />
                   </div>
                   <div className="mt-2 text-center">
@@ -2052,7 +2052,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
                 {/* Step 3: Kirim Pendaftaran */}
                 <div className="relative z-10 flex flex-col items-center" title="Tahap 3: Pengiriman Data ke Database">
-                  <div className="w-10 h-10 rounded-full bg-blue-800 text-white border-2 border-white shadow-md flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-cyan-800 text-white border-2 border-white shadow-md flex items-center justify-center">
                     <Send className="w-4 h-4 text-white" />
                   </div>
                   <div className="mt-2 text-center">
@@ -2084,7 +2084,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
                 {/* Step 5: Masuk (Login) */}
                 <div className="relative z-10 flex flex-col items-center" title="Tahap 5: Masuk ke SIMAK Merdeka">
-                  <div className="w-10 h-10 rounded-full bg-[#004b87] text-white border-2 border-white shadow-md flex items-center justify-center ring-4 ring-slate-400/40">
+                  <div className="w-10 h-10 rounded-full bg-[#164e63] text-white border-2 border-white shadow-md flex items-center justify-center ring-4 ring-slate-400/40">
                     <LogIn className="w-4 h-4 text-white" />
                   </div>
                   <div className="mt-2 text-center">
@@ -2105,8 +2105,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
         <section id="analytics-section" className="relative z-10 pt-8 sm:pt-10 pb-10 sm:pb-12 border-b border-slate-200/70 scroll-mt-16 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-6 sm:mb-8">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-100/80 border border-blue-200 text-xs font-bold text-[#004b87] mb-2.5 shadow-2xs">
-                <BarChart3 className="w-4 h-4 text-[#004b87] stroke-[2.5]" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-100/80 border border-cyan-200 text-xs font-bold text-[#164e63] mb-2.5 shadow-2xs">
+                <BarChart3 className="w-4 h-4 text-[#164e63] stroke-[2.5]" />
                 <span>Analitik & Performa Real-Time SIMAK Guru</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -2156,12 +2156,12 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
               {/* 2. Sinkronisasi Data */}
               <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#004b87]" />
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#164e63]" />
                 <div className="flex items-start justify-between mb-3">
-                  <div className="p-3 rounded-xl bg-blue-50 border border-blue-100 text-[#004b87]">
+                  <div className="p-3 rounded-xl bg-cyan-50 border border-cyan-100 text-[#164e63]">
                     <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
                   </div>
-                  <span className="text-xs font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200">
+                  <span className="text-xs font-bold text-cyan-700 bg-cyan-50 px-2.5 py-1 rounded-full border border-cyan-200">
                     Cloud Active
                   </span>
                 </div>
@@ -2170,7 +2170,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 </div>
                 <div className="text-3xl font-black text-slate-900 mb-2 flex items-baseline gap-2">
                   <span>{classAnalyticsMetrics.syncVal}</span>
-                  <span className="text-xs font-bold text-blue-600">Terhubung Vercel</span>
+                  <span className="text-xs font-bold text-cyan-600">Terhubung Vercel</span>
                 </div>
                 <p className="text-xs text-slate-600 font-medium mb-4">
                   Tingkat konsistensi dan integritas data antara penyimpanan lokal browser dan Vercel Database.
@@ -2179,13 +2179,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 {/* Progress bar */}
                 <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
                   <div 
-                    className="bg-[#004b87] h-2.5 rounded-full transition-all duration-700" 
+                    className="bg-[#164e63] h-2.5 rounded-full transition-all duration-700" 
                     style={{ width: classAnalyticsMetrics.syncVal }}
                   />
                 </div>
                 <div className="mt-2 text-[11px] text-slate-500 flex justify-between font-semibold">
                   <span>Enkripsi Database AES-256</span>
-                  <span className="text-[#004b87] font-bold">{classAnalyticsMetrics.syncVal} Sync</span>
+                  <span className="text-[#164e63] font-bold">{classAnalyticsMetrics.syncVal} Sync</span>
                 </div>
               </div>
 
@@ -2228,7 +2228,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             {/* Sub-Analytics Summary Box */}
             <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-xs">
               <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#004b87]" />
+                <CheckCircle2 className="w-4 h-4 text-[#164e63]" />
                 <span>Rincian Verifikasi Perangkat & Database</span>
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
@@ -2240,7 +2240,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                   <div className="text-slate-500 font-medium">Status Vercel</div>
                   <div className="text-sm font-black text-slate-800 mt-1">Tersinkron Otomatis</div>
-                  <div className="text-[11px] text-blue-600 font-bold mt-0.5">Real-Time Data Mirror</div>
+                  <div className="text-[11px] text-cyan-600 font-bold mt-0.5">Real-Time Data Mirror</div>
                 </div>
                 <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                   <div className="text-slate-500 font-medium">Rekapitulasi Kehadiran</div>
@@ -2256,8 +2256,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
         <section id="about-section" className="relative z-10 pt-6 sm:pt-8 pb-8 sm:pb-10 border-b border-slate-200/70 scroll-mt-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-6 sm:mb-8">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-xs font-bold text-[#004b87] mb-2.5 shadow-2xs">
-                <Sparkles className="w-4 h-4 text-[#004b87]" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-xs font-bold text-[#164e63] mb-2.5 shadow-2xs">
+                <Sparkles className="w-4 h-4 text-[#164e63]" />
                 <span>Tentang SIMAK Guru Merdeka</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -2273,7 +2273,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all text-slate-800">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#004b87] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-[#164e63] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
                     <GraduationCap className="w-4 h-4 text-white" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">Kurikulum Merdeka Ready</h3>
@@ -2285,7 +2285,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
               <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all text-slate-800">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#004b87] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-[#164e63] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
                     <UserCheck className="w-4 h-4 text-white" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">Presensi & Jurnal Mengajar</h3>
@@ -2297,7 +2297,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
               <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all text-slate-800">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#004b87] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-[#164e63] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
                     <BarChart3 className="w-4 h-4 text-white" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">Analitik & Grafik Interaktif</h3>
@@ -2309,7 +2309,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
               <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all text-slate-800">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#004b87] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-[#164e63] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">Asisten AI Guru</h3>
@@ -2321,7 +2321,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
               <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all text-slate-800">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#004b87] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-[#164e63] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
                     <ShieldCheck className="w-4 h-4 text-white" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">Sinkronisasi Vercel Real-Time</h3>
@@ -2333,7 +2333,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
               <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all text-slate-800">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#004b87] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-[#164e63] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
                     <CheckCircle2 className="w-4 h-4 text-white" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">Cetak & Ekspor Rapor Mudah</h3>
@@ -2350,8 +2350,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
         <section id="faq-section" className="relative z-10 pt-6 sm:pt-8 pb-10 sm:pb-12 scroll-mt-16">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-6 sm:mb-7">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-50 border border-blue-200 text-xs font-semibold text-[#004b87] mb-2.5 shadow-2xs">
-                <HelpCircle className="w-4 h-4 text-[#004b87] stroke-[2.5]" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-xs font-semibold text-[#164e63] mb-2.5 shadow-2xs">
+                <HelpCircle className="w-4 h-4 text-[#164e63] stroke-[2.5]" />
                 <span>Pusat Bantuan & Layanan Informasi</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -2376,12 +2376,12 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       className="w-full p-4 sm:p-5 text-left font-bold text-xs sm:text-sm text-slate-800 flex items-center justify-between gap-3 hover:bg-slate-100/80 transition-colors cursor-pointer"
                     >
                       <span className="flex items-center gap-2.5">
-                        <span className="w-6 h-6 rounded-full bg-blue-100 text-[#004b87] text-xs font-black flex items-center justify-center shrink-0 border border-blue-200">
+                        <span className="w-6 h-6 rounded-full bg-cyan-100 text-[#164e63] text-xs font-black flex items-center justify-center shrink-0 border border-cyan-200">
                           {index + 1}
                         </span>
                         <span className="leading-snug">{item.question}</span>
                       </span>
-                      <span className={`p-1.5 bg-slate-200/80 rounded-lg text-slate-600 shrink-0 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180 bg-blue-100 text-[#004b87]' : ''}`}>
+                      <span className={`p-1.5 bg-slate-200/80 rounded-lg text-slate-600 shrink-0 transition-transform duration-300 ease-in-out ${isOpen ? 'rotate-180 bg-cyan-100 text-[#164e63]' : ''}`}>
                         <ChevronDown className="w-4 h-4" />
                       </span>
                     </button>
@@ -2408,11 +2408,11 @@ export const LoginView: React.FC<LoginViewProps> = ({
         </section>
 
         {/* 5. HELPDESK SECTION ON LOGIN PAGE */}
-        <section id="helpdesk-section" className="relative z-10 pt-8 sm:pt-10 pb-12 sm:pb-16 scroll-mt-16 border-t border-slate-200/60 bg-gradient-to-b from-slate-50/50 to-blue-50/30">
+        <section id="helpdesk-section" className="relative z-10 pt-8 sm:pt-10 pb-12 sm:pb-16 scroll-mt-16 border-t border-slate-200/60 bg-gradient-to-b from-slate-50/50 to-cyan-50/30">
           <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-8">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-blue-100/80 border border-blue-200 text-xs font-bold text-[#004b87] mb-2.5 shadow-2xs">
-                <Headphones className="w-4 h-4 text-[#004b87] stroke-[2.5]" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-100/80 border border-cyan-200 text-xs font-bold text-[#164e63] mb-2.5 shadow-2xs">
+                <Headphones className="w-4 h-4 text-[#164e63] stroke-[2.5]" />
                 <span>Layanan Dukungan & Helpdesk SIMAK</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -2482,17 +2482,17 @@ export const LoginView: React.FC<LoginViewProps> = ({
       <footer className="hidden sm:block relative z-10 w-full bg-white text-slate-900 py-6 sm:py-8 pb-[calc(2rem+env(safe-area-inset-bottom))] border-t border-slate-200 mt-auto antialiased">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
           <div className="flex items-center space-x-3.5">
-            <div className="p-2 rounded-xl bg-blue-50 border border-blue-100 shadow-2xs shrink-0">
-              <TutWuriHandayaniLogo className="w-8 h-8 text-[#004b87]" />
+            <div className="p-2 rounded-xl bg-cyan-50 border border-cyan-100 shadow-2xs shrink-0">
+              <TutWuriHandayaniLogo className="w-8 h-8 text-[#164e63]" />
             </div>
             <div>
               <div className="text-slate-900 text-sm sm:text-base font-bold tracking-normal leading-snug">SIMAK Guru Merdeka</div>
               <div className="text-slate-700 text-xs sm:text-sm font-semibold leading-snug mt-0.5">Sistem Informasi Akademik</div>
-              <div className="text-xs text-slate-500 font-normal leading-snug mt-0.5">Terpadu - Kurikulum Merdeka - Versi 3.7.0</div>
+              <div className="text-xs text-slate-500 font-normal leading-snug mt-0.5">Terpadu - Kurikulum Merdeka - Versi 3.8.1</div>
             </div>
           </div>
           <div className="text-xs sm:text-sm text-slate-700 font-medium bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200">
-            © 2026 Hak Cipta Dilindungi Undang-Undang. Versi 3.7.0
+            © 2026 Hak Cipta Dilindungi Undang-Undang. Versi 3.8.1
           </div>
         </div>
       </footer>
@@ -2505,8 +2505,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
           {/* Top Full-Screen Navigation Bar */}
           <header className={`w-full text-white py-3 sm:py-3.5 px-4 sm:px-8 flex items-center justify-between border-b shadow-xs shrink-0 z-30 ${
             isStudentLogin 
-              ? 'bg-gradient-to-r from-[#004b87] to-emerald-800 border-emerald-900/50' 
-              : 'bg-[#004b87] border-blue-900/50'
+              ? 'bg-gradient-to-r from-[#164e63] to-emerald-800 border-emerald-900/50' 
+              : 'bg-[#164e63] border-cyan-900/50'
           }`}>
             <div className="flex items-center space-x-3">
               <div className="p-1.5 sm:p-2 flex items-center justify-center shrink-0 bg-white/15 rounded-xl border border-white/20">
@@ -2537,8 +2537,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
                           : 'Portal Masuk Guru'}
                   </span>
                 </div>
-                <p className="text-[11px] text-blue-100/90 font-medium">
-                  Sistem Informasi Manajemen Akademik Terpadu - Kurikulum Merdeka
+                <p className="text-[11px] text-white font-medium">
+                  Sistem Informasi Manajemen Akademik Terpadu - Kurikulum Merdeka v.3.8.1
                 </p>
               </div>
             </div>
@@ -2572,13 +2572,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 transition-all ${
                     preAuthAccepted 
                       ? 'bg-emerald-600 text-white' 
-                      : 'bg-[#004b87] text-white shadow-xs ring-4 ring-[#004b87]/15'
+                      : 'bg-[#164e63] text-white shadow-xs ring-4 ring-[#164e63]/15'
                   }`}>
                     {preAuthAccepted ? <Check className="w-4 h-4" /> : '1'}
                   </div>
                   <div className="text-left">
                     <div className={`text-xs sm:text-sm font-bold leading-tight ${
-                      !preAuthAccepted ? 'text-[#004b87]' : 'text-slate-800 group-hover:text-[#004b87]'
+                      !preAuthAccepted ? 'text-[#164e63]' : 'text-slate-800 group-hover:text-[#164e63]'
                     }`}>
                       1. Hak Akses & Peran
                     </div>
@@ -2604,14 +2604,14 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     showActivationStep
                       ? 'bg-emerald-600 text-white'
                       : preAuthAccepted 
-                        ? 'bg-[#004b87] text-white shadow-xs ring-4 ring-[#004b87]/15' 
+                        ? 'bg-[#164e63] text-white shadow-xs ring-4 ring-[#164e63]/15' 
                         : 'bg-slate-200 text-slate-500'
                   }`}>
                     {showActivationStep ? <Check className="w-4 h-4" /> : '2'}
                   </div>
                   <div className="text-left">
                     <div className={`text-xs sm:text-sm font-bold leading-tight ${
-                      preAuthAccepted && !showActivationStep ? 'text-[#004b87]' : 'text-slate-700'
+                      preAuthAccepted && !showActivationStep ? 'text-[#164e63]' : 'text-slate-700'
                     }`}>
                       2. Formulir Biodata
                     </div>
@@ -2641,7 +2641,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     showActivationStep
                       ? isAccountActive 
                         ? 'bg-emerald-600 text-white shadow-xs' 
-                        : 'bg-[#004b87] text-white shadow-xs ring-4 ring-[#004b87]/20'
+                        : 'bg-[#164e63] text-white shadow-xs ring-4 ring-[#164e63]/20'
                       : 'bg-slate-200 text-slate-500'
                   }`}>
                     {showActivationStep ? (
@@ -2713,12 +2713,12 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 <div className="flex items-center gap-3.5 sm:gap-4">
                   <div className={`p-2.5 sm:p-3 flex items-center justify-center shrink-0 rounded-2xl shadow-xs ${
                     isMasterDataLogin
-                      ? 'bg-blue-50 border border-blue-200'
+                      ? 'bg-cyan-50 border border-cyan-200'
                       : isStudentLogin 
                         ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white' 
                         : showActivationStep
-                          ? isAccountActive ? 'bg-emerald-600 text-white' : 'bg-[#004b87] text-white'
-                          : 'bg-[#004b87] text-white'
+                          ? isAccountActive ? 'bg-emerald-600 text-white' : 'bg-[#164e63] text-white'
+                          : 'bg-[#164e63] text-white'
                   }`}>
                     {isMasterDataLogin ? (
                       <SSOCloudKeyLogo className="w-7 h-7 sm:w-8 sm:h-8" cloudColor="#2563eb" keyColor="#ffffff" keyHoleColor="#2563eb" />
@@ -2766,7 +2766,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
                 {activeTab === 'register' && !preAuthAccepted && !showActivationStep && (
                   <div className="text-left sm:text-right max-w-full sm:max-w-xs lg:max-w-md border-t sm:border-t-0 pt-3 sm:pt-0 border-slate-100">
-                    <h3 className="text-base sm:text-lg lg:text-xl font-bold text-[#004b87] leading-tight">
+                    <h3 className="text-base sm:text-lg lg:text-xl font-bold text-[#164e63] leading-tight">
                       Autentikasi Hak Akses Pendaftaran
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1 leading-relaxed">
@@ -2785,7 +2785,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   <div className="lg:col-span-6 space-y-6">
                     {/* Deskripsi Singkat */}
                     <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-[#004b87]">
+                      <div className="flex items-center gap-2 text-[#164e63]">
                         <BookOpen className="w-5 h-5" />
                         <h3 className="font-extrabold text-base sm:text-lg text-slate-900">
                           Pendaftaran Akun SIMAK Merdeka
@@ -2799,10 +2799,10 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     {/* Informasi Perhatian Sebelum Melanjutkan */}
                     <div className="pt-4 border-t border-slate-200 space-y-3">
                       <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                        <Info className="w-4 h-4 shrink-0 text-[#004b87]" />
+                        <Info className="w-4 h-4 shrink-0 text-[#164e63]" />
                         <span>Perhatian Sebelum Melanjutkan:</span>
                       </h4>
-                      <ul className="text-xs sm:text-sm text-slate-600 space-y-2.5 list-decimal pl-5 marker:font-bold marker:text-[#004b87] leading-relaxed">
+                      <ul className="text-xs sm:text-sm text-slate-600 space-y-2.5 list-decimal pl-5 marker:font-bold marker:text-[#164e63] leading-relaxed">
                         <li>Pastikan menggunakan email resmi / NISN yang aktif dan terdaftar</li>
                         <li>Pilih hak akses sesuai tugas dan wewenang resmi di satuan pendidikan</li>
                         <li>Tidak diperkenankan menggunakan data/akun milik pihak lain</li>
@@ -2836,16 +2836,16 @@ export const LoginView: React.FC<LoginViewProps> = ({
                               onClick={() => setRegRole(item.title)}
                               className={`p-3 rounded-xl border transition-all cursor-pointer select-none text-left ${
                                 isSelected
-                                  ? 'bg-blue-50/90 border-[#004b87] shadow-xs ring-2 ring-[#004b87]/20'
+                                  ? 'bg-cyan-50/90 border-[#164e63] shadow-xs ring-2 ring-[#164e63]/20'
                                   : 'bg-slate-50/60 border-slate-200 hover:bg-slate-100/80 hover:border-slate-300'
                               }`}
                             >
                               <div className="flex items-center justify-between gap-2 mb-1">
-                                <span className={`text-xs sm:text-sm font-bold ${isSelected ? 'text-[#004b87]' : 'text-slate-800'}`}>
+                                <span className={`text-xs sm:text-sm font-bold ${isSelected ? 'text-[#164e63]' : 'text-slate-800'}`}>
                                   {item.label}
                                 </span>
                                 {isSelected && (
-                                  <span className="shrink-0 w-5 h-5 rounded-full bg-[#004b87] text-white flex items-center justify-center">
+                                  <span className="shrink-0 w-5 h-5 rounded-full bg-[#164e63] text-white flex items-center justify-center">
                                     <Check className="w-3 h-3 stroke-[3]" />
                                   </span>
                                 )}
@@ -2864,7 +2864,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                         <button
                           type="button"
                           onClick={() => setPreAuthAccepted(true)}
-                          className="w-full bg-[#004b87] hover:bg-[#003d6d] text-white font-bold text-sm sm:text-base py-3 sm:py-3.5 px-6 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.99]"
+                          className="w-full bg-[#164e63] hover:bg-[#003d6d] text-white font-bold text-sm sm:text-base py-3 sm:py-3.5 px-6 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.99]"
                         >
                           <UserPlus className="w-5 h-5 shrink-0" />
                           <span>Lanjutkan ke Formulir Pendaftaran ({regRole})</span>
@@ -2879,7 +2879,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 /* SINGLE-COLUMN UNBOXED LAYOUT FOR LOGIN PRE-AUTH */
                 <div className="text-slate-800 space-y-6 animate-fadeIn">
                   <div className="text-center sm:text-left">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#004b87] mb-1">
+                    <h3 className="text-lg sm:text-xl font-bold text-[#164e63] mb-1">
                       Autentikasi Akun
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-500 font-medium max-w-xl">
@@ -2890,7 +2890,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setPreAuthAccepted(true)}
-                    className="w-full bg-[#004b87] hover:bg-[#003d6d] text-white font-bold text-sm sm:text-base py-3.5 sm:py-4 px-6 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.99]"
+                    className="w-full bg-[#164e63] hover:bg-[#003d6d] text-white font-bold text-sm sm:text-base py-3.5 sm:py-4 px-6 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.99]"
                   >
                     <LogIn className="w-5 h-5 shrink-0" />
                     <span>Lanjutkan ke Formulir Masuk</span>
@@ -2898,10 +2898,10 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
                   <div className="pt-4 border-t border-slate-200 space-y-3">
                     <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                      <Info className="w-4 h-4 shrink-0 text-[#004b87]" />
+                      <Info className="w-4 h-4 shrink-0 text-[#164e63]" />
                       <span>Perhatian Sebelum Melanjutkan:</span>
                     </h4>
-                    <ul className="text-xs sm:text-sm text-slate-600 space-y-2 list-decimal pl-5 marker:font-bold marker:text-[#004b87]">
+                    <ul className="text-xs sm:text-sm text-slate-600 space-y-2 list-decimal pl-5 marker:font-bold marker:text-[#164e63]">
                       <li>Pastikan menggunakan email resmi / NISN yang aktif dan terdaftar</li>
                       <li>Pilih hak akses sesuai tugas dan wewenang resmi di satuan pendidikan</li>
                       <li>Tidak diperkenankan menggunakan data/akun milik pihak lain</li>
@@ -2922,9 +2922,9 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
                 {successNotification && (
                   <div className={`mb-6 p-4 border text-xs sm:text-sm font-semibold rounded-xl flex items-center gap-2.5 animate-fadeIn ${
-                    isStudentLogin ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-blue-50 border-blue-200 text-[#004b87]'
+                    isStudentLogin ? 'bg-emerald-50 border-emerald-200 text-emerald-800' : 'bg-cyan-50 border-cyan-200 text-[#164e63]'
                   }`}>
-                    <CheckCircle2 className={`w-5 h-5 shrink-0 ${isStudentLogin ? 'text-emerald-600' : 'text-[#004b87]'}`} />
+                    <CheckCircle2 className={`w-5 h-5 shrink-0 ${isStudentLogin ? 'text-emerald-600' : 'text-[#164e63]'}`} />
                     <span>{successNotification}</span>
                   </div>
                 )}
@@ -2936,7 +2936,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       <div className="lg:col-span-6 space-y-6">
                         {/* Deskripsi Singkat */}
                         <div className="space-y-3">
-                          <div className="flex items-center gap-2 text-[#004b87]">
+                          <div className="flex items-center gap-2 text-[#164e63]">
                             <BookOpen className="w-5 h-5" />
                             <h3 className="font-extrabold text-base sm:text-lg text-slate-900">
                               Pendaftaran Akun SIMAK Merdeka
@@ -2950,10 +2950,10 @@ export const LoginView: React.FC<LoginViewProps> = ({
                         {/* Informasi Perhatian Sebelum Melanjutkan */}
                         <div className="pt-4 border-t border-slate-200 space-y-3">
                           <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                            <Info className="w-4 h-4 shrink-0 text-[#004b87]" />
+                            <Info className="w-4 h-4 shrink-0 text-[#164e63]" />
                             <span>Perhatian Sebelum Melanjutkan:</span>
                           </h4>
-                          <ul className="text-xs sm:text-sm text-slate-600 space-y-2.5 list-decimal pl-5 marker:font-bold marker:text-[#004b87] leading-relaxed">
+                          <ul className="text-xs sm:text-sm text-slate-600 space-y-2.5 list-decimal pl-5 marker:font-bold marker:text-[#164e63] leading-relaxed">
                             <li>Pastikan menggunakan email resmi / NISN yang aktif dan terdaftar</li>
                             <li>Pilih hak akses sesuai tugas dan wewenang resmi di satuan pendidikan</li>
                             <li>Tidak diperkenankan menggunakan data/akun milik pihak lain</li>
@@ -2997,7 +2997,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             placeholder="Email resmi (guru@simakmerdeka.ai.studio) atau NIP"
-                            className="w-full pl-12 pr-4 py-3.5 sm:py-4 bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-[#004b87] transition-all shadow-xs"
+                            className="w-full pl-12 pr-4 py-3.5 sm:py-4 bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] transition-all shadow-xs"
                           />
                         </div>
                       </div>
@@ -3012,7 +3012,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                           <button
                             type="button"
                             onClick={handleOpenForgotModal}
-                            className="text-xs sm:text-sm font-bold text-[#004b87] hover:text-[#003d6d] hover:underline cursor-pointer"
+                            className="text-xs sm:text-sm font-bold text-[#164e63] hover:text-[#003d6d] hover:underline cursor-pointer"
                           >
                             Lupa Kata Sandi?
                           </button>
@@ -3026,7 +3026,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                           value={password}
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder={isStudentLogin ? "Masukkan Kata Sandi" : "••••••••"}
-                          className="w-full pl-12 pr-12 py-3.5 sm:py-4 bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-[#004b87] transition-all shadow-xs"
+                          className="w-full pl-12 pr-12 py-3.5 sm:py-4 bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] transition-all shadow-xs"
                         />
                         <button
                           type="button"
@@ -3049,7 +3049,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             <select
                               value={ssoSystem}
                               onChange={(e) => setSsoSystem(e.target.value as 'Administrator' | 'Guru' | 'Kurikulum' | 'TU' | 'Keuangan' | 'Kesiswaan')}
-                              className="w-full pl-12 pr-10 py-3.5 sm:py-4 bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-[#004b87] transition-all appearance-none cursor-pointer shadow-xs"
+                              className="w-full pl-12 pr-10 py-3.5 sm:py-4 bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] transition-all appearance-none cursor-pointer shadow-xs"
                             >
                               <option value="Administrator">Administrator (Master Data & Monitoring)</option>
                               <option value="Guru">Guru (Sistem Akademik & Jurnal Guru)</option>
@@ -3074,7 +3074,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                               value={encryptionCode}
                               onChange={(e) => setEncryptionCode(e.target.value)}
                               placeholder="Masukkan Kode Enkripsi"
-                              className="w-full pl-12 pr-12 py-3.5 sm:py-4 bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-[#004b87] transition-all font-mono shadow-xs"
+                              className="w-full pl-12 pr-12 py-3.5 sm:py-4 bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] transition-all font-mono shadow-xs"
                             />
                             <button
                               type="button"
@@ -3094,7 +3094,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       type="submit"
                       disabled={isLoading}
                       className={`w-full py-4 text-white font-bold text-sm sm:text-base rounded-xl shadow-md hover:shadow-lg flex items-center justify-center space-x-2 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 mt-4 ${
-                        isStudentLogin ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-[#004b87] hover:bg-[#003d6d]'
+                        isStudentLogin ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-[#164e63] hover:bg-[#003d6d]'
                       }`}
                     >
                       {isLoading ? (
@@ -3160,7 +3160,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                   value={checkEmail}
                                   onChange={(e) => setCheckEmail(e.target.value)}
                                   placeholder="Contoh: guru@simakmerdeka.ai.studio atau NIP"
-                                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-[#004b87] transition-all"
+                                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] transition-all"
                                 />
                               </div>
                             </div>
@@ -3178,7 +3178,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                   value={checkPassword}
                                   onChange={(e) => setCheckPassword(e.target.value)}
                                   placeholder="Masukkan kata sandi akun Anda"
-                                  className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-[#004b87] transition-all"
+                                  className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] transition-all"
                                 />
                                 <button
                                   type="button"
@@ -3195,7 +3195,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             <button
                               type="submit"
                               disabled={checkLoading}
-                              className="w-full mt-2 py-3.5 px-4 bg-[#004b87] hover:bg-[#003d6d] text-white font-bold text-sm rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                              className="w-full mt-2 py-3.5 px-4 bg-[#164e63] hover:bg-[#003d6d] text-white font-bold text-sm rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
                             >
                               {checkLoading ? (
                                 <span className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
@@ -3215,7 +3215,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                 setActiveTab('login');
                                 setShowActivationStep(false);
                               }}
-                              className="text-[#004b87] hover:underline font-bold cursor-pointer"
+                              className="text-[#164e63] hover:underline font-bold cursor-pointer"
                             >
                               Form Masuk (Login)
                             </button>
@@ -3323,34 +3323,34 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     ) : (
                       /* STEP 2: STATUS AKTIVASI AKUN (WARNA BIRU PROFESIONAL & ALUR PENDAFTARAN) */
                       <div className="w-full max-w-xl mx-auto space-y-6 animate-fadeIn">
-                        <div className="bg-blue-50/95 border-2 border-blue-300/90 rounded-3xl p-6 sm:p-8 shadow-xl text-blue-950 relative overflow-hidden">
+                        <div className="bg-cyan-50/95 border-2 border-cyan-300/90 rounded-3xl p-6 sm:p-8 shadow-xl text-cyan-950 relative overflow-hidden">
                           {/* Background Accents */}
-                          <div className="absolute -right-12 -top-12 w-48 h-48 bg-blue-200/50 rounded-full blur-2xl pointer-events-none"></div>
+                          <div className="absolute -right-12 -top-12 w-48 h-48 bg-cyan-200/50 rounded-full blur-2xl pointer-events-none"></div>
                           <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-sky-200/40 rounded-full blur-2xl pointer-events-none"></div>
 
                           <div className="flex flex-col items-center text-center space-y-5 relative z-10">
                             
                             <div>
-                              <div className="w-14 h-14 bg-[#004b87] text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md">
+                              <div className="w-14 h-14 bg-[#164e63] text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md">
                                 <ShieldCheck className="w-7 h-7 stroke-[2.2]" />
                               </div>
-                              <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#004b87] tracking-tight">
+                              <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#164e63] tracking-tight">
                                 Aktivasi Akun Pengguna SIMAK
                               </h3>
-                              <p className="text-xs sm:text-sm text-blue-900/80 font-semibold mt-1.5 max-w-lg mx-auto leading-relaxed">
+                              <p className="text-xs sm:text-sm text-cyan-900/80 font-semibold mt-1.5 max-w-lg mx-auto leading-relaxed">
                                 Pendaftaran akun berhasil dikirim. Akun Anda saat ini dalam status <span className="underline font-bold">Menunggu Aktivasi</span> oleh Operator / Administrator Sekolah.
                               </p>
                             </div>
 
                             {/* Account Details Box */}
-                            <div className="w-full bg-white/95 backdrop-blur-xs border border-blue-200/90 rounded-2xl p-4 sm:p-6 text-left text-slate-800 space-y-4 shadow-xs">
-                              <div className="text-xs font-black text-[#004b87] uppercase tracking-wider border-b border-blue-100 pb-2.5 flex items-center justify-between">
+                            <div className="w-full bg-white/95 backdrop-blur-xs border border-cyan-200/90 rounded-2xl p-4 sm:p-6 text-left text-slate-800 space-y-4 shadow-xs">
+                              <div className="text-xs font-black text-[#164e63] uppercase tracking-wider border-b border-cyan-100 pb-2.5 flex items-center justify-between">
                                 <span className="flex items-center gap-1.5">
-                                  <ShieldCheck className="w-4 h-4 text-[#004b87]" />
+                                  <ShieldCheck className="w-4 h-4 text-[#164e63]" />
                                   <span>Rincian Akun Terdaftar</span>
                                 </span>
-                                <span className="text-[11px] font-extrabold text-[#004b87] font-mono bg-blue-100/80 px-2.5 py-0.5 rounded-full border border-blue-300 flex items-center gap-1.5">
-                                  <ShieldCheck className="w-3.5 h-3.5 text-[#004b87]" />
+                                <span className="text-[11px] font-extrabold text-[#164e63] font-mono bg-cyan-100/80 px-2.5 py-0.5 rounded-full border border-cyan-300 flex items-center gap-1.5">
+                                  <ShieldCheck className="w-3.5 h-3.5 text-[#164e63]" />
                                   STATUS: MENUNGGU AKTIVASI
                                 </span>
                               </div>
@@ -3362,7 +3362,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                 </div>
                                 <div>
                                   <span className="text-slate-500 font-semibold block text-[11px]">Hak Akses / Peran:</span>
-                                  <span className="font-bold text-[#004b87] bg-blue-50 px-2.5 py-0.5 rounded-lg border border-blue-200 inline-block mt-0.5 text-xs">
+                                  <span className="font-bold text-[#164e63] bg-cyan-50 px-2.5 py-0.5 rounded-lg border border-cyan-200 inline-block mt-0.5 text-xs">
                                     {activationData?.role || regRole}
                                   </span>
                                 </div>
@@ -3388,8 +3388,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             </div>
 
                             {/* Verification Notice */}
-                            <div className="w-full bg-blue-100/90 border border-blue-300 rounded-xl p-3 text-left text-xs text-blue-950 flex items-start gap-2.5">
-                              <Info className="w-4 h-4 text-[#004b87] shrink-0 mt-0.5" />
+                            <div className="w-full bg-cyan-100/90 border border-cyan-300 rounded-xl p-3 text-left text-xs text-cyan-950 flex items-start gap-2.5">
+                              <Info className="w-4 h-4 text-[#164e63] shrink-0 mt-0.5" />
                               <p className="leading-relaxed">
                                 <span className="font-bold">Informasi Aktivasi:</span> Proses verifikasi data pendaftaran memerlukan persetujuan Administrator IT / Operator Sekolah. Silakan hubungi Operator atau klik <b>Lanjut ke Form Masuk</b> untuk mulai masuk menggunakan akun Anda.
                               </p>
@@ -3407,7 +3407,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                   setPreAuthAccepted(true);
                                   setSuccessNotification(`Pendaftaran Berhasil! Akun "${targetEmail}" telah siap. Masukkan kata sandi Anda untuk masuk ke sistem.`);
                                 }}
-                                className="w-full sm:flex-1 py-3.5 px-4 bg-[#004b87] hover:bg-[#003d6d] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                                className="w-full sm:flex-1 py-3.5 px-4 bg-[#164e63] hover:bg-[#003d6d] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                               >
                                 <span>Lanjut ke Form Masuk (Login)</span>
                                 <ArrowRight className="w-4 h-4 text-white" />
@@ -3435,7 +3435,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                     }
                                   }, 500);
                                 }}
-                                className="w-full sm:flex-1 py-3.5 px-4 bg-blue-100 hover:bg-blue-200 text-[#004b87] font-bold text-xs sm:text-sm rounded-xl transition-all shadow-2xs border border-blue-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                                className="w-full sm:flex-1 py-3.5 px-4 bg-cyan-100 hover:bg-cyan-200 text-[#164e63] font-bold text-xs sm:text-sm rounded-xl transition-all shadow-2xs border border-cyan-300 flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                               >
                                 <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
                                 <span>Cek Status Aktivasi</span>
@@ -3469,14 +3469,14 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-3 border-b border-slate-200">
                         <div className="flex items-center gap-2">
                           <span className="text-xs font-semibold text-slate-500">Mendaftar Sebagai:</span>
-                          <span className="text-xs sm:text-sm font-bold text-[#004b87] bg-blue-50 px-2.5 py-1 rounded-lg border border-blue-200">
+                          <span className="text-xs sm:text-sm font-bold text-[#164e63] bg-cyan-50 px-2.5 py-1 rounded-lg border border-cyan-200">
                             {regRole}
                           </span>
                         </div>
                         <button
                           type="button"
                           onClick={() => setPreAuthAccepted(false)}
-                          className="text-xs font-bold text-[#004b87] hover:text-[#003d6d] hover:underline cursor-pointer flex items-center gap-1 self-start sm:self-auto"
+                          className="text-xs font-bold text-[#164e63] hover:text-[#003d6d] hover:underline cursor-pointer flex items-center gap-1 self-start sm:self-auto"
                         >
                           <ChevronLeft className="w-3.5 h-3.5" />
                           <span>Ganti Hak Akses / Peran</span>
@@ -3494,7 +3494,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             value={regName}
                             onChange={(e) => setRegName(e.target.value)}
                             placeholder={regRole === 'Siswa' ? "Contoh: Ahmad Fauzan" : "Contoh: Dra. Tri Endah, M.Pd."}
-                            className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-[#004b87] shadow-2xs transition-all"
+                            className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] shadow-2xs transition-all"
                           />
                         </div>
 
@@ -3506,7 +3506,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             value={regSchool}
                             onChange={(e) => setRegSchool(e.target.value)}
                             placeholder="Contoh: SMA Negeri 3 Bandung"
-                            className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-[#004b87] shadow-2xs transition-all"
+                            className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] shadow-2xs transition-all"
                           />
                         </div>
                       </div>
@@ -3518,7 +3518,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                           <select
                             value={regRole}
                             onChange={(e) => setRegRole(e.target.value)}
-                            className="w-full pl-12 pr-10 py-3.5 sm:py-4 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-[#004b87] transition-all appearance-none cursor-pointer shadow-2xs"
+                            className="w-full pl-12 pr-10 py-3.5 sm:py-4 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] transition-all appearance-none cursor-pointer shadow-2xs"
                           >
                             <option value="Guru Pengampu">Guru Pengampu (Mata Pelajaran)</option>
                             <option value="Guru Kelas">Guru Kelas / Wali Kelas</option>
@@ -3544,7 +3544,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             value={regEmail}
                             onChange={(e) => setRegEmail(e.target.value)}
                             placeholder="guru@simakmerdeka.ai.studio"
-                            className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-[#004b87] shadow-2xs transition-all"
+                            className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] shadow-2xs transition-all"
                           />
                         </div>
                         <div>
@@ -3556,7 +3556,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             value={regNip}
                             onChange={(e) => setRegNip(e.target.value)}
                             placeholder={regRole === 'Siswa' ? 'Contoh: 0081234567' : '19850101 201001 1 001'}
-                            className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-[#004b87] shadow-2xs transition-all"
+                            className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] shadow-2xs transition-all"
                           />
                         </div>
                       </div>
@@ -3570,7 +3570,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             value={regPassword}
                             onChange={(e) => setRegPassword(e.target.value)}
                             placeholder="Minimal 6 karakter"
-                            className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-[#004b87] shadow-2xs transition-all"
+                            className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] shadow-2xs transition-all"
                           />
                         </div>
                         <div>
@@ -3581,7 +3581,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             value={regConfirmPassword}
                             onChange={(e) => setRegConfirmPassword(e.target.value)}
                             placeholder="Minimal 6 karakter"
-                            className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/30 focus:border-[#004b87] shadow-2xs transition-all"
+                            className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] shadow-2xs transition-all"
                           />
                         </div>
                       </div>
@@ -3589,7 +3589,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       <button
                         type="submit"
                         disabled={isLoading}
-                        className="w-full py-4 bg-[#004b87] hover:bg-[#003d6d] text-white font-bold text-sm sm:text-base rounded-xl shadow-md hover:shadow-lg flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 mt-3 active:scale-[0.99]"
+                        className="w-full py-4 bg-[#164e63] hover:bg-[#003d6d] text-white font-bold text-sm sm:text-base rounded-xl shadow-md hover:shadow-lg flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 mt-3 active:scale-[0.99]"
                       >
                         {isLoading ? (
                           <span className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
@@ -3612,7 +3612,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
           {/* Full Screen Footer */}
           <footer className="w-full py-3 px-4 sm:px-8 border-t border-slate-200/80 bg-white/80 backdrop-blur-xs text-xs text-slate-500 font-medium shrink-0 flex flex-col sm:flex-row items-center justify-between gap-2 z-10">
             <div className="flex items-center gap-2">
-              <TutWuriHandayaniLogo className="w-4 h-4 text-[#004b87]" />
+              <TutWuriHandayaniLogo className="w-4 h-4 text-[#164e63]" />
               <span className="font-semibold text-slate-700">SIMAK Merdeka</span>
             </div>
             <div className="flex items-center gap-4 text-[11px] text-slate-500">
@@ -3632,7 +3632,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
           <div className="absolute inset-0 pointer-events-none bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] opacity-5"></div>
           
           <div className="bg-white rounded-2xl w-full max-w-md shadow-2xl border border-slate-200 overflow-hidden text-slate-800 relative z-10 flex flex-col">
-            <div className="bg-[#004b87] text-white p-4 sm:p-5 flex items-center justify-between border-b border-blue-900/40">
+            <div className="bg-[#164e63] text-white p-4 sm:p-5 flex items-center justify-between border-b border-cyan-900/40">
               <div className="flex items-center space-x-3">
                 <div className="p-1.5 flex items-center justify-center shrink-0 bg-white/15 rounded-xl border border-white/20">
                   <KeyRound className="w-5 h-5 text-white" />
@@ -3642,7 +3642,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <button
                 type="button"
                 onClick={() => setShowForgotModal(false)}
-                className="text-blue-100 hover:text-white p-1.5 hover:bg-white/15 rounded-lg transition-colors cursor-pointer"
+                className="text-cyan-100 hover:text-white p-1.5 hover:bg-white/15 rounded-lg transition-colors cursor-pointer"
                 title="Kembali"
               >
                 <X className="w-5 h-5" />
@@ -3671,13 +3671,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       value={forgotEmail}
                       onChange={(e) => setForgotEmail(e.target.value)}
                       placeholder="contoh: guru@simakmerdeka.ai.studio"
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#004b87] focus:bg-white"
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-[#164e63] focus:bg-white"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={forgotLoading}
-                    className="w-full py-2.5 bg-[#004b87] hover:bg-[#003d6d] text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 mt-2"
+                    className="w-full py-2.5 bg-[#164e63] hover:bg-[#003d6d] text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer disabled:opacity-50 mt-2"
                   >
                     {forgotLoading ? (
                       <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
@@ -3694,9 +3694,9 @@ export const LoginView: React.FC<LoginViewProps> = ({
               {/* STEP 2: Show OTP Code */}
               {forgotStep === 2 && (
                 <div className="space-y-4">
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-xs text-blue-900 space-y-2">
-                    <div className="font-bold text-[#004b87]">Kode OTP Verifikasi Anda:</div>
-                    <div className="text-xl font-black text-[#004b87] tracking-widest bg-white p-2.5 rounded-lg text-center border border-blue-300 select-all">
+                  <div className="p-3 bg-cyan-50 border border-cyan-200 rounded-xl text-xs text-cyan-900 space-y-2">
+                    <div className="font-bold text-[#164e63]">Kode OTP Verifikasi Anda:</div>
+                    <div className="text-xl font-black text-[#164e63] tracking-widest bg-white p-2.5 rounded-lg text-center border border-cyan-300 select-all">
                       {generatedOtp}
                     </div>
                   </div>
@@ -3709,7 +3709,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       value={inputOtp}
                       onChange={(e) => setInputOtp(e.target.value)}
                       placeholder="6 Digit OTP"
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#004b87] focus:bg-white"
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-center tracking-widest focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-[#164e63] focus:bg-white"
                     />
                   </div>
 
@@ -3717,7 +3717,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     <button
                       type="button"
                       onClick={() => handleVerifyOtp()}
-                      className="flex-1 py-2.5 bg-[#004b87] hover:bg-[#003d6d] text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                      className="flex-1 py-2.5 bg-[#164e63] hover:bg-[#003d6d] text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
                     >
                       Verifikasi OTP
                     </button>
@@ -3739,7 +3739,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Minimal 6 karakter"
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#004b87] focus:bg-white"
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-[#164e63] focus:bg-white"
                     />
                   </div>
                   <div>
@@ -3750,13 +3750,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       value={confirmNewPassword}
                       onChange={(e) => setConfirmNewPassword(e.target.value)}
                       placeholder="Sama dengan kata sandi baru"
-                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-[#004b87] focus:bg-white"
+                      className="w-full px-3 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500/20 focus:border-[#164e63] focus:bg-white"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={forgotLoading}
-                    className="w-full py-2.5 bg-[#004b87] hover:bg-[#003d6d] text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer"
+                    className="w-full py-2.5 bg-[#164e63] hover:bg-[#003d6d] text-white font-bold text-xs rounded-xl shadow-md flex items-center justify-center space-x-2 transition-all cursor-pointer"
                   >
                     {forgotLoading ? (
                       <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
@@ -3770,7 +3770,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               {/* STEP 4: Reset Success */}
               {forgotStep === 4 && (
                 <div className="text-center py-4 space-y-3">
-                  <div className="w-12 h-12 bg-blue-100 text-[#004b87] rounded-full flex items-center justify-center mx-auto">
+                  <div className="w-12 h-12 bg-cyan-100 text-[#164e63] rounded-full flex items-center justify-center mx-auto">
                     <CheckCircle2 className="w-7 h-7" />
                   </div>
                   <h4 className="font-bold text-sm text-slate-800">Kata Sandi Berhasil Diperbarui!</h4>
@@ -3780,7 +3780,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   <button
                     type="button"
                     onClick={handleFinishResetAndLogin}
-                    className="w-full py-2.5 bg-[#004b87] hover:bg-[#003d6d] text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
+                    className="w-full py-2.5 bg-[#164e63] hover:bg-[#003d6d] text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer"
                   >
                     Lanjut Masuk Akun
                   </button>

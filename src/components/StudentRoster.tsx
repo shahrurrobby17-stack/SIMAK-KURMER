@@ -239,11 +239,11 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
               placeholder="Cari nama siswa..." 
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-slate-50 border border-slate-300 text-xs pl-9 pr-3 py-2 rounded-none focus:outline-none focus:border-blue-500"
+              className="w-full bg-slate-50 border border-slate-300 text-xs pl-9 pr-3 py-2 rounded-none focus:outline-none focus:border-cyan-500"
             />
           </div>
           <div className="text-xs font-bold text-slate-500 whitespace-nowrap hidden sm:block">
-            Total: <span className="text-blue-700 font-extrabold">{filteredStudents.length}</span> Siswa
+            Total: <span className="text-cyan-700 font-extrabold">{filteredStudents.length}</span> Siswa
           </div>
         </div>
 
@@ -260,7 +260,7 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
                   onSelectClass(newCls || 'Semua Kelas');
                 }
               }}
-              className="h-9 bg-slate-50 hover:bg-slate-100 border border-slate-300 text-xs px-3 rounded-none focus:outline-none focus:border-blue-500 text-slate-800 font-semibold cursor-pointer shrink-0"
+              className="h-9 bg-slate-50 hover:bg-slate-100 border border-slate-300 text-xs px-3 rounded-none focus:outline-none focus:border-cyan-500 text-slate-800 font-semibold cursor-pointer shrink-0"
             >
               <option value="">Semua Kelas</option>
               {Array.from(new Set([...(classList || []), ...students.map(s => s.className)])).filter(c => Boolean(c) && c !== 'Semua Kelas' && c !== 'SEMUA').sort().map(cls => (
@@ -349,7 +349,7 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
                           </div>
                           <div>
                             <span 
-                              className="font-bold text-slate-800 text-xs block hover:text-blue-600 cursor-pointer transition-colors" 
+                              className="font-bold text-slate-800 text-xs block hover:text-cyan-600 cursor-pointer transition-colors" 
                               onClick={() => setSelectedStudentDetail(student)}
                             >
                               {student.name}
@@ -392,7 +392,7 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
                         <div className="flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
                           <button
                             onClick={() => setSelectedStudentDetail(student)}
-                            className="text-slate-400 hover:text-blue-600 transition-colors cursor-pointer"
+                            className="text-slate-400 hover:text-cyan-600 transition-colors cursor-pointer"
                             title="Lihat Detail Profil"
                           >
                             <Eye className="w-4 h-4" />
@@ -431,11 +431,11 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
         <div className="bg-slate-50 border-t border-slate-200 px-4 py-3 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-600">
           <div className="flex items-center gap-4 flex-wrap">
             <span className="font-semibold">
-              Total Ditampilkan: <strong className="text-[#004b87]">{filteredStudents.length}</strong> Siswa
+              Total Ditampilkan: <strong className="text-[#164e63]">{filteredStudents.length}</strong> Siswa
             </span>
             <span className="text-slate-300 hidden sm:inline">|</span>
             <span>
-              Laki-laki: <strong className="text-blue-700">{filteredStudents.filter(s => s.gender === 'L').length}</strong>
+              Laki-laki: <strong className="text-cyan-700">{filteredStudents.filter(s => s.gender === 'L').length}</strong>
             </span>
             <span className="text-slate-300 hidden sm:inline">|</span>
             <span>
@@ -454,8 +454,8 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-none max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200">
             <div className="flex justify-between items-center border-b pb-2">
-              <h3 className="text-base font-bold text-[#004b87] flex items-center gap-2">
-                <UserPlus className="w-5 h-5 text-blue-600" />
+              <h3 className="text-base font-bold text-[#164e63] flex items-center gap-2">
+                <UserPlus className="w-5 h-5 text-cyan-600" />
                 Tambah Siswa Kelas {targetClass || selectedClass || 'Baru'}
               </h3>
               <button onClick={() => setShowAddModal(false)} className="text-slate-400 hover:text-slate-700">
@@ -471,7 +471,7 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
                   placeholder="Contoh: Muhammad Fajar Kurniawan"
                   value={newForm.name}
                   onChange={(e) => setNewForm({ ...newForm, name: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 p-2 rounded-none focus:outline-none focus:border-blue-500"
+                  className="w-full bg-slate-50 border border-slate-300 p-2 rounded-none focus:outline-none focus:border-cyan-500"
                 />
               </div>
 
@@ -509,7 +509,7 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="w-full bg-blue-600 text-white font-bold py-2 rounded-none hover:bg-blue-500 transition-colors cursor-pointer"
+                  className="w-full bg-cyan-600 text-white font-bold py-2 rounded-none hover:bg-cyan-500 transition-colors cursor-pointer"
                 >
                   Simpan Siswa
                 </button>
@@ -525,11 +525,11 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
           <div className="bg-white rounded-none max-w-lg w-full p-6 shadow-2xl space-y-4 border border-slate-200 max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-start border-b pb-3">
               <div className="flex items-center space-x-3">
-                <div className="w-12 h-12 rounded-none bg-[#004b87] text-amber-400 font-black text-xl flex items-center justify-center">
+                <div className="w-12 h-12 rounded-none bg-[#164e63] text-amber-400 font-black text-xl flex items-center justify-center">
                   {selectedStudentDetail.name.charAt(0)}
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-[#004b87]">{selectedStudentDetail.name}</h3>
+                  <h3 className="text-base font-bold text-[#164e63]">{selectedStudentDetail.name}</h3>
                   <p className="text-xs text-slate-500">
                     Kelas: {selectedStudentDetail.className} | Status: {selectedStudentDetail.status || 'Aktif'}
                   </p>
@@ -542,7 +542,7 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
 
             {/* Academic Breakdown */}
             <div className="space-y-2 text-xs">
-              <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] text-blue-700">
+              <h4 className="font-bold text-slate-800 uppercase tracking-wider text-[11px] text-cyan-700">
                 Nilai Capaian Mata Pelajaran (Semester Ganjil)
               </h4>
               <div className="border border-slate-200 rounded-none overflow-hidden divide-y divide-slate-100">
@@ -554,11 +554,11 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
                   return (
                     <div key={sub.id} className="p-2.5 flex justify-between items-center bg-slate-50/50">
                       <div>
-                        <span className="font-bold text-[#004b87]">{sub.name}</span>
+                        <span className="font-bold text-[#164e63]">{sub.name}</span>
                         <div className="text-[10px] text-slate-400">KKTP Min: {sub.kktp}</div>
                       </div>
                       <div className="flex items-center space-x-2">
-                        <span className="font-black text-blue-700 text-sm">{score}</span>
+                        <span className="font-black text-cyan-700 text-sm">{score}</span>
                         <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-none">
                           Predikat {pred}
                         </span>
@@ -606,13 +606,13 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
                 <AlertTriangle className="w-6 h-6 text-red-600" />
               </div>
               <div>
-                <h3 className="text-base font-bold text-[#004b87]">Hapus Data Siswa</h3>
+                <h3 className="text-base font-bold text-[#164e63]">Hapus Data Siswa</h3>
                 <p className="text-xs text-slate-500">Konfirmasi Penghapusan</p>
               </div>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Apakah Anda yakin ingin menghapus <strong className="text-[#004b87]">{studentToDelete.name}</strong> dari daftar siswa kelas {studentToDelete.className}? Data nilai dan rekap presensi siswa ini juga akan dibersihkan.
+              Apakah Anda yakin ingin menghapus <strong className="text-[#164e63]">{studentToDelete.name}</strong> dari daftar siswa kelas {studentToDelete.className}? Data nilai dan rekap presensi siswa ini juga akan dibersihkan.
             </p>
 
             <div className="flex gap-2 pt-2">

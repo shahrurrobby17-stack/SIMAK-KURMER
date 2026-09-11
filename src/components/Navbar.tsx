@@ -6,15 +6,14 @@ import {
   LogIn, 
   CheckCircle2, 
   Sparkles,
-  Calendar,
-  User
+  Calendar
 } from 'lucide-react';
 import { TeacherProfile, UserAccount, TeachingScheduleItem } from '../types';
 import { subscribeToSchedules } from '../lib/firebaseService';
 import { TutWuriHandayaniLogo } from './TutWuriHandayaniLogo';
 
 interface NavbarProps {
-  teacher: TeacherProfile;
+  teacher?: TeacherProfile;
   currentUser?: UserAccount | null;
   classList: string[];
   selectedClass: string;
@@ -115,45 +114,52 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isStudentPage = activeTab === 'system-kesiswaan' || isStudentUser;
 
   return (
-    <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-xs">
+    <header className="bg-cyan-900 border-b border-cyan-800 sticky top-0 z-30 shadow-md">
       {/* Top Banner bar */}
-      <div className="bg-[#004b87] text-white px-3 md:px-6 pt-[calc(env(safe-area-inset-top,0px)+0.4rem)] pb-1.5 text-[10px] flex justify-between items-center border-b border-slate-800 transition-all">
+      <div className="bg-cyan-950/80 text-white px-3 md:px-6 pt-[calc(env(safe-area-inset-top,0px)+0.4rem)] pb-1.5 text-[10px] flex justify-between items-center border-b border-cyan-800/80 transition-all">
         <div className="flex items-center space-x-1.5 truncate">
-          <span className="font-bold tracking-wide uppercase text-[9px] md:text-[10px] text-blue-100 truncate">
+          <span className="font-bold tracking-wide uppercase text-[9px] md:text-[10px] text-white truncate">
             {isStudentUser ? 'LEARNING MANAGEMENT SYSTEM • PLATFORM PEMBELAJARAN DIGITAL MANDIRI' : isKeuanganPage ? 'SISTEM PENGELOLAAN KEUANGAN & ANGGARAN SEKOLAH' : isTuPage ? 'SISTEM INFORMASI ADMINISTRASI TATA USAHA' : isKurikulumPage ? 'SISTEM INFORMASI KURIKULUM MERDEKA' : 'SISTEM INFORMASI AKADEMIK GURU'}
           </span>
-          <span className="hidden md:inline text-blue-400">•</span>
+          <span className="hidden md:inline text-white/70">•</span>
           <span className="hidden md:inline-flex items-center text-amber-300 font-medium text-[10px]">
             <ShieldCheck className="w-3.5 h-3.5 mr-1 text-amber-400" />
-            SIMAK Versi 3.7.0
+            SIMAK Versi 3.8.1
           </span>
 
         </div>
         
-        <div className="flex items-center space-x-2 text-[9px] md:text-[10px] text-blue-100 shrink-0">
+        <div className="flex items-center space-x-2 text-[9px] md:text-[10px] text-white shrink-0">
           <div className="hidden sm:flex items-center space-x-1">
-            <Calendar className="w-3 h-3 text-blue-300" />
+            <Calendar className="w-3 h-3 text-cyan-200" />
             <span>{dateString}</span>
           </div>
         </div>
       </div>
 
       {/* Main Header Content */}
-      <div className="px-3 md:px-6 py-2 md:py-3 max-w-[1600px] mx-auto flex flex-col md:flex-row justify-between items-stretch md:items-center gap-2 md:gap-3">
+      <div className="px-3 md:px-6 py-2 md:py-2.5 w-full flex flex-col md:flex-row justify-between items-stretch md:items-center gap-2 md:gap-3">
         
         {/* Top Row: Emblem Title + User Profile Badge */}
-        <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center justify-between gap-3 min-w-0">
           {/* School Emblem Title */}
-          <div className="flex items-center space-x-2.5 min-w-0">
-            <div className="w-8 h-8 md:w-10 md:h-10 bg-white rounded-none shadow-xs shrink-0 flex items-center justify-center p-1 border border-slate-200">
+          <div className="flex items-center space-x-2.5 md:space-x-3 min-w-0">
+            <div className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 bg-white rounded-none shadow-sm shrink-0 flex items-center justify-center p-1 md:p-1.5 border border-cyan-700/60">
               <TutWuriHandayaniLogo className="w-full h-full" />
             </div>
-            <div className="min-w-0 flex flex-col justify-center">
-              <h1 className="text-xs md:text-sm font-black text-[#004b87] uppercase tracking-wider leading-none truncate">
-                {isStudentUser ? 'Learning Management System' : isTuPage ? 'ADMINISTRASI TATA USAHA' : isKurikulumPage ? 'KURIKULUM' : 'SIMAK GURU'}
-              </h1>
-              <p className="text-[10px] md:text-[11px] text-slate-600 font-medium tracking-tight mt-1 truncate">
-                {teacher.schoolName} {!isStudentPage && <span className="hidden sm:inline">• NPSN: {teacher.npsn}</span>}
+            <div className="min-w-0 flex flex-col justify-center space-y-0.5">
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-black text-white uppercase tracking-wider leading-tight truncate">
+                  {isStudentUser ? 'Learning Management System' : isTuPage ? 'ADMINISTRASI TATA USAHA' : isKurikulumPage ? 'KURIKULUM' : 'SIMAK GURU'}
+                </h1>
+                {!isStudentUser && !isTuPage && !isKurikulumPage && (
+                  <span className="bg-amber-400 text-cyan-950 font-black text-[10px] sm:text-[11px] md:text-xs px-1.5 py-0.5 rounded-none shadow-xs shrink-0 tracking-wider">
+                    V.3.8.1
+                  </span>
+                )}
+              </div>
+              <p className="text-[11px] sm:text-xs md:text-sm text-white font-bold tracking-tight truncate">
+                {teacher?.schoolName || currentUser?.schoolName || 'SMA ISLAM DIPONEGORO WAGIR'} {!isStudentPage && <span className="inline text-cyan-100 font-semibold">• NPSN: {teacher?.npsn || '20517834'}</span>}
               </p>
             </div>
           </div>
@@ -164,10 +170,10 @@ export const Navbar: React.FC<NavbarProps> = ({
               <button
                 type="button"
                 onClick={onLogout}
-                className="flex items-center space-x-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-2.5 py-1.5 rounded-none text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
+                className="flex items-center space-x-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-400/40 px-2.5 py-1.5 rounded-none text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
                 title="Keluar dari Aplikasi"
               >
-                <LogOut className="w-3.5 h-3.5 text-rose-600" />
+                <LogOut className="w-3.5 h-3.5 text-rose-300" />
                 <span>Keluar</span>
               </button>
             )}
@@ -175,20 +181,20 @@ export const Navbar: React.FC<NavbarProps> = ({
         </div>
 
         {/* Right Side: Teacher Info & Photo + Class Filter Bar */}
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between md:justify-end gap-2 md:gap-3 mt-2 md:mt-0 border-t border-slate-100 md:border-0 pt-2 md:pt-0 w-full md:w-auto">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between md:justify-end gap-2 md:gap-3 mt-2 md:mt-0 border-t border-cyan-800 md:border-0 pt-2 md:pt-0 w-full md:w-auto">
           {/* Teacher Profile Avatar & Info Card */}
           <div className="flex items-center justify-between md:justify-end gap-2.5 min-w-0 w-full md:w-auto">
             <div className="flex flex-col md:items-end min-w-0 flex-1 md:flex-initial text-left md:text-right">
-              <p className="text-[10px] md:text-[11px] font-bold text-[#004b87] truncate">
-                {currentUser?.name || teacher.name}
+              <p className="text-[10px] md:hidden font-bold text-white truncate">
+                {currentUser?.name || teacher?.name || 'Pengguna'}
               </p>
-              <p className="text-[9px] md:text-[10px] font-semibold text-slate-500 truncate leading-tight">
-                {currentUser?.role || teacher.subjectRole || 'Guru Pengampu'}
+              <p className="text-[9px] md:hidden font-semibold text-white truncate leading-tight">
+                {currentUser?.role || teacher?.subjectRole || 'Guru Pengampu'}
               </p>
               {!isKurikulumPage && !isTuPage && !isStudentPage && (
-                <div className="flex items-center md:justify-end gap-1.5 mt-0.5">
-                  <div className={`w-1.5 h-1.5 rounded-full ${activeClasses.length > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></div>
-                  <p className={`text-[9px] md:text-[10px] font-bold truncate ${activeClasses.length > 0 ? 'text-emerald-600' : 'text-slate-500'}`}>
+                <div className="flex items-center md:hidden gap-1.5 mt-0.5">
+                  <div className={`w-1.5 h-1.5 rounded-full ${activeClasses.length > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-cyan-600'}`}></div>
+                  <p className="text-[9px] md:text-[10px] font-bold truncate text-white">
                     Status: Kelas Aktif ({activeClassText})
                   </p>
                 </div>
@@ -197,11 +203,11 @@ export const Navbar: React.FC<NavbarProps> = ({
               {/* Filter Kelas on Laptop/Desktop - directly below status kelas aktif */}
               {showClassSelector && (
                 <div className="hidden md:flex items-center justify-end gap-1.5 mt-1">
-                  <span className="text-slate-500 font-bold text-[10px]">Filter Kelas:</span>
+                  <span className="text-cyan-200 font-bold text-[10px]">Filter Kelas:</span>
                   <select 
                     value={selectedClass} 
                     onChange={(e) => onSelectClass(e.target.value)}
-                    className="bg-white text-[#004b87] font-extrabold px-2 py-0.5 rounded-none border border-slate-300 focus:outline-none focus:border-blue-500 cursor-pointer shadow-2xs text-[11px]"
+                    className="bg-cyan-800 text-white font-extrabold px-2 py-0.5 rounded-none border border-cyan-700 focus:outline-none focus:border-cyan-400 cursor-pointer shadow-2xs text-[11px]"
                   >
                     {classList.map((cls) => (
                       <option key={cls} value={cls}>{cls}</option>
@@ -210,36 +216,25 @@ export const Navbar: React.FC<NavbarProps> = ({
                 </div>
               )}
             </div>
-
-            <button
-              type="button"
-              onClick={() => onTabChange && onTabChange('settings')}
-              className="relative w-9 h-9 md:w-10 md:h-10 shrink-0 rounded-full border-2 border-[#004b87]/30 bg-[#004b87] flex items-center justify-center overflow-hidden cursor-pointer hover:border-[#004b87] hover:scale-105 transition-all shadow-xs self-center"
-              title="Profil Pengajar"
-            >
-              <div className="w-full h-full text-white flex items-center justify-center font-bold text-xs md:text-sm">
-                {(currentUser?.name || teacher.name) ? (currentUser?.name || teacher.name).charAt(0).toUpperCase() : <User className="w-4 h-4 text-white" />}
-              </div>
-            </button>
           </div>
           
           {/* Mobile Only Filter Kelas */}
           {showClassSelector && (
-            <div className="md:hidden flex items-center justify-between gap-2 bg-slate-50 px-2 py-1.5 rounded-none border border-slate-200/80 w-full shrink-0 mt-1">
+            <div className="md:hidden flex items-center justify-between gap-2 bg-cyan-800/90 px-2 py-1.5 rounded-none border border-cyan-700 w-full shrink-0 mt-1">
               <div className="flex items-center space-x-1.5 text-xs">
-                <span className="text-slate-500 font-bold text-[11px]">Filter Kelas:</span>
+                <span className="text-cyan-200 font-bold text-[11px]">Filter Kelas:</span>
                 <select 
                   value={selectedClass} 
                   onChange={(e) => onSelectClass(e.target.value)}
-                  className="bg-white text-[#004b87] font-extrabold px-2 py-0.5 rounded-none border border-slate-300 focus:outline-none focus:border-blue-500 cursor-pointer shadow-2xs text-xs"
+                  className="bg-cyan-900 text-white font-extrabold px-2 py-0.5 rounded-none border border-cyan-700 focus:outline-none focus:border-cyan-400 cursor-pointer shadow-2xs text-xs"
                 >
                   {classList.map((cls) => (
                     <option key={cls} value={cls}>{cls}</option>
                   ))}
                 </select>
               </div>
-              <span className="text-[10px] text-slate-400 font-medium">
-                T.A {teacher.academicYear}
+              <span className="text-[10px] text-cyan-300/80 font-medium">
+                T.A {teacher?.academicYear || '2026/2027'}
               </span>
             </div>
           )}

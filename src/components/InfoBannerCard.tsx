@@ -229,11 +229,11 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
         /* Active Running Text Banner Card */
         <div className="bg-white border border-slate-200/90 rounded-xl px-3 py-2 sm:px-3.5 sm:py-2.5 shadow-sm text-slate-800 flex items-center gap-2.5 sm:gap-3 overflow-hidden relative">
           {/* Subtle background overlay effect */}
-          <div className="absolute -right-10 -bottom-10 w-28 h-28 bg-blue-500/5 rounded-full blur-xl pointer-events-none" />
+          <div className="absolute -right-10 -bottom-10 w-28 h-28 bg-cyan-500/5 rounded-full blur-xl pointer-events-none" />
 
           {/* Badge Label: INFO TERKINI */}
           <div className="flex items-center gap-2 shrink-0 border-r border-slate-200/90 pr-2.5 sm:pr-3">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-wider bg-gradient-to-r from-blue-600 via-sky-500 to-blue-400 text-white border border-blue-300/40 shadow-2xs">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-wider bg-gradient-to-r from-cyan-600 via-sky-500 to-cyan-400 text-white border border-cyan-300/40 shadow-2xs">
               <Radio className="w-3.5 h-3.5 shrink-0 animate-pulse" />
               <span>INFO TERKINI</span>
             </span>
@@ -260,12 +260,12 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
                     item.category === 'Penting' ? 'bg-rose-100 text-rose-700 border border-rose-200' :
                     item.category === 'Pengumuman' ? 'bg-amber-100 text-amber-800 border border-amber-200' :
                     item.category === 'Fitur Baru' ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' :
-                    'bg-blue-100 text-blue-700 border border-blue-200'
+                    'bg-cyan-100 text-cyan-700 border border-cyan-200'
                   }`}>
                     [{item.category || 'INFORMASI'}]
                   </span>
                   <span className="text-slate-800 font-bold whitespace-nowrap">{item.text}</span>
-                  <span className="ml-2.5 text-blue-400/80 font-black text-xs shrink-0">✦</span>
+                  <span className="ml-2.5 text-cyan-400/80 font-black text-xs shrink-0">✦</span>
                 </span>
               ))}
             </div>
@@ -337,7 +337,7 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
                     required
                     value={masterEmailInput}
                     onChange={(e) => setMasterEmailInput(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-600"
                   />
                 </div>
 
@@ -349,7 +349,7 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
                     placeholder="Masukkan kata sandi master..."
                     value={masterPasswordInput}
                     onChange={(e) => setMasterPasswordInput(e.target.value)}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-600"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-600"
                   />
                 </div>
 
@@ -385,7 +385,7 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
                   <select
                     value={formIsActive ? 'aktif' : 'sembunyi'}
                     onChange={(e) => setFormIsActive(e.target.value === 'aktif')}
-                    className="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer shrink-0"
+                    className="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-600 cursor-pointer shrink-0"
                   >
                     <option value="aktif">Tampilkan (Aktif)</option>
                     <option value="sembunyi">Sembunyikan (Nonaktif)</option>
@@ -396,13 +396,13 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
                 <div className="space-y-3">
                   <div className="flex items-center justify-between">
                     <label className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                      <Megaphone className="w-4 h-4 text-[#004b87]" />
+                      <Megaphone className="w-4 h-4 text-[#164e63]" />
                       <span>Daftar Pengumuman Running Text ({formItems.length})</span>
                     </label>
                     <button
                       type="button"
                       onClick={handleAddItem}
-                      className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#004b87] rounded-xl text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                      className="px-3 py-1.5 bg-cyan-50 hover:bg-cyan-100 text-[#164e63] rounded-xl text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>+ Tambah Pengumuman Lagi</span>
@@ -414,7 +414,7 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
                       <div key={item.id || index} className="p-3.5 bg-slate-50 border border-slate-200 rounded-xl space-y-2.5 relative group">
                         <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
                           <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 bg-[#004b87] text-white rounded-full flex items-center justify-center text-[10px] font-black">
+                            <span className="w-5 h-5 bg-[#164e63] text-white rounded-full flex items-center justify-center text-[10px] font-black">
                               {index + 1}
                             </span>
                             <span className="text-xs font-extrabold text-slate-800">Pengumuman #{index + 1}</span>
@@ -426,7 +426,7 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
                                 type="checkbox"
                                 checked={item.isActive}
                                 onChange={(e) => handleUpdateItem(index, 'isActive', e.target.checked)}
-                                className="rounded text-blue-600 focus:ring-blue-500 cursor-pointer w-4 h-4"
+                                className="rounded text-cyan-600 focus:ring-cyan-500 cursor-pointer w-4 h-4"
                               />
                               <span>Tampilkan</span>
                             </label>
@@ -451,7 +451,7 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
                             value={item.text}
                             onChange={(e) => handleUpdateItem(index, 'text', e.target.value)}
                             placeholder={`Tulis isi pengumuman #${index + 1} di sini...`}
-                            className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-800"
+                            className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 text-slate-800"
                           />
                         </div>
 
@@ -460,7 +460,7 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
                           <select
                             value={item.category || 'Informasi'}
                             onChange={(e) => handleUpdateItem(index, 'category', e.target.value as any)}
-                            className="px-3 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer"
+                            className="px-3 py-1 bg-white border border-slate-300 rounded-lg text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-cyan-600 cursor-pointer"
                           >
                             <option value="Informasi">Informasi Umum (Biru)</option>
                             <option value="Penting">Penting (Merah)</option>
@@ -521,7 +521,7 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
                   </button>
                   <button
                     type="submit"
-                    className="px-5 py-2.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+                    className="px-5 py-2.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-xl text-xs font-bold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
                   >
                     <Save className="w-4 h-4" />
                     <span>Simpan Pengumuman ({formItems.length})</span>

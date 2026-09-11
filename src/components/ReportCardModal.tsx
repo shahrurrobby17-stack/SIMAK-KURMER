@@ -14,7 +14,7 @@ import {
 
 interface ReportCardModalProps {
   student: Student;
-  teacher: TeacherProfile;
+  teacher?: TeacherProfile;
   subjects: Subject[];
   grades: StudentGrade[];
   attendanceRecords: AttendanceRecord[];
@@ -104,7 +104,7 @@ export const ReportCardModal: React.FC<ReportCardModalProps> = ({
     <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-md z-50 flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
       <div className="bg-white rounded-none max-w-4xl w-full shadow-2xl border border-slate-300 my-auto overflow-hidden print:shadow-none print:border-none print:max-w-none print:w-full">
         {/* Top Floating Control Bar (Hidden on Print) */}
-        <div className="bg-[#004b87] text-white p-4 flex justify-between items-center print:hidden border-b border-slate-800">
+        <div className="bg-[#164e63] text-white p-4 flex justify-between items-center print:hidden border-b border-slate-800">
           <div className="flex items-center space-x-2">
             <span className="bg-amber-400 text-slate-950 font-black text-xs px-2 py-0.5 rounded-none">
               RAPOR KURIKULUM MERDEKA
@@ -124,7 +124,7 @@ export const ReportCardModal: React.FC<ReportCardModalProps> = ({
 
             <button
               onClick={handlePrint}
-              className="flex items-center space-x-1.5 bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-none shadow cursor-pointer"
+              className="flex items-center space-x-1.5 bg-cyan-600 hover:bg-cyan-500 text-white font-bold text-xs px-3.5 py-1.5 rounded-none shadow cursor-pointer"
             >
               <Printer className="w-3.5 h-3.5" />
               <span>Cetak PDF / Print</span>
@@ -140,7 +140,7 @@ export const ReportCardModal: React.FC<ReportCardModalProps> = ({
         </div>
 
         {/* PRINTABLE RAPOR CONTENT BODY */}
-        <div id="printable-rapor" className="p-8 sm:p-10 space-y-6 text-[#004b87] text-xs bg-white">
+        <div id="printable-rapor" className="p-8 sm:p-10 space-y-6 text-[#164e63] text-xs bg-white">
           {/* Header Kop Surat Sekolah */}
           <div className="border-b-4 border-slate-900 pb-4 text-center space-y-1 relative">
             <div className="flex justify-between items-center mb-2">
@@ -151,17 +151,17 @@ export const ReportCardModal: React.FC<ReportCardModalProps> = ({
                 <h2 className="text-xs font-bold uppercase tracking-widest text-slate-700">
                   LAPORAN HASIL BELAJAR PESERTA DIDIK
                 </h2>
-                <h1 className="text-lg font-black uppercase text-[#004b87] tracking-tight mt-0.5">
-                  {teacher.schoolName}
+                <h1 className="text-lg font-black uppercase text-[#164e63] tracking-tight mt-0.5">
+                  {teacher?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak'}
                 </h1>
                 <p className="text-[10px] text-slate-600">
-                  NPSN: {teacher.npsn} | Terakreditasi A (Unggul) | Sekolah Penggerak
+                  NPSN: {teacher?.npsn || '20500000'} | Terakreditasi A (Unggul) | Sekolah Penggerak
                 </p>
                 <p className="text-[10px] text-slate-500 italic">
                   Jalan Pendidikan No. 1, Kompleks Edukasi Nasional - Kode Pos 10110
                 </p>
               </div>
-              <div className="w-12 h-12 bg-slate-100 text-[#004b87] font-bold text-xs rounded-full flex items-center justify-center border border-slate-300">
+              <div className="w-12 h-12 bg-slate-100 text-[#164e63] font-bold text-xs rounded-full flex items-center justify-center border border-slate-300">
                 SMA
               </div>
             </div>
@@ -169,11 +169,11 @@ export const ReportCardModal: React.FC<ReportCardModalProps> = ({
           </div>
 
           <div className="text-center">
-            <h2 className="text-sm font-black uppercase tracking-wider text-[#004b87] border-b border-slate-300 inline-block pb-1">
+            <h2 className="text-sm font-black uppercase tracking-wider text-[#164e63] border-b border-slate-300 inline-block pb-1">
               LAPORAN HASIL BELAJAR (RAPOR SISWA)
             </h2>
             <p className="text-[11px] text-slate-600 mt-0.5 font-medium">
-              KURIKULUM MERDEKA — TAHUN AJARAN {teacher.academicYear} ({teacher.semester.toUpperCase()})
+              KURIKULUM MERDEKA — TAHUN AJARAN {teacher?.academicYear || '2026/2027'} ({teacher?.semester?.toUpperCase() || 'GANJIL'})
             </p>
           </div>
 
@@ -181,27 +181,27 @@ export const ReportCardModal: React.FC<ReportCardModalProps> = ({
           <div className="grid grid-cols-2 gap-x-8 gap-y-1.5 text-xs bg-slate-50 p-4 rounded-none border border-slate-200">
             <div className="flex">
               <span className="w-32 text-slate-500 font-medium">Nama Peserta Didik</span>
-              <span className="font-bold text-[#004b87]">: {student.name}</span>
+              <span className="font-bold text-[#164e63]">: {student.name}</span>
             </div>
             <div className="flex">
               <span className="w-32 text-slate-500 font-medium">Kelas / Fase</span>
-              <span className="font-bold text-[#004b87]">: {student.className} / Fase E</span>
+              <span className="font-bold text-[#164e63]">: {student.className} / Fase E</span>
             </div>
             <div className="flex">
               <span className="w-32 text-slate-500 font-medium">NIS</span>
-              <span className="font-bold text-[#004b87]">: {student.nis}</span>
+              <span className="font-bold text-[#164e63]">: {student.nis}</span>
             </div>
             <div className="flex">
               <span className="w-32 text-slate-500 font-medium">Semester</span>
-              <span className="font-bold text-[#004b87]">: {teacher.semester} (Satu)</span>
+              <span className="font-bold text-[#164e63]">: {teacher?.semester || 'Ganjil'} (Satu)</span>
             </div>
             <div className="flex">
               <span className="w-32 text-slate-500 font-medium">Sekolah</span>
-              <span className="font-bold text-[#004b87]">: {teacher.schoolName}</span>
+              <span className="font-bold text-[#164e63]">: {teacher?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak'}</span>
             </div>
             <div className="flex">
               <span className="w-32 text-slate-500 font-medium">Wali Kelas</span>
-              <span className="font-bold text-[#004b87]">: {teacher.name}</span>
+              <span className="font-bold text-[#164e63]">: {teacher?.name || 'Wali Kelas'}</span>
             </div>
           </div>
 
@@ -213,7 +213,7 @@ export const ReportCardModal: React.FC<ReportCardModalProps> = ({
 
             <table className="w-full text-left text-xs border-collapse border border-slate-400">
               <thead>
-                <tr className="bg-slate-100 text-[#004b87] font-bold border-b border-slate-400 uppercase text-[10px]">
+                <tr className="bg-slate-100 text-[#164e63] font-bold border-b border-slate-400 uppercase text-[10px]">
                   <th className="p-2 border-r border-slate-400 text-center w-8">No</th>
                   <th className="p-2 border-r border-slate-400 w-44">Mata Pelajaran</th>
                   <th className="p-2 border-r border-slate-400 text-center w-16">Nilai Akhir</th>
@@ -225,8 +225,8 @@ export const ReportCardModal: React.FC<ReportCardModalProps> = ({
                 {studentGrades.map((item, index) => (
                   <tr key={item.subject.id} className="align-top">
                     <td className="p-2 border-r border-slate-300 text-center font-bold">{index + 1}</td>
-                    <td className="p-2 border-r border-slate-300 font-bold text-[#004b87]">{item.subject.name}</td>
-                    <td className="p-2 border-r border-slate-300 text-center font-black text-blue-900">{item.grade.finalScore}</td>
+                    <td className="p-2 border-r border-slate-300 font-bold text-[#164e63]">{item.subject.name}</td>
+                    <td className="p-2 border-r border-slate-300 text-center font-black text-cyan-900">{item.grade.finalScore}</td>
                     <td className="p-2 border-r border-slate-300 text-center font-bold">
                       <span className="px-1.5 py-0.5 rounded-none bg-slate-100 border border-slate-300 text-[10px]">
                         {item.grade.predicate}
@@ -305,7 +305,7 @@ export const ReportCardModal: React.FC<ReportCardModalProps> = ({
             <div className="bg-slate-50 p-3 rounded-none border border-slate-400 space-y-2">
               <div className="flex justify-between items-center text-[10px] border-b border-slate-300 pb-1">
                 <span className="font-bold text-slate-700">Predikat Perkembangan Karakter P5:</span>
-                <span className="font-black text-blue-900 uppercase bg-blue-100 px-2 py-0.5 rounded-none border border-blue-300">
+                <span className="font-black text-cyan-900 uppercase bg-cyan-100 px-2 py-0.5 rounded-none border border-cyan-300">
                   {characterPredicate}
                 </span>
               </div>
@@ -313,14 +313,14 @@ export const ReportCardModal: React.FC<ReportCardModalProps> = ({
                 rows={3}
                 value={guardianNote}
                 onChange={(e) => setGuardianNote(e.target.value)}
-                className="w-full bg-white border border-slate-300 p-2 text-xs rounded-none focus:outline-none focus:border-blue-500 font-serif leading-relaxed"
+                className="w-full bg-white border border-slate-300 p-2 text-xs rounded-none focus:outline-none focus:border-cyan-500 font-serif leading-relaxed"
                 placeholder="Tulis catatan wali kelas..."
               />
             </div>
           </div>
 
           {/* Signatures Section */}
-          <div className="pt-8 grid grid-cols-3 gap-4 text-center text-xs text-[#004b87] border-t border-slate-200">
+          <div className="pt-8 grid grid-cols-3 gap-4 text-center text-xs text-[#164e63] border-t border-slate-200">
             <div>
               <p className="text-slate-500">Mengetahui,</p>
               <p className="font-medium mt-0.5">Orang Tua / Wali Siswa</p>
@@ -330,15 +330,15 @@ export const ReportCardModal: React.FC<ReportCardModalProps> = ({
             </div>
 
             <div>
-              <p className="text-slate-500">{teacher.city || 'Malang'}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
+              <p className="text-slate-500">{teacher?.city || 'Malang'}, {new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
               <p className="font-medium mt-0.5">Wali Kelas {student.className}</p>
               <div className="h-20 flex flex-col items-center justify-end">
                 <div className="text-[9px] text-emerald-700 font-mono font-semibold flex items-center gap-1 bg-emerald-50 px-2 py-0.5 rounded-none border border-emerald-300 mb-1">
                   <ShieldCheck className="w-3 h-3 text-emerald-600" />
                   <span>Tanda Tangan Digital Tersertifikasi</span>
                 </div>
-                <p className="border-b border-slate-900 w-44 pb-0.5 font-bold">{teacher.name}</p>
-                <p className="text-[10px] text-slate-500">NIP: {teacher.nip}</p>
+                <p className="border-b border-slate-900 w-44 pb-0.5 font-bold">{teacher?.name || 'Wali Kelas'}</p>
+                <p className="text-[10px] text-slate-500">NIP: {teacher?.nip || '-'}</p>
               </div>
             </div>
 
@@ -346,8 +346,8 @@ export const ReportCardModal: React.FC<ReportCardModalProps> = ({
               <p className="text-slate-500">Mengetahui,</p>
               <p className="font-medium mt-0.5">Kepala Sekolah</p>
               <div className="h-20 flex flex-col items-center justify-end">
-                <p className="border-b border-slate-900 w-44 pb-0.5 font-bold">{teacher.principalName}</p>
-                <p className="text-[10px] text-slate-500">NIP: {teacher.principalNip}</p>
+                <p className="border-b border-slate-900 w-44 pb-0.5 font-bold">{teacher?.principalName || 'Kepala Sekolah'}</p>
+                <p className="text-[10px] text-slate-500">NIP: {teacher?.principalNip || '-'}</p>
               </div>
             </div>
           </div>

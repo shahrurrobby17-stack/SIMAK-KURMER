@@ -372,7 +372,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
       {/* Configuration Card: Ekstra Selection, Session Title, Date & Instructor */}
       <div className="bg-white rounded-none p-5 border border-slate-200 shadow-sm space-y-4">
         <div className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2 border-b border-slate-100 pb-3">
-          <Award className="w-4 h-4 text-blue-600" />
+          <Award className="w-4 h-4 text-cyan-600" />
           <span>Pengaturan Sesi Presensi Ekstrakurikuler</span>
         </div>
 
@@ -384,7 +384,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
               </label>
               <button
                 onClick={() => setIsAddingExtra(!isAddingExtra)}
-                className="text-[11px] font-bold text-blue-600 hover:text-blue-800 flex items-center gap-0.5 cursor-pointer"
+                className="text-[11px] font-bold text-cyan-600 hover:text-cyan-800 flex items-center gap-0.5 cursor-pointer"
               >
                 <Plus className="w-3 h-3" />
                 <span>{isAddingExtra ? 'Batal' : '+ Tambah'}</span>
@@ -398,7 +398,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
                   value={newExtraName}
                   onChange={(e) => setNewExtraName(e.target.value)}
                   placeholder="Nama ekstra..."
-                  className="w-full bg-slate-50 border border-slate-300 font-bold text-slate-800 text-xs px-2.5 py-2 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full bg-slate-50 border border-slate-300 font-bold text-slate-800 text-xs px-2.5 py-2 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
                 <button
                   onClick={() => {
@@ -417,7 +417,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
                       setTimeout(() => setToastMessage(null), 3000);
                     }
                   }}
-                  className="px-3 py-2 bg-blue-600 text-white font-bold text-xs rounded-none hover:bg-blue-700 cursor-pointer shrink-0"
+                  className="px-3 py-2 bg-cyan-600 text-white font-bold text-xs rounded-none hover:bg-cyan-700 cursor-pointer shrink-0"
                 >
                   Simpan
                 </button>
@@ -426,7 +426,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
               <select
                 value={selectedExtra}
                 onChange={(e) => setSelectedExtra(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 font-bold text-slate-800 text-xs px-3 py-2.5 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="w-full bg-slate-50 border border-slate-200 font-bold text-slate-800 text-xs px-3 py-2.5 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
               >
                 {extraList.map(ex => (
                   <option key={ex} value={ex}>{ex}</option>
@@ -444,7 +444,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
               value={sessionTitle}
               onChange={(e) => handleSessionTitleChange(e.target.value)}
               placeholder="Contoh: Latihan Rutin Mingguan"
-              className="w-full bg-slate-50 border border-slate-200 font-medium text-slate-800 text-xs px-3 py-2.5 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full bg-slate-50 border border-slate-200 font-medium text-slate-800 text-xs px-3 py-2.5 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500"
             />
           </div>
 
@@ -457,7 +457,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
                 type="date"
                 value={sessionDate}
                 onChange={(e) => setSessionDate(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 font-medium text-slate-800 text-xs px-3 py-2.5 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer"
+                className="w-full bg-slate-50 border border-slate-200 font-medium text-slate-800 text-xs px-3 py-2.5 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
               />
             </div>
           </div>
@@ -478,7 +478,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
                 value={currentInstructor}
                 onChange={(e) => handleInstructorChange(e.target.value)}
                 placeholder="Nama Pembina / Pelatih"
-                className="w-full bg-slate-50 border border-slate-200 font-bold text-slate-800 text-xs pl-8 pr-3 py-2.5 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                className="w-full bg-slate-50 border border-slate-200 font-bold text-slate-800 text-xs pl-8 pr-3 py-2.5 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 transition-all"
               />
             </div>
           </div>
@@ -503,11 +503,11 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
           </div>
         </div>
 
-        <div className="bg-blue-50/70 p-4 rounded-none border border-blue-200/80 shadow-sm flex flex-col justify-between">
-          <span className="text-[11px] font-bold text-blue-800 uppercase tracking-wider">Izin</span>
+        <div className="bg-cyan-50/70 p-4 rounded-none border border-cyan-200/80 shadow-sm flex flex-col justify-between">
+          <span className="text-[11px] font-bold text-cyan-800 uppercase tracking-wider">Izin</span>
           <div className="flex items-baseline justify-between mt-2">
-            <span className="text-2xl font-black text-blue-700">{izinCount}</span>
-            <Clock className="w-5 h-5 text-blue-600" />
+            <span className="text-2xl font-black text-cyan-700">{izinCount}</span>
+            <Clock className="w-5 h-5 text-cyan-600" />
           </div>
         </div>
 
@@ -527,7 +527,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
           </div>
         </div>
 
-        <div className="bg-gradient-to-br from-indigo-50 to-blue-50 p-4 rounded-none border border-indigo-200 shadow-sm flex flex-col justify-between">
+        <div className="bg-gradient-to-br from-indigo-50 to-cyan-50 p-4 rounded-none border border-indigo-200 shadow-sm flex flex-col justify-between">
           <span className="text-[11px] font-bold text-indigo-900 uppercase tracking-wider">% Kehadiran</span>
           <div className="flex items-baseline justify-between mt-2">
             <span className="text-2xl font-black text-indigo-700">{attendanceRate}%</span>
@@ -576,14 +576,14 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Cari nama atau NISN..."
-                className="w-full bg-white border border-slate-300 rounded-none pl-9 pr-3 py-1.5 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full bg-white border border-slate-300 rounded-none pl-9 pr-3 py-1.5 text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500"
               />
             </div>
 
             {/* Mark All Present */}
             <button
               onClick={handleMarkAllPresent}
-              className="px-3.5 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-none shadow-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
+              className="px-3.5 py-2 bg-cyan-600 hover:bg-cyan-700 text-white font-bold text-xs rounded-none shadow-xs transition-colors flex items-center gap-1.5 shrink-0 cursor-pointer"
             >
               <CheckSquare className="w-4 h-4" />
               <span className="hidden sm:inline">Tandai Semua Hadir</span>
@@ -595,7 +595,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
                 onClick={handleExportPdf}
                 className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-none shadow-xs border border-slate-300 transition-colors flex items-center gap-1.5 cursor-pointer"
               >
-                <FileDown className="w-4 h-4 text-blue-600" />
+                <FileDown className="w-4 h-4 text-cyan-600" />
                 <span className="hidden lg:inline">PDF</span>
               </button>
               <button
@@ -675,8 +675,8 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
                             onClick={() => handleUpdateStatus(student.id, 'IZIN')}
                             className={`px-3 py-1.5 rounded-none font-bold text-[11px] transition-all flex items-center gap-1 cursor-pointer ${
                               rec.status === 'IZIN'
-                                ? 'bg-blue-600 text-white shadow-xs ring-2 ring-blue-300'
-                                : 'bg-slate-100 text-slate-600 hover:bg-blue-100 hover:text-blue-800'
+                                ? 'bg-cyan-600 text-white shadow-xs ring-2 ring-cyan-300'
+                                : 'bg-slate-100 text-slate-600 hover:bg-cyan-100 hover:text-cyan-800'
                             }`}
                           >
                             <span>Izin</span>
@@ -715,7 +715,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
                             value={rec.note || ''}
                             onChange={(e) => handleUpdateNote(student.id, e.target.value)}
                             placeholder="Tambah catatan..."
-                            className="w-full bg-slate-50 border border-slate-200 rounded-none px-2.5 py-1 text-xs text-slate-700 focus:bg-white focus:outline-none focus:ring-1 focus:ring-blue-500"
+                            className="w-full bg-slate-50 border border-slate-200 rounded-none px-2.5 py-1 text-xs text-slate-700 focus:bg-white focus:outline-none focus:ring-1 focus:ring-cyan-500"
                           />
                           <button
                             onClick={() => handleRemoveStudentFromExtra(student.id)}
@@ -739,12 +739,12 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
       {isAddStudentModalOpen && (
         <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-none max-w-2xl w-full shadow-2xl flex flex-col max-h-[85vh] overflow-hidden">
-            <div className="bg-[#004b87] text-white p-4 flex justify-between items-center shrink-0">
+            <div className="bg-[#164e63] text-white p-4 flex justify-between items-center shrink-0">
               <h3 className="font-bold flex items-center gap-2">
                 <User className="w-5 h-5 text-amber-300" />
                 Tambah Siswa ke {selectedExtra}
               </h3>
-              <button onClick={() => setIsAddStudentModalOpen(false)} className="text-blue-200 hover:text-white">
+              <button onClick={() => setIsAddStudentModalOpen(false)} className="text-cyan-200 hover:text-white">
                 Tutup
               </button>
             </div>
@@ -780,14 +780,14 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
                   })
                   .slice(0, 100) // limit for perf
                   .map(student => (
-                  <div key={student.id} className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-none hover:border-blue-300 hover:bg-blue-50/30 transition-all">
+                  <div key={student.id} className="flex items-center justify-between p-3 bg-white border border-slate-200 rounded-none hover:border-cyan-300 hover:bg-cyan-50/30 transition-all">
                     <div>
                       <div className="font-bold text-slate-800 text-sm">{student.name}</div>
                       <div className="text-xs text-slate-500">{student.className} • NISN: {student.nisn}</div>
                     </div>
                     <button
                       onClick={() => handleAddStudentToExtra(student.id)}
-                      className="bg-blue-100 hover:bg-blue-200 text-blue-700 px-3 py-1.5 rounded-none text-xs font-bold transition-all"
+                      className="bg-cyan-100 hover:bg-cyan-200 text-cyan-700 px-3 py-1.5 rounded-none text-xs font-bold transition-all"
                     >
                       Tambahkan
                     </button>

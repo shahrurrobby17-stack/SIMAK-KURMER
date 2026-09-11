@@ -487,7 +487,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
       {/* KPI Cards for TU */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
-          <div className="p-3 bg-blue-50 text-[#004b87] rounded-none shrink-0">
+          <div className="p-3 bg-cyan-50 text-[#164e63] rounded-none shrink-0">
             <FolderOpen className="w-5 h-5" />
           </div>
           <div>
@@ -589,7 +589,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
               <button
                 type="button"
                 onClick={handleOpenAddModal}
-                className="px-3 py-1.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+                className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span>Tambah Data Pegawai & Guru</span>
@@ -662,7 +662,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                       <td className="p-3">
                         <div className="flex items-center gap-1.5 flex-wrap">
                           <span className={`px-2 py-0.5 font-bold text-[10px] rounded-none ${
-                            pegawai.kategori === 'Guru' ? 'bg-blue-100 text-blue-800' : 'bg-amber-100 text-amber-900'
+                            pegawai.kategori === 'Guru' ? 'bg-cyan-100 text-cyan-800' : 'bg-amber-100 text-amber-900'
                           }`}>
                             {pegawai.kategori || 'Pegawai TU'}
                           </span>
@@ -721,7 +721,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className="bg-white w-full max-w-2xl rounded-none shadow-2xl border border-slate-300 overflow-hidden animate-in fade-in zoom-in-95 duration-150 max-h-[90vh] flex flex-col">
-            <div className="bg-[#004b87] text-white px-5 py-4 flex items-center justify-between">
+            <div className="bg-[#164e63] text-white px-5 py-4 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-white/10 rounded-none border border-white/20">
                   <FolderOpen className="w-5 h-5 text-amber-300" />
@@ -730,7 +730,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                   <h3 className="text-sm font-bold tracking-wide">
                     {editingId ? 'Edit Data Buku Induk Pegawai & Guru' : 'Tambah Entri Buku Induk Baru'}
                   </h3>
-                  <p className="text-[11px] text-blue-100">Buku Induk Tenaga Pendidik & Kependidikan (GTK)</p>
+                  <p className="text-[11px] text-cyan-100">Buku Induk Tenaga Pendidik & Kependidikan (GTK)</p>
                 </div>
               </div>
               <button
@@ -761,7 +761,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                     value={formData.nama}
                     onChange={(e) => setFormData({ ...formData, nama: e.target.value })}
                     placeholder="Contoh: Drs. H. Bambang Sudirman, M.M."
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#004b87]"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#164e63]"
                   />
                 </div>
 
@@ -770,7 +770,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                   <select
                     value={formData.kategori}
                     onChange={(e) => setFormData({ ...formData, kategori: e.target.value as any })}
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#004b87]"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#164e63]"
                   >
                     <option value="Guru">Guru / Tenaga Pendidik</option>
                     <option value="Pegawai TU">Pegawai Tata Usaha</option>
@@ -783,7 +783,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                   <select
                     value={formData.status}
                     onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#004b87]"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#164e63]"
                   >
                     <option value="PNS (Pembina / IV-a)">PNS (Pembina / IV-a)</option>
                     <option value="PNS (Penata Tk.I / III-d)">PNS (Penata Tk.I / III-d)</option>
@@ -804,7 +804,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                     value={formData.nip}
                     onChange={(e) => setFormData({ ...formData, nip: e.target.value })}
                     placeholder="Contoh: 19710510 199803 1 002 (atau - jika belum ada)"
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#004b87] font-mono"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#164e63] font-mono"
                   />
                 </div>
 
@@ -815,7 +815,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                     value={formData.nuptk}
                     onChange={(e) => setFormData({ ...formData, nuptk: e.target.value })}
                     placeholder="Contoh: 4532749651200032 (atau - jika belum ada)"
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#004b87] font-mono"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#164e63] font-mono"
                   />
                 </div>
 
@@ -826,7 +826,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                     value={formData.jabatan}
                     onChange={(e) => setFormData({ ...formData, jabatan: e.target.value })}
                     placeholder="Contoh: Kepala Tata Usaha / Guru Biologi"
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#004b87]"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#164e63]"
                   />
                 </div>
 
@@ -835,7 +835,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                   <select
                     value={formData.keaktifan}
                     onChange={(e) => setFormData({ ...formData, keaktifan: e.target.value as any })}
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#004b87]"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#164e63]"
                   >
                     <option value="Aktif">Aktif</option>
                     <option value="Cuti">Cuti</option>
@@ -853,7 +853,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                     value={formData.tugas}
                     onChange={(e) => setFormData({ ...formData, tugas: e.target.value })}
                     placeholder="Contoh: Pengajar Biologi & Wali Kelas X-IPA 1 / Pengelolaan Kenaikan Pangkat & SKP"
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#004b87]"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-2 focus:ring-[#164e63]"
                   />
                 </div>
               </div>
@@ -869,7 +869,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#004b87] text-white font-bold hover:bg-blue-800 rounded-none flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                  className="px-4 py-2 bg-[#164e63] text-white font-bold hover:bg-cyan-800 rounded-none flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                 >
                   <Save className="w-4 h-4" />
                   <span>{editingId ? 'Simpan Perubahan' : 'Simpan Data Baru'}</span>
@@ -945,7 +945,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
             <button
               type="button"
               onClick={handleOpenAddMutasiModal}
-              className="px-3 py-1.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors shrink-0"
+              className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors shrink-0"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Proses Mutasi Baru</span>
@@ -983,7 +983,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                         </span>
                       </td>
                       <td className="p-3 text-center">
-                        <span className="px-2 py-0.5 bg-blue-100 text-blue-800 font-bold text-[10px] rounded-none">
+                        <span className="px-2 py-0.5 bg-cyan-100 text-cyan-800 font-bold text-[10px] rounded-none">
                           {item.status}
                         </span>
                       </td>
@@ -1016,14 +1016,14 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
       {isMutasiModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className="bg-white w-full max-w-lg rounded-none shadow-2xl border border-slate-300 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="bg-[#004b87] text-white px-5 py-4 flex items-center justify-between">
+            <div className="bg-[#164e63] text-white px-5 py-4 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <div className="p-2 bg-white/10 rounded-none border border-white/20">
                   <ArrowRightLeft className="w-5 h-5 text-amber-300" />
                 </div>
                 <div>
                   <h3 className="text-sm font-bold tracking-wide">Proses Berkas Mutasi Siswa</h3>
-                  <p className="text-[11px] text-blue-100">Penerbitan Surat Keterangan Pindah</p>
+                  <p className="text-[11px] text-cyan-100">Penerbitan Surat Keterangan Pindah</p>
                 </div>
               </div>
               <button
@@ -1051,7 +1051,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                     required
                     value={mutasiFormData.noSurat}
                     onChange={(e) => setMutasiFormData({ ...mutasiFormData, noSurat: e.target.value })}
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none font-mono focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none font-mono focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                   />
                 </div>
 
@@ -1063,7 +1063,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                     value={mutasiFormData.nama}
                     onChange={(e) => setMutasiFormData({ ...mutasiFormData, nama: e.target.value })}
                     placeholder="Nama lengkap peserta didik..."
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                   />
                 </div>
 
@@ -1075,7 +1075,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                       value={mutasiFormData.nisn}
                       onChange={(e) => setMutasiFormData({ ...mutasiFormData, nisn: e.target.value })}
                       placeholder="007xxxxxxx"
-                      className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none font-mono focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                      className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none font-mono focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                     />
                   </div>
                   <div>
@@ -1083,7 +1083,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                     <select
                       value={mutasiFormData.jenis}
                       onChange={(e) => setMutasiFormData({ ...mutasiFormData, jenis: e.target.value as any })}
-                      className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                      className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                     >
                       <option value="Mutasi Keluar">Mutasi Keluar</option>
                       <option value="Mutasi Masuk">Mutasi Masuk</option>
@@ -1098,7 +1098,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                       type="text"
                       value={mutasiFormData.asal}
                       onChange={(e) => setMutasiFormData({ ...mutasiFormData, asal: e.target.value })}
-                      className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                      className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                     />
                   </div>
                   <div>
@@ -1108,7 +1108,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                       value={mutasiFormData.tujuan}
                       onChange={(e) => setMutasiFormData({ ...mutasiFormData, tujuan: e.target.value })}
                       placeholder="Nama sekolah tujuan..."
-                      className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                      className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                     />
                   </div>
                 </div>
@@ -1124,7 +1124,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#004b87] text-white font-bold hover:bg-blue-800 rounded-none flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                  className="px-4 py-2 bg-[#164e63] text-white font-bold hover:bg-cyan-800 rounded-none flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                 >
                   <Save className="w-4 h-4" />
                   <span>Simpan Berkas</span>
@@ -1192,7 +1192,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
             <button
               type="button"
               onClick={handleAddUserClick}
-              className="px-3 py-1.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
+              className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-colors"
             >
               <Plus className="w-3.5 h-3.5" />
               <span>Tambah Staf TU</span>
@@ -1274,14 +1274,14 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
       {(showAddUserModalInternal || showEditUserModalInternal) && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4">
           <div className="bg-white w-full max-w-lg rounded-none shadow-2xl border border-slate-300 overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            <div className="bg-[#004b87] text-white px-5 py-4 flex items-center justify-between">
+            <div className="bg-[#164e63] text-white px-5 py-4 flex items-center justify-between">
               <div className="flex items-center gap-2.5">
                 <UserPlus className="w-5 h-5 text-amber-300" />
                 <div>
                   <h3 className="text-sm font-bold tracking-wide">
                     {showEditUserModalInternal ? 'Edit Akun Staf TU' : 'Tambah Akun Staf Tata Usaha'}
                   </h3>
-                  <p className="text-[11px] text-blue-100">Manajemen Pengguna & Hak Akses Administrasi</p>
+                  <p className="text-[11px] text-cyan-100">Manajemen Pengguna & Hak Akses Administrasi</p>
                 </div>
               </div>
               <button
@@ -1306,7 +1306,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                   value={userFormData.name}
                   onChange={(e) => setUserFormData({ ...userFormData, name: e.target.value })}
                   placeholder="Nama pegawai tata usaha..."
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                 />
               </div>
 
@@ -1319,7 +1319,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                     value={userFormData.email}
                     onChange={(e) => setUserFormData({ ...userFormData, email: e.target.value })}
                     placeholder="email@simakmerdeka.ai.studio"
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                   />
                 </div>
                 <div>
@@ -1329,7 +1329,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                     value={userFormData.password}
                     onChange={(e) => setUserFormData({ ...userFormData, password: e.target.value })}
                     placeholder={showEditUserModalInternal ? 'Biarkan kosong jika tidak diubah' : 'Kata sandi akun'}
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                   />
                 </div>
               </div>
@@ -1342,7 +1342,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                     value={userFormData.nip}
                     onChange={(e) => setUserFormData({ ...userFormData, nip: e.target.value })}
                     placeholder="1984..."
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none font-mono focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none font-mono focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                   />
                 </div>
                 <div>
@@ -1350,7 +1350,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                   <select
                     value={userFormData.role}
                     onChange={(e) => setUserFormData({ ...userFormData, role: e.target.value })}
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                   >
                     <option value="Tata Usaha (TU)">Tata Usaha (TU)</option>
                     <option value="Kepala Tata Usaha">Kepala Tata Usaha</option>
@@ -1374,7 +1374,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#004b87] text-white font-bold hover:bg-blue-800 rounded-none flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+                  className="px-4 py-2 bg-[#164e63] text-white font-bold hover:bg-cyan-800 rounded-none flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
                 >
                   <Save className="w-4 h-4" />
                   <span>Simpan Akun</span>

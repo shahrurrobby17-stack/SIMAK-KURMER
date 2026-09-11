@@ -83,11 +83,11 @@ export const FooterHelpModals: React.FC<FooterHelpModalsProps> = ({ activeModal,
   );
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#004b87]/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-6 animate-fade-in">
+    <div className="fixed inset-0 z-50 bg-[#164e63]/60 backdrop-blur-xs flex items-center justify-center p-2.5 sm:p-6 animate-fade-in">
       <div className="bg-white rounded-2xl sm:rounded-none border border-slate-200 shadow-2xl w-full max-w-4xl max-h-[92vh] sm:max-h-[90vh] flex flex-col overflow-hidden">
         
         {/* Header Modal */}
-        <div className="bg-[#004b87] text-white px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between shrink-0">
+        <div className="bg-[#164e63] text-white px-4 sm:px-6 py-3.5 sm:py-4 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 pr-2">
             <div className="p-1.5 sm:p-2 bg-white/10 rounded-xl sm:rounded-none shrink-0">
               {currentTab === 'guide' && <BookOpen className="w-4 h-4 sm:w-5 sm:h-5 text-cyan-300" />}
@@ -95,7 +95,7 @@ export const FooterHelpModals: React.FC<FooterHelpModalsProps> = ({ activeModal,
             </div>
             <div className="min-w-0">
               <h2 className="text-sm sm:text-base font-bold truncate">Pusat Informasi & Dokumen SIMAK</h2>
-              <p className="text-[10px] sm:text-xs text-blue-200 truncate">Panduan Resmi Penggunaan & Ketentuan</p>
+              <p className="text-[10px] sm:text-xs text-cyan-200 truncate">Panduan Resmi Penggunaan & Ketentuan</p>
             </div>
           </div>
           <button 
@@ -115,7 +115,7 @@ export const FooterHelpModals: React.FC<FooterHelpModalsProps> = ({ activeModal,
             onClick={() => setCurrentTab('guide')}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-none text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'guide' 
-                ? 'bg-[#004b87] text-white shadow-xs' 
+                ? 'bg-[#164e63] text-white shadow-xs' 
                 : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
             }`}
           >
@@ -128,7 +128,7 @@ export const FooterHelpModals: React.FC<FooterHelpModalsProps> = ({ activeModal,
             onClick={() => setCurrentTab('terms')}
             className={`px-3 sm:px-4 py-1.5 sm:py-2 rounded-lg sm:rounded-none text-xs font-bold flex items-center gap-1.5 sm:gap-2 transition-all cursor-pointer whitespace-nowrap shrink-0 ${
               currentTab === 'terms' 
-                ? 'bg-[#004b87] text-white shadow-xs' 
+                ? 'bg-[#164e63] text-white shadow-xs' 
                 : 'bg-white text-slate-700 hover:bg-slate-200 border border-slate-200'
             }`}
           >
@@ -151,14 +151,14 @@ export const FooterHelpModals: React.FC<FooterHelpModalsProps> = ({ activeModal,
                   value={guideSearch}
                   onChange={(e) => setGuideSearch(e.target.value)}
                   placeholder="Cari topik panduan (misal: Rapor, Presensi, KKM, Nilai...)"
-                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-500"
                 />
               </div>
 
               {/* Modul Langkah Utama */}
               <div className="grid grid-cols-1 sm:grid-cols-4 gap-2 text-center">
-                <div className="p-3 bg-blue-50 border border-blue-100 rounded-none">
-                  <div className="w-6 h-6 bg-[#004b87] text-white rounded-full font-bold flex items-center justify-center text-xs mx-auto mb-1">1</div>
+                <div className="p-3 bg-cyan-50 border border-cyan-100 rounded-none">
+                  <div className="w-6 h-6 bg-[#164e63] text-white rounded-full font-bold flex items-center justify-center text-xs mx-auto mb-1">1</div>
                   <div className="font-bold text-slate-800 text-[11px]">Pengaturan Kelas</div>
                 </div>
                 <div className="p-3 bg-emerald-50 border border-emerald-100 rounded-none">
@@ -178,13 +178,13 @@ export const FooterHelpModals: React.FC<FooterHelpModalsProps> = ({ activeModal,
               {/* Guide Topics Accordion / Cards */}
               <div className="space-y-3">
                 {filteredTopics.map((topic) => (
-                  <div key={topic.id} className="p-4 bg-slate-50 border border-slate-200 rounded-none space-y-1 hover:border-blue-300 transition-colors">
+                  <div key={topic.id} className="p-4 bg-slate-50 border border-slate-200 rounded-none space-y-1 hover:border-cyan-300 transition-colors">
                     <div className="flex items-center justify-between">
                       <span className="font-bold text-slate-800 text-xs flex items-center gap-2">
-                        <ChevronRight className="w-4 h-4 text-[#004b87]" />
+                        <ChevronRight className="w-4 h-4 text-[#164e63]" />
                         {topic.title}
                       </span>
-                      <span className="px-2 py-0.5 rounded-none bg-blue-100 text-blue-800 font-bold text-[10px]">
+                      <span className="px-2 py-0.5 rounded-none bg-cyan-100 text-cyan-800 font-bold text-[10px]">
                         {topic.category}
                       </span>
                     </div>
@@ -206,8 +206,8 @@ export const FooterHelpModals: React.FC<FooterHelpModalsProps> = ({ activeModal,
           {/* TAB 3: SYARAT & KETENTUAN */}
           {currentTab === 'terms' && (
             <div className="space-y-4 leading-relaxed">
-              <div className="p-4 bg-blue-50 border border-blue-100 rounded-none flex items-center gap-3">
-                <Info className="w-5 h-5 text-[#004b87] shrink-0" />
+              <div className="p-4 bg-cyan-50 border border-cyan-100 rounded-none flex items-center gap-3">
+                <Info className="w-5 h-5 text-[#164e63] shrink-0" />
                 <div>
                   <h3 className="font-bold text-slate-800 text-xs">Ketentuan Penggunaan Aplikasi SIMAK Merdeka Versi 3.7.0</h3>
                   <p className="text-[11px] text-slate-600">Terakhir Diperbarui: Juli 2026 • Kurikulum Merdeka KSP</p>

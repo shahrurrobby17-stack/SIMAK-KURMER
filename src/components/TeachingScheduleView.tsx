@@ -20,7 +20,7 @@ import { saveTeachingSchedulesToFirebase, subscribeToSchedules } from '../lib/fi
 import { generatePdfReport } from '../utils/pdfExport';
 
 interface TeachingScheduleViewProps {
-  teacher: TeacherProfile;
+  teacher?: TeacherProfile;
   selectedClass: string;
   classList: string[];
   subjects: Subject[];
@@ -188,14 +188,14 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
 
     generatePdfReport({
       title: 'JADWAL MENGAJAR TATAP MUKA GURU',
-      subtitle: `Jadwal Kegiatan Belajar Mengajar — ${teacher.name || 'Guru Pengampu'}`,
-      teacherName: teacher.name,
-      teacherNip: teacher.nip,
-      schoolName: teacher.schoolName || 'SMA Negeri Merdeka',
-      principalName: teacher.principalName,
-      principalNip: teacher.principalNip,
-      academicYear: teacher.academicYear || '2024/2025',
-      semester: teacher.semester || 'Ganjil',
+      subtitle: `Jadwal Kegiatan Belajar Mengajar — ${teacher?.name || 'Guru Pengampu'}`,
+      teacherName: teacher?.name || 'Guru Pengampu',
+      teacherNip: teacher?.nip || '-',
+      schoolName: teacher?.schoolName || 'SMA Negeri Merdeka',
+      principalName: teacher?.principalName || 'Kepala Sekolah',
+      principalNip: teacher?.principalNip || '-',
+      academicYear: teacher?.academicYear || '2026/2027',
+      semester: teacher?.semester || 'Ganjil',
       kpiCards,
       tableHeaders,
       tableRows,
@@ -214,7 +214,7 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
         <div className="bg-white p-3.5 rounded-none border border-slate-200 shadow-2xs">
           <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Total Sesi / Minggu</div>
-          <div className="text-xl font-black text-[#004b87] mt-0.5">{schedules.length} Sesi</div>
+          <div className="text-xl font-black text-[#164e63] mt-0.5">{schedules.length} Sesi</div>
           <div className="text-[10px] text-slate-400">Tatap Muka</div>
         </div>
 
@@ -275,7 +275,7 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
             <select
               value={filterDay}
               onChange={(e) => setFilterDay(e.target.value)}
-              className="bg-white text-slate-800 font-bold px-2 py-1 rounded-none border border-slate-300 focus:outline-none focus:border-blue-500 text-xs shrink-0"
+              className="bg-white text-slate-800 font-bold px-2 py-1 rounded-none border border-slate-300 focus:outline-none focus:border-cyan-500 text-xs shrink-0"
             >
               <option value="SEMUA">Semua Hari</option>
               {DAYS_OF_WEEK.map(day => (
@@ -297,22 +297,22 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
               key={day} 
               className={`p-4 rounded-none border transition-all ${
                 isToday 
-                  ? 'bg-gradient-to-b from-blue-50/80 to-white border-blue-400 shadow-md ring-2 ring-blue-500/20' 
+                  ? 'bg-gradient-to-b from-cyan-50/80 to-white border-cyan-400 shadow-md ring-2 ring-cyan-500/20' 
                   : 'bg-white border-slate-200 shadow-sm hover:shadow-md'
               }`}
             >
               <div className="flex justify-between items-center pb-3 border-b border-slate-200 mb-3">
                 <div className="flex items-center space-x-2">
                   <div className={`w-7 h-7 rounded-none flex items-center justify-center font-bold text-xs ${
-                    isToday ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-700'
+                    isToday ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-700'
                   }`}>
                     {day.slice(0, 3)}
                   </div>
                   <div>
-                    <h3 className="font-extrabold text-sm text-[#004b87] flex items-center gap-1.5">
+                    <h3 className="font-extrabold text-sm text-[#164e63] flex items-center gap-1.5">
                       <span>{day}</span>
                       {isToday && (
-                        <span className="bg-blue-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-none uppercase">
+                        <span className="bg-cyan-600 text-white text-[9px] font-black px-1.5 py-0.5 rounded-none uppercase">
                           Hari Ini
                         </span>
                       )}
@@ -334,11 +334,11 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
                   {daySchedules.map((item) => (
                     <div 
                       key={item.id}
-                      className="bg-slate-50 p-3.5 rounded-none border border-slate-200 hover:border-blue-300 transition-all group relative flex flex-col justify-between"
+                      className="bg-slate-50 p-3.5 rounded-none border border-slate-200 hover:border-cyan-300 transition-all group relative flex flex-col justify-between"
                     >
                       <div className="flex justify-between items-start gap-2">
-                        <div className="flex items-center space-x-1.5 text-xs font-extrabold text-blue-800 bg-blue-100/80 px-2.5 py-0.5 rounded-none">
-                          <Clock className="w-3 h-3 text-blue-600" />
+                        <div className="flex items-center space-x-1.5 text-xs font-extrabold text-cyan-800 bg-cyan-100/80 px-2.5 py-0.5 rounded-none">
+                          <Clock className="w-3 h-3 text-cyan-600" />
                           <span>{item.time}</span>
                         </div>
 
@@ -352,7 +352,7 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
                       </div>
 
                       <div className="mt-2.5">
-                        <div className="text-xs font-black text-[#004b87] flex items-center justify-between">
+                        <div className="text-xs font-black text-[#164e63] flex items-center justify-between">
                           <span className="text-sm font-bold text-slate-800">{item.className}</span>
                           <span className="text-[10px] text-slate-500 font-semibold bg-slate-200/60 px-1.5 py-0.5 rounded-none">
                             Biologi
@@ -374,9 +374,9 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
 
       {/* Add Schedule Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-[#004b87]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#164e63]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-none max-w-md w-full shadow-2xl border border-slate-200 overflow-hidden">
-            <div className="bg-[#004b87] text-white p-4 flex justify-between items-center">
+            <div className="bg-[#164e63] text-white p-4 flex justify-between items-center">
               <div className="flex items-center space-x-2">
                 <Clock className="w-5 h-5 text-amber-400" />
                 <h3 className="font-extrabold text-sm">Tambah Jadwal Mengajar</h3>
@@ -395,7 +395,7 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
                 <select
                   value={form.day}
                   onChange={(e) => setForm({ ...form, day: e.target.value })}
-                  className="w-full bg-slate-50 border border-slate-300 rounded-none p-2.5 font-semibold text-slate-800 focus:outline-none focus:border-blue-600"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-none p-2.5 font-semibold text-slate-800 focus:outline-none focus:border-cyan-600"
                 >
                   {DAYS_OF_WEEK.map(d => (
                     <option key={d} value={d}>{d}</option>
@@ -410,7 +410,7 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
                   value={form.time}
                   onChange={(e) => setForm({ ...form, time: e.target.value })}
                   placeholder="Contoh: 07:30 - 09:00"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-none p-2.5 font-medium text-slate-800 focus:outline-none focus:border-blue-600"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-none p-2.5 font-medium text-slate-800 focus:outline-none focus:border-cyan-600"
                   required
                 />
               </div>
@@ -420,7 +420,7 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
                 <select
                   value={form.className}
                   onChange={(e) => setForm({ ...form, className: e.target.value })}
-                  className={`w-full bg-slate-50 border border-slate-300 rounded-none p-2.5 font-bold focus:outline-none focus:border-blue-600 ${
+                  className={`w-full bg-slate-50 border border-slate-300 rounded-none p-2.5 font-bold focus:outline-none focus:border-cyan-600 ${
                     form.className === 'OFF' ? 'text-red-600' : 'text-slate-800'
                   }`}
                 >
@@ -438,7 +438,7 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
                   value={form.sub}
                   onChange={(e) => setForm({ ...form, sub: e.target.value })}
                   placeholder="Contoh: Biologi - Keanekaragaman Hayati"
-                  className="w-full bg-slate-50 border border-slate-300 rounded-none p-2.5 font-medium text-slate-800 focus:outline-none focus:border-blue-600"
+                  className="w-full bg-slate-50 border border-slate-300 rounded-none p-2.5 font-medium text-slate-800 focus:outline-none focus:border-cyan-600"
                   required
                 />
               </div>
@@ -453,7 +453,7 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 rounded-none bg-blue-600 hover:bg-blue-700 text-white font-bold cursor-pointer transition-colors shadow-sm"
+                  className="px-4 py-2 rounded-none bg-cyan-600 hover:bg-cyan-700 text-white font-bold cursor-pointer transition-colors shadow-sm"
                 >
                   Simpan Jadwal
                 </button>
@@ -465,17 +465,17 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
 
       {/* Delete Schedule Modal */}
       {scheduleToDelete && (
-        <div className="fixed inset-0 z-50 bg-[#004b87]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#164e63]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-none max-w-sm w-full p-5 shadow-2xl border border-slate-200 space-y-4">
             <div className="flex items-center space-x-3 text-red-600">
               <div className="p-2 bg-red-100 rounded-none">
                 <Trash2 className="w-5 h-5" />
               </div>
-              <h4 className="text-sm font-bold text-[#004b87]">Hapus Jadwal Mengajar?</h4>
+              <h4 className="text-sm font-bold text-[#164e63]">Hapus Jadwal Mengajar?</h4>
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Apakah Anda yakin ingin menghapus jadwal <span className="font-bold text-[#004b87]">{scheduleToDelete.day} ({scheduleToDelete.time})</span> untuk kelas <span className="font-bold text-[#004b87]">{scheduleToDelete.className}</span>?
+              Apakah Anda yakin ingin menghapus jadwal <span className="font-bold text-[#164e63]">{scheduleToDelete.day} ({scheduleToDelete.time})</span> untuk kelas <span className="font-bold text-[#164e63]">{scheduleToDelete.className}</span>?
             </p>
 
             <div className="flex justify-end space-x-2 pt-2">

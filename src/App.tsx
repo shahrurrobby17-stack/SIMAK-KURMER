@@ -1708,9 +1708,8 @@ export default function App() {
       <Navbar 
         teacher={teacher}
         selectedClass={selectedClass}
-            classList={classList}
+        classList={classList}
         onSelectClass={setSelectedClass}
-        
         showClassSelector={false}
         currentUser={currentUser}
         isMasterUser={isMasterUser}
@@ -1722,9 +1721,10 @@ export default function App() {
       />
 
       {/* Main Workspace Layout */}
-      <div className="flex-1 flex flex-col md:flex-row max-w-[1600px] w-full mx-auto my-0 md:my-3 md:px-4 gap-4 items-stretch  overflow-hidden">
+      <div className="flex-1 flex flex-col md:flex-row w-full my-0 items-stretch overflow-hidden">
         {/* Sidebar */}
         <SidebarNavigation
+          teacher={teacher}
           activeTab={activeTab}
           onTabChange={handleTabChange} 
           attendanceCount={recordedTodayCount}
@@ -1738,11 +1738,12 @@ export default function App() {
         />
 
         {/* Content Pane */}
-        <main className="flex-1 w-full p-3 md:p-0 overflow-y-auto h-full md:pr-1 pb-24 md:pb-10">
+        <main className="flex-1 w-full p-3 md:p-4 lg:p-5 overflow-y-auto h-full pb-24 md:pb-10">
           {/* STUDENT ROLE DEDICATED LMS VIEWS (Persistent without animation on header/menu switch) */}
           {currentUser?.role?.toLowerCase().includes('siswa') ? (
             <div className="w-full h-full">
               <StudentLMSView 
+                teacher={teacher}
                 initialTab={
                   activeTab === 'upload-modul' ? 'modules' :
                   activeTab === 'extra-tasks' ? 'tasks' :
@@ -1757,7 +1758,6 @@ export default function App() {
                 subjects={subjects}
                 studentTasks={allStudentTasks}
                 attendanceRecords={allAttendanceRecords}
-                teacher={teacher}
                 currentUser={currentUser}
                 onSaveTask={handleSaveStudentTask}
                 onUpdateAttendance={handleUpdateAttendanceRecordsBatch}
@@ -1782,7 +1782,6 @@ export default function App() {
                       attendanceRecords={attendanceRecords}
                       selectedClass={selectedClass}
                       selectedSubject={selectedSubject}
-                      teacher={teacher}
                       currentUser={currentUser}
                       isMasterUser={isMasterUser}
                       isAccountDisabled={isCurrentAccountDisabled}
@@ -1799,7 +1798,6 @@ export default function App() {
                       onUpdateAttendance={handleUpdateAttendance}
                       onMarkAllPresent={handleMarkAllPresent}
                       onDeleteMeeting={handleDeleteMeeting}
-                      teacher={teacher}
                       isMasterUser={isMasterUser}
                     />
                   )}
@@ -1816,7 +1814,6 @@ export default function App() {
                       onSelectSubject={setSelectedSubject}
                       onUpdateGrade={handleUpdateGrade}
                       onUpdateGradesBatch={handleUpdateGradesBatch}
-                      teacher={teacher}
                       onUpdateKktp={handleUpdateKktp}
                     />
                   )}
@@ -1831,7 +1828,6 @@ export default function App() {
                       onSelectClass={setSelectedClass}
                       selectedSubject={selectedSubject}
                       onSelectSubject={setSelectedSubject}
-                      teacher={teacher}
                       onSaveTask={handleSaveStudentTask}
                       onDeleteTask={handleDeleteTask}
                     />
@@ -1849,7 +1845,6 @@ export default function App() {
                       onAddStudent={handleAddStudent}
                       onDeleteStudent={handleDeleteStudent}
                       onOpenReportCard={(st) => setActiveReportCardStudent(st)}
-                      teacher={teacher}
                     />
                   )}
 
@@ -1869,7 +1864,6 @@ export default function App() {
 
                   {activeTab === 'upload-modul' && (
                     <TeacherModuleUploadView
-                      teacher={teacher}
                       subjects={subjects}
                       selectedClass={selectedClass}
                       isMasterUser={isMasterUser}
@@ -1879,7 +1873,6 @@ export default function App() {
                   {activeTab === 'system-kurikulum' && (
                     <CurriculumSystemView 
                       registeredUsers={registeredUsers}
-                      teacher={teacher}
                       onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
                       onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
                     />
@@ -1888,7 +1881,6 @@ export default function App() {
                   {activeTab === 'system-guru' && (
                     <TeacherSystemView 
                       registeredUsers={registeredUsers}
-                      teacher={teacher}
                       onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
                     />
                   )}
@@ -1896,7 +1888,6 @@ export default function App() {
                   {activeTab === 'system-tu' && (
                     <AdministrationSystemView 
                       registeredUsers={registeredUsers}
-                      teacher={teacher}
                       onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
                       onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
                     />
@@ -1905,7 +1896,6 @@ export default function App() {
                   {activeTab === 'system-keuangan' && (
                     <FinanceSystemView 
                       registeredUsers={registeredUsers}
-                      teacher={teacher}
                       students={allStudents}
                       onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
                     />
@@ -1914,7 +1904,6 @@ export default function App() {
                   {activeTab === 'system-kesiswaan' && (
                     <StudentSystemView 
                       registeredUsers={registeredUsers}
-                      teacher={teacher}
                       classList={classList}
                       students={allStudents}
                       attendanceRecords={allAttendanceRecords}
@@ -1938,7 +1927,6 @@ export default function App() {
                   onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
                   teacherProfiles={teacherProfiles}
                   currentUser={currentUser}
-                  teacher={teacher}
                   classList={classList}
                   infoAnnouncement={infoAnnouncement}
                   onUpdateInfoAnnouncement={handleUpdateInfoAnnouncement}
@@ -1965,7 +1953,6 @@ export default function App() {
                   onUpdateStudents={handleUpdateStudents}
                   onAddStudent={handleAddStudent}
                   onDeleteStudent={handleDeleteStudent}
-                  teacher={teacher}
                   onClassChange={setSelectedClass}
                 />
               )}
@@ -1974,8 +1961,7 @@ export default function App() {
                 <TeachingScheduleView 
                   teacher={teacher}
                   selectedClass={selectedClass}
-            classList={classList}
-                  
+                  classList={classList}
                   subjects={subjects}
                   isDemoAdmin={isDemoAdmin}
                   isMasterUser={isMasterUser}
@@ -1987,8 +1973,6 @@ export default function App() {
                   students={students}
                   selectedClass={selectedClass}
             classList={classList}
-                  
-                  teacher={teacher}
                   isDemoAdmin={isDemoAdmin}
             
                 />
@@ -2047,7 +2031,7 @@ export default function App() {
           <button 
             type="button"
             onClick={() => setActiveFooterModal('guide')}
-            className="hover:text-blue-700 hover:underline cursor-pointer transition-colors px-1 py-0.5 rounded active:bg-slate-200"
+            className="hover:text-cyan-700 hover:underline cursor-pointer transition-colors px-1 py-0.5 rounded active:bg-slate-200"
           >
             Panduan Pengguna
           </button>
@@ -2055,7 +2039,7 @@ export default function App() {
           <button 
             type="button"
             onClick={() => setActiveFooterModal('terms')}
-            className="text-blue-600 font-bold hover:text-blue-800 hover:underline cursor-pointer transition-colors px-1 py-0.5 rounded active:bg-slate-200"
+            className="text-cyan-600 font-bold hover:text-cyan-800 hover:underline cursor-pointer transition-colors px-1 py-0.5 rounded active:bg-slate-200"
           >
             Syarat & Ketentuan
           </button>

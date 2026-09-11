@@ -50,7 +50,7 @@ import {
 } from '../lib/firebaseService';
 
 interface SettingsViewProps {
-  teacher: TeacherProfile;
+  teacher?: TeacherProfile;
   selectedClass: string;
   onClassChange: (className: string) => void;
   onUpdateTeacherProfile: (updatedTeacher: TeacherProfile) => boolean | void;
@@ -219,25 +219,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   // Profile settings state
-  const [teacherName, setTeacherName] = useState<string>(teacher.name);
-  const [teacherTitle, setTeacherTitle] = useState<string>(teacher.title || '');
-  const [nip, setNip] = useState<string>(teacher.nip);
-  const [npsn, setNpsn] = useState<string>(teacher.npsn || '');
-  const [subject, setSubject] = useState<string>(teacher.subjectRole);
-  const [schoolName, setSchoolName] = useState<string>(teacher.schoolName);
-  const [principalName, setPrincipalName] = useState<string>(teacher.principalName || '');
-  const [principalNip, setPrincipalNip] = useState<string>(teacher.principalNip || '');
-  const [city, setCity] = useState<string>(teacher.city || 'Malang');
+  const [teacherName, setTeacherName] = useState<string>(teacher?.name || '');
+  const [teacherTitle, setTeacherTitle] = useState<string>(teacher?.title || '');
+  const [nip, setNip] = useState<string>(teacher?.nip || '');
+  const [npsn, setNpsn] = useState<string>(teacher?.npsn || '');
+  const [subject, setSubject] = useState<string>(teacher?.subjectRole || '');
+  const [schoolName, setSchoolName] = useState<string>(teacher?.schoolName || '');
+  const [principalName, setPrincipalName] = useState<string>(teacher?.principalName || '');
+  const [principalNip, setPrincipalNip] = useState<string>(teacher?.principalNip || '');
+  const [city, setCity] = useState<string>(teacher?.city || 'Malang');
   
   // Academic year state
-  const [academicYear, setAcademicYear] = useState<string>(teacher.academicYear || '2026/2027');
-  const [semester, setSemester] = useState<string>(teacher.semester || 'Ganjil');
-  const [defaultKkm, setDefaultKkm] = useState<number>(teacher.kkm || 75);
+  const [academicYear, setAcademicYear] = useState<string>(teacher?.academicYear || '2026/2027');
+  const [semester, setSemester] = useState<string>(teacher?.semester || 'Ganjil');
+  const [defaultKkm, setDefaultKkm] = useState<number>(teacher?.kkm || 75);
   const [curriculum, setCurriculum] = useState<string>('Kurikulum Merdeka (KSP)');
 
   // Manual class input state & Delete confirmation modal
   const [manualClassInput, setManualClassInput] = useState<string>('');
-  const [manualKkmInput, setManualKkmInput] = useState<number>(teacher.kkm || 75);
+  const [manualKkmInput, setManualKkmInput] = useState<number>(teacher?.kkm || 75);
   const [classToDeleteConfirm, setClassToDeleteConfirm] = useState<string | null>(null);
 
   // Encryption code states
@@ -602,7 +602,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       setSemester(teacher.semester || 'Ganjil');
       setDefaultKkm(teacher.kkm || 75);
     }
-  }, [teacher.id]);
+  }, [teacher?.id]);
 
   const handleSaveSettings = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -690,7 +690,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   return (
     <div className="space-y-4">
       {/* Top Banner */}
-      <div className="bg-gradient-to-r from-[#002f54] via-[#004b87] to-[#003d6d] text-white rounded-none p-5 shadow-sm border border-blue-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative overflow-hidden">
+      <div className="bg-gradient-to-r from-[#002f54] via-[#164e63] to-[#003d6d] text-white rounded-none p-5 shadow-sm border border-cyan-800/40 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative overflow-hidden">
         <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
           <Sliders className="w-48 h-48 text-white" />
         </div>
@@ -701,14 +701,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
           <div className="space-y-1">
             <div className="flex items-center gap-2">
-              <span className="bg-amber-400 text-[#004b87] text-[10px] font-bold px-2 py-0.5 rounded-none uppercase tracking-wide flex items-center gap-1">
+              <span className="bg-amber-400 text-[#164e63] text-[10px] font-bold px-2 py-0.5 rounded-none uppercase tracking-wide flex items-center gap-1">
                 <Sliders className="w-3 h-3" /> Konfigurasi Guru
               </span>
             </div>
             <h1 className="text-xl md:text-2xl font-bold tracking-tight">
               Pengaturan Sistem & Profil
             </h1>
-            <p className="text-xs text-blue-200/90 max-w-2xl">
+            <p className="text-xs text-cyan-200/90 max-w-2xl">
               Atur identitas pengajar, NPSN, tahun ajaran aktif, kurikulum sekolah, dan tambah kelas baru secara manual.
             </p>
           </div>
@@ -748,11 +748,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             onClick={() => setActiveSubTab('profile')}
             className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
               activeSubTab === 'profile' 
-                ? 'bg-[#004b87] text-white shadow-sm border-l-4 border-white' 
+                ? 'bg-[#164e63] text-white shadow-sm border-l-4 border-white' 
                 : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
             }`}
           >
-            <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'profile' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#004b87]'}`}>
+            <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'profile' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-[#164e63]'}`}>
               <User className="w-4 h-4" />
             </div>
             <span className="block font-bold">Profil Pengajar</span>
@@ -762,11 +762,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             onClick={() => setActiveSubTab('school')}
             className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
               activeSubTab === 'school' 
-                ? 'bg-[#004b87] text-white shadow-sm border-l-4 border-white' 
+                ? 'bg-[#164e63] text-white shadow-sm border-l-4 border-white' 
                 : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
             }`}
           >
-            <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'school' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#004b87]'}`}>
+            <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'school' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-[#164e63]'}`}>
               <School className="w-4 h-4" />
             </div>
             <span className="block font-bold">Details Sekolah</span>
@@ -776,11 +776,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             onClick={() => setActiveSubTab('academic')}
             className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
               activeSubTab === 'academic' 
-                ? 'bg-[#004b87] text-white shadow-sm border-l-4 border-white' 
+                ? 'bg-[#164e63] text-white shadow-sm border-l-4 border-white' 
                 : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
             }`}
           >
-            <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'academic' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#004b87]'}`}>
+            <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'academic' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-[#164e63]'}`}>
               <Building2 className="w-4 h-4" />
             </div>
             <span className="block font-bold">Tahun Ajaran & Kelas</span>
@@ -792,11 +792,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               onClick={() => setActiveSubTab('dataLock')}
               className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
                 activeSubTab === 'dataLock' 
-                  ? 'bg-[#004b87] text-white shadow-sm border-l-4 border-white' 
+                  ? 'bg-[#164e63] text-white shadow-sm border-l-4 border-white' 
                   : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
               }`}
             >
-              <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'dataLock' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#004b87]'}`}>
+              <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'dataLock' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-[#164e63]'}`}>
                 <Lock className="w-4 h-4" />
               </div>
               <span className="block font-bold">Kunci Data</span>
@@ -809,11 +809,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               onClick={() => setActiveSubTab('systemAnnouncement')}
               className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
                 activeSubTab === 'systemAnnouncement' 
-                  ? 'bg-[#004b87] text-white shadow-sm border-l-4 border-white' 
+                  ? 'bg-[#164e63] text-white shadow-sm border-l-4 border-white' 
                   : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
               }`}
             >
-              <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'systemAnnouncement' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#004b87]'}`}>
+              <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'systemAnnouncement' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-[#164e63]'}`}>
                 <Megaphone className="w-4 h-4" />
               </div>
               <span className="block font-bold">Pengumuman Sistem</span>
@@ -824,11 +824,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             onClick={() => setActiveSubTab('system')}
             className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
               activeSubTab === 'system' 
-                ? 'bg-[#004b87] text-white shadow-sm border-l-4 border-white' 
+                ? 'bg-[#164e63] text-white shadow-sm border-l-4 border-white' 
                 : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
             }`}
           >
-            <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'system' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#004b87]'}`}>
+            <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'system' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-[#164e63]'}`}>
               <ShieldCheck className="w-4 h-4" />
             </div>
             <span className="block font-bold">Keamanan & Data</span>
@@ -840,11 +840,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               onClick={() => setActiveSubTab('loginBackground')}
               className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
                 activeSubTab === 'loginBackground' 
-                  ? 'bg-[#004b87] text-white shadow-sm border-l-4 border-white' 
+                  ? 'bg-[#164e63] text-white shadow-sm border-l-4 border-white' 
                   : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
               }`}
             >
-              <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'loginBackground' ? 'bg-white/20 text-white' : 'bg-blue-100 text-[#004b87]'}`}>
+              <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'loginBackground' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-[#164e63]'}`}>
                 <ImageIcon className="w-4 h-4" />
               </div>
               <span className="block font-bold">Pengaturan Background</span>
@@ -867,7 +867,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <div className="space-y-6 max-w-xl">
               <form onSubmit={handleSaveSettings} className="space-y-4">
                 <div className="flex items-center gap-2.5 p-3 rounded-none bg-slate-100 border border-slate-200">
-                  <div className="p-2 bg-[#004b87] text-white rounded-none shadow-xs">
+                  <div className="p-2 bg-[#164e63] text-white rounded-none shadow-xs">
                     <User className="w-4 h-4" />
                   </div>
                   <div>
@@ -883,7 +883,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       type="text" 
                       value={teacherName}
                       onChange={(e) => setTeacherName(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
                       placeholder="Contoh: Drs. H. Bambang Susanto, M.Pd."
                     />
                   </div>
@@ -916,7 +916,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       type="text" 
                       value={nip}
                       onChange={(e) => setNip(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono"
                       placeholder="Contoh: 19780512 200312 1 004"
                     />
                   </div>
@@ -925,7 +925,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-[#004b87] hover:bg-[#003d6d] text-white font-semibold rounded-none text-xs shadow-sm flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-2 bg-[#164e63] hover:bg-[#003d6d] text-white font-semibold rounded-none text-xs shadow-sm flex items-center gap-2 cursor-pointer"
                   >
                     <Save className="w-3.5 h-3.5" />
                     Simpan Profil Pengajar
@@ -936,7 +936,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {/* Form Ubah Email Akun */}
               <div className="p-4 bg-white border border-slate-200 rounded-none shadow-xs space-y-3 mt-6">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                  <Mail className="w-4 h-4 text-[#004b87]" />
+                  <Mail className="w-4 h-4 text-[#164e63]" />
                   <h3 className="text-xs font-bold text-slate-800">Ubah Email Akun</h3>
                 </div>
 
@@ -967,14 +967,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       value={newEmail}
                       onChange={(e) => setNewEmail(e.target.value)}
                       placeholder="Masukkan alamat email baru"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
                     />
                   </div>
 
                   <div className="pt-2">
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-[#004b87] hover:bg-blue-800 text-white rounded-none font-bold text-xs flex items-center gap-2 shadow-sm transition-colors cursor-pointer"
+                      className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-2 shadow-sm transition-colors cursor-pointer"
                     >
                       <Save className="w-3.5 h-3.5" />
                       <span>Simpan Email</span>
@@ -986,7 +986,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {/* Form Ubah Kata Sandi (Untuk semua user) */}
               <div className="p-4 bg-white border border-slate-200 rounded-none shadow-xs space-y-3 mt-4">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                  <Lock className="w-4 h-4 text-[#004b87]" />
+                  <Lock className="w-4 h-4 text-[#164e63]" />
                   <h3 className="text-xs font-bold text-slate-800">Ubah Kata Sandi Akun</h3>
                 </div>
 
@@ -1018,7 +1018,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Minimal 6 karakter"
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
                       />
                       <button
                         type="button"
@@ -1039,7 +1039,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         value={confirmNewPassword}
                         onChange={(e) => setConfirmNewPassword(e.target.value)}
                         placeholder="Ulangi kata sandi baru"
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
                       />
                       <button
                         type="button"
@@ -1054,7 +1054,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <div className="pt-2">
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-[#004b87] hover:bg-blue-800 text-white rounded-none font-bold text-xs flex items-center gap-2 shadow-sm transition-colors cursor-pointer"
+                      className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-2 shadow-sm transition-colors cursor-pointer"
                     >
                       <Save className="w-3.5 h-3.5" />
                       <span>Simpan Kata Sandi</span>
@@ -1069,7 +1069,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <div className="space-y-6 max-w-xl">
               <form onSubmit={handleSaveSettings} className="space-y-4">
                 <div className="flex items-center gap-2.5 p-3 rounded-none bg-slate-100 border border-slate-200">
-                  <div className="p-2 bg-[#004b87] text-white rounded-none shadow-xs">
+                  <div className="p-2 bg-[#164e63] text-white rounded-none shadow-xs">
                     <School className="w-4 h-4" />
                   </div>
                   <div>
@@ -1085,7 +1085,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       type="text" 
                       value={schoolName}
                       onChange={(e) => setSchoolName(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
                       placeholder="Contoh: SMA Negeri 1 Indonesia"
                     />
                   </div>
@@ -1096,7 +1096,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       type="text" 
                       value={npsn}
                       onChange={(e) => setNpsn(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold text-[#004b87]"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono font-bold text-[#164e63]"
                       placeholder="Contoh: 20401928"
                     />
                     <p className="text-[10px] text-slate-400 mt-1">Kode 8 digit NPSN resmi satuan pendidikan sekolah.</p>
@@ -1108,7 +1108,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       type="text" 
                       value={city}
                       onChange={(e) => setCity(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
                       placeholder="Contoh: Malang"
                     />
                     <p className="text-[10px] text-slate-400 mt-1">Digunakan sebagai tempat/kota pada format tanggal tanda tangan laporan dan e-Rapor (contoh: Malang, 4 Agustus 2026).</p>
@@ -1122,7 +1122,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         type="text" 
                         value={principalName}
                         onChange={(e) => setPrincipalName(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
                         placeholder="Contoh: Dr. Hj. Sri Wahyuni, M.Si."
                       />
                     </div>
@@ -1133,7 +1133,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         type="text" 
                         value={principalNip}
                         onChange={(e) => setPrincipalNip(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono"
                         placeholder="Contoh: 19691120 199403 2 003"
                       />
                     </div>
@@ -1143,7 +1143,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-[#004b87] hover:bg-[#003d6d] text-white font-semibold rounded-none text-xs shadow-sm flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-2 bg-[#164e63] hover:bg-[#003d6d] text-white font-semibold rounded-none text-xs shadow-sm flex items-center gap-2 cursor-pointer"
                   >
                     <Save className="w-3.5 h-3.5" />
                     Simpan Details Sekolah
@@ -1157,7 +1157,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <div className="space-y-6 max-w-xl">
               <form onSubmit={handleSaveSettings} className="space-y-4">
                 <div className="flex items-center gap-2.5 p-3 rounded-none bg-slate-100 border border-slate-200">
-                  <div className="p-2 bg-[#004b87] text-white rounded-none shadow-xs">
+                  <div className="p-2 bg-[#164e63] text-white rounded-none shadow-xs">
                     <Calendar className="w-4 h-4" />
                   </div>
                   <div>
@@ -1175,7 +1175,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       type="text" 
                       value={academicYear}
                       onChange={(e) => setAcademicYear(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-bold text-[#004b87]"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-bold text-[#164e63]"
                       placeholder="Contoh: 2026/2027"
                     />
                     <div className="flex items-center gap-1.5 mt-1.5">
@@ -1186,7 +1186,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                           type="button"
                           onClick={() => setAcademicYear(yr)}
                           className={`px-2 py-0.5 rounded-none text-[10px] font-semibold transition-all cursor-pointer ${
-                            academicYear === yr ? 'bg-blue-100 text-[#004b87]' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                            academicYear === yr ? 'bg-cyan-100 text-[#164e63]' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                           }`}
                         >
                           {yr}
@@ -1200,7 +1200,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <select 
                       value={semester}
                       onChange={(e) => setSemester(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium cursor-pointer"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium cursor-pointer"
                     >
                       <option value="Ganjil">Semester 1 (Ganjil)</option>
                       <option value="Genap">Semester 2 (Genap)</option>
@@ -1212,7 +1212,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <select 
                       value={curriculum}
                       onChange={(e) => setCurriculum(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium cursor-pointer"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium cursor-pointer"
                     >
                       <option value="Kurikulum Merdeka (KSP)">Kurikulum Merdeka (KSP)</option>
                       <option value="Kurikulum 2013 Revision">Kurikulum 2013 (K-13 Revisi)</option>
@@ -1223,7 +1223,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <div className="pt-2">
                   <button
                     type="submit"
-                    className="px-4 py-2 bg-[#004b87] hover:bg-[#003d6d] text-white font-semibold rounded-none text-xs shadow-sm flex items-center gap-2 cursor-pointer"
+                    className="px-4 py-2 bg-[#164e63] hover:bg-[#003d6d] text-white font-semibold rounded-none text-xs shadow-sm flex items-center gap-2 cursor-pointer"
                   >
                     <Save className="w-3.5 h-3.5" />
                     Simpan Konfigurasi Akademik
@@ -1246,7 +1246,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       value={manualClassInput}
                       onChange={(e) => setManualClassInput(e.target.value)}
                       placeholder="Nama Kelas Baru"
-                      className="px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[140px]"
+                      className="px-3 py-1.5 text-xs bg-white border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 min-w-[140px]"
                     />
                     <button
                       type="submit"
@@ -1331,14 +1331,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
               {/* Modal Confirmation Deletion */}
               {classToDeleteConfirm && (
-                <div className="fixed inset-0 z-50 bg-[#004b87]/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
+                <div className="fixed inset-0 z-50 bg-[#164e63]/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fadeIn">
                   <div className="bg-white rounded-none max-w-sm w-full p-5 shadow-2xl border border-slate-200 space-y-4">
                     <div className="flex items-center gap-3 text-red-600">
                       <div className="p-2.5 bg-red-100 rounded-none">
                         <Trash2 className="w-6 h-6" />
                       </div>
                       <div>
-                        <h4 className="text-sm font-bold text-[#004b87]">Hapus Kelas "{classToDeleteConfirm}"?</h4>
+                        <h4 className="text-sm font-bold text-[#164e63]">Hapus Kelas "{classToDeleteConfirm}"?</h4>
                         <p className="text-xs text-slate-500">Tindakan ini akan menghapus kelas dari daftar aktif.</p>
                       </div>
                     </div>
@@ -1376,7 +1376,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {activeSubTab === 'dataLock' && (
             <div className="space-y-5 max-w-2xl">
               {/* Header Info Banner */}
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[#002f54] via-[#004b87] to-[#003d6d] text-white border border-blue-800/40 rounded-none shadow-md">
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[#002f54] via-[#164e63] to-[#003d6d] text-white border border-cyan-800/40 rounded-none shadow-md">
                 <div className="p-2.5 bg-white/20 text-white rounded-none shrink-0 font-bold border border-white/20">
                   <Lock className="w-6 h-6" />
                 </div>
@@ -1389,7 +1389,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-blue-100 mt-1 leading-relaxed">
+                  <p className="text-[11px] text-cyan-100 mt-1 leading-relaxed">
                     Gunakan fitur ini untuk mengamankan data siswa, rekapitulasi nilai, presensi, dan dokumen resmi dari perubahan tanpa izin.
                   </p>
                 </div>
@@ -1436,7 +1436,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                   <div>
                     <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                      <Sliders className="w-4 h-4 text-[#004b87]" />
+                      <Sliders className="w-4 h-4 text-[#164e63]" />
                       Pengaturan Kunci Data per Modul Spesifik
                     </h3>
                     <p className="text-[10px] text-slate-500">Pilih modul data mana saja yang ingin dikunci secara parsial</p>
@@ -1447,7 +1447,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   {/* 1. Data Siswa */}
                   <div className="p-3 bg-slate-50 border border-slate-200 rounded-none flex items-center justify-between gap-3">
                     <div className="flex items-start gap-2.5">
-                      <div className="p-2 bg-blue-100 text-[#004b87] rounded-none shrink-0 mt-0.5">
+                      <div className="p-2 bg-cyan-100 text-[#164e63] rounded-none shrink-0 mt-0.5">
                         <User className="w-4 h-4" />
                       </div>
                       <div>
@@ -1466,7 +1466,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         onChange={(e) => handleToggleIndividualLock('lockStudents', e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#004b87]"></div>
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#164e63]"></div>
                     </label>
                   </div>
 
@@ -1492,7 +1492,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         onChange={(e) => handleToggleIndividualLock('lockGrades', e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#004b87]"></div>
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#164e63]"></div>
                     </label>
                   </div>
 
@@ -1518,7 +1518,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         onChange={(e) => handleToggleIndividualLock('lockAttendance', e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#004b87]"></div>
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#164e63]"></div>
                     </label>
                   </div>
 
@@ -1544,7 +1544,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         onChange={(e) => handleToggleIndividualLock('lockJournal', e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#004b87]"></div>
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#164e63]"></div>
                     </label>
                   </div>
 
@@ -1570,7 +1570,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         onChange={(e) => handleToggleIndividualLock('lockSettings', e.target.checked)}
                         className="sr-only peer"
                       />
-                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#004b87]"></div>
+                      <div className="w-9 h-5 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-[#164e63]"></div>
                     </label>
                   </div>
                 </div>
@@ -1597,7 +1597,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           {activeSubTab === 'systemAnnouncement' && isAdministratorUser && (
             <div className="space-y-5 max-w-2xl">
               {/* Header Info Banner */}
-              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[#002f54] via-[#004b87] to-[#003d6d] text-white border border-blue-800/40 rounded-none shadow-md">
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[#002f54] via-[#164e63] to-[#003d6d] text-white border border-cyan-800/40 rounded-none shadow-md">
                 <div className="p-2.5 bg-white/20 text-white rounded-none shrink-0 font-bold border border-white/20">
                   <Megaphone className="w-6 h-6" />
                 </div>
@@ -1610,7 +1610,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-blue-100 mt-1 leading-relaxed">
+                  <p className="text-[11px] text-cyan-100 mt-1 leading-relaxed">
                     Kelola teks pengumuman running text yang ditampilkan pada bagian teratas halaman login dan portal informasi publik SIMAK.
                   </p>
                 </div>
@@ -1620,7 +1620,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="p-4 bg-slate-50 border border-slate-200 rounded-none flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-2xs">
                 <div>
                   <label className="text-xs font-bold text-slate-800 flex items-center gap-2">
-                    <Sliders className="w-4 h-4 text-[#004b87]" />
+                    <Sliders className="w-4 h-4 text-[#164e63]" />
                     <span>Visibilitas Running Text</span>
                   </label>
                   <p className="text-[11px] text-slate-500 font-medium">
@@ -1630,7 +1630,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <select
                   value={announcementIsActive ? 'aktif' : 'sembunyi'}
                   onChange={(e) => setAnnouncementIsActive(e.target.value === 'aktif')}
-                  className="px-3 py-1.5 bg-white border border-slate-300 rounded-none text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-600 cursor-pointer shrink-0"
+                  className="px-3 py-1.5 bg-white border border-slate-300 rounded-none text-xs font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-600 cursor-pointer shrink-0"
                 >
                   <option value="aktif">Tampilkan (Aktif)</option>
                   <option value="sembunyi">Sembunyikan (Nonaktif)</option>
@@ -1638,8 +1638,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
 
               {/* Live Preview Card */}
-              <div className="bg-gradient-to-r from-slate-900 via-[#00284a] to-[#003865] rounded-none p-4 text-white shadow-sm border border-blue-400/20 space-y-2.5">
-                <div className="flex items-center justify-between text-xs text-blue-100 font-bold border-b border-white/10 pb-2">
+              <div className="bg-gradient-to-r from-slate-900 via-[#00284a] to-[#003865] rounded-none p-4 text-white shadow-sm border border-cyan-400/20 space-y-2.5">
+                <div className="flex items-center justify-between text-xs text-cyan-100 font-bold border-b border-white/10 pb-2">
                   <span className="flex items-center gap-1.5 text-amber-300 uppercase tracking-wider text-[10px] font-black">
                     <Radio className="w-3 h-3 animate-pulse" />
                     <span>Pratinjau Langsung Running Text ({announcementItems.filter(i => i.isActive && i.text.trim()).length} Pengumuman Aktif)</span>
@@ -1651,7 +1651,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
                 <div className="space-y-1.5">
                   {announcementItems.filter(i => i.text.trim()).length === 0 ? (
-                    <div className="text-xs text-blue-200/60 italic py-2">
+                    <div className="text-xs text-cyan-200/60 italic py-2">
                       Belum ada teks pengumuman. Tambahkan pengumuman atau pilih template cepat di bawah.
                     </div>
                   ) : (
@@ -1661,11 +1661,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                           item.category === 'Penting' ? 'bg-rose-600 text-white' :
                           item.category === 'Pengumuman' ? 'bg-amber-500 text-slate-900' :
                           item.category === 'Fitur Baru' ? 'bg-indigo-600 text-white' :
-                          'bg-blue-600 text-white'
+                          'bg-cyan-600 text-white'
                         }`}>
                           {item.category || 'Informasi'}
                         </span>
-                        <span className="text-blue-50 font-medium italic flex-1 min-w-0">
+                        <span className="text-cyan-50 font-medium italic flex-1 min-w-0">
                           "{item.text}"
                         </span>
                         {!item.isActive && (
@@ -1683,7 +1683,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
                     <div>
                       <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-2">
-                        <Megaphone className="w-4 h-4 text-[#004b87]" />
+                        <Megaphone className="w-4 h-4 text-[#164e63]" />
                         Daftar Pengumuman Running Text ({announcementItems.length})
                       </h3>
                       <p className="text-[10px] text-slate-500">Tiap pengumuman akan ditampilkan secara bergantian atau berjejer dalam running banner</p>
@@ -1691,7 +1691,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <button
                       type="button"
                       onClick={handleAddAnnouncementItem}
-                      className="px-3 py-1.5 bg-blue-50 hover:bg-blue-100 text-[#004b87] rounded-none text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
+                      className="px-3 py-1.5 bg-cyan-50 hover:bg-cyan-100 text-[#164e63] rounded-none text-xs font-bold flex items-center gap-1 transition-colors cursor-pointer shadow-2xs"
                     >
                       <Plus className="w-3.5 h-3.5" />
                       <span>+ Tambah Pengumuman</span>
@@ -1703,7 +1703,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       <div key={item.id || index} className="p-3.5 bg-slate-50 border border-slate-200 rounded-none space-y-2.5 relative group">
                         <div className="flex items-center justify-between pb-2 border-b border-slate-200/80">
                           <div className="flex items-center gap-2">
-                            <span className="w-5 h-5 bg-[#004b87] text-white rounded-full flex items-center justify-center text-[10px] font-black">
+                            <span className="w-5 h-5 bg-[#164e63] text-white rounded-full flex items-center justify-center text-[10px] font-black">
                               {index + 1}
                             </span>
                             <span className="text-xs font-extrabold text-slate-800">Pengumuman #{index + 1}</span>
@@ -1715,7 +1715,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                                 type="checkbox"
                                 checked={item.isActive}
                                 onChange={(e) => handleUpdateAnnouncementItem(index, 'isActive', e.target.checked)}
-                                className="rounded-none text-blue-600 focus:ring-blue-500 cursor-pointer w-4 h-4"
+                                className="rounded-none text-cyan-600 focus:ring-cyan-500 cursor-pointer w-4 h-4"
                               />
                               <span>Tampilkan</span>
                             </label>
@@ -1740,7 +1740,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                             value={item.text}
                             onChange={(e) => handleUpdateAnnouncementItem(index, 'text', e.target.value)}
                             placeholder={`Tulis isi pengumuman #${index + 1} di sini...`}
-                            className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-blue-600 text-slate-800"
+                            className="w-full px-3.5 py-2 bg-white border border-slate-300 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 text-slate-800"
                           />
                         </div>
 
@@ -1749,7 +1749,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                           <select
                             value={item.category || 'Informasi'}
                             onChange={(e) => handleUpdateAnnouncementItem(index, 'category', e.target.value as any)}
-                            className="px-3 py-1 bg-white border border-slate-300 rounded-none text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-blue-600 cursor-pointer"
+                            className="px-3 py-1 bg-white border border-slate-300 rounded-none text-xs font-bold text-slate-700 focus:outline-none focus:ring-1 focus:ring-cyan-600 cursor-pointer"
                           >
                             <option value="Informasi">Informasi Umum (Biru)</option>
                             <option value="Penting">Penting (Merah)</option>
@@ -1803,7 +1803,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 <div className="flex items-center justify-end gap-3 pt-2">
                   <button
                     type="submit"
-                    className="px-6 py-2.5 bg-[#004b87] hover:bg-blue-800 text-white rounded-none text-xs font-bold flex items-center gap-2 shadow-sm transition-colors cursor-pointer active:scale-95"
+                    className="px-6 py-2.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none text-xs font-bold flex items-center gap-2 shadow-sm transition-colors cursor-pointer active:scale-95"
                   >
                     <Save className="w-4 h-4" />
                     <span>Simpan Pengumuman Sistem ({announcementItems.length})</span>
@@ -1837,7 +1837,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <button
                     type="button"
                     onClick={() => setActiveSubTab('dataLock')}
-                    className="px-3.5 py-2 bg-[#004b87] hover:bg-[#003865] text-white font-bold text-xs rounded-none flex items-center gap-2 shrink-0 cursor-pointer shadow-xs transition-all"
+                    className="px-3.5 py-2 bg-[#164e63] hover:bg-[#003865] text-white font-bold text-xs rounded-none flex items-center gap-2 shrink-0 cursor-pointer shadow-xs transition-all"
                   >
                     <Lock className="w-3.5 h-3.5 text-white" />
                     <span>Kelola Kunci Data</span>
@@ -1845,7 +1845,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
               )}
               <div className="flex items-center gap-2.5 p-3 rounded-none bg-slate-100 border border-slate-200">
-                <div className="p-2 bg-[#004b87] text-white rounded-none shadow-xs">
+                <div className="p-2 bg-[#164e63] text-white rounded-none shadow-xs">
                   <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div>
@@ -1855,9 +1855,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               </div>
 
               <div className="space-y-3 text-xs">
-                <div className="p-3 bg-blue-50 rounded-none border border-blue-200 flex items-center justify-between">
+                <div className="p-3 bg-cyan-50 rounded-none border border-cyan-200 flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <Database className="w-5 h-5 text-[#004b87]" />
+                    <Database className="w-5 h-5 text-[#164e63]" />
                     <div>
                       <div className="font-bold text-slate-800">Vercel</div>
                       <div className="text-[11px] text-slate-600">Data tersimpan dan tersinkronisasi secara real-time di Vercel</div>
@@ -1874,7 +1874,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       <div className="text-[11px] text-slate-500">Standar keamanan data nilai sesuai petunjuk teknis SIMAK</div>
                     </div>
                   </div>
-                  <span className="bg-blue-100 text-[#004b87] font-bold px-2 py-0.5 rounded-none text-[10px]">Terproteksi</span>
+                  <span className="bg-cyan-100 text-[#164e63] font-bold px-2 py-0.5 rounded-none text-[10px]">Terproteksi</span>
                 </div>
 
                 <div className="p-3 bg-slate-50 rounded-none border border-slate-200 flex items-center justify-between">
@@ -1892,7 +1892,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               {/* Form Ubah Kode Enkripsi Keamanan Sistem (Administrator & Kurikulum) */}
               <div className="p-4 bg-white border border-slate-200 rounded-none shadow-xs space-y-3 mt-4">
                 <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                  <Key className="w-4 h-4 text-[#004b87]" />
+                  <Key className="w-4 h-4 text-[#164e63]" />
                   <h3 className="text-xs font-bold text-slate-800">Ubah Kode Enkripsi Keamanan Sistem</h3>
                 </div>
 
@@ -1937,7 +1937,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         value={newEncryptionCode}
                         onChange={(e) => setNewEncryptionCode(e.target.value)}
                         placeholder="Masukkan kode enkripsi baru (min. 4 karakter)"
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono font-medium"
+                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono font-medium"
                       />
                       <button
                         type="button"
@@ -1958,14 +1958,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       value={confirmEncryptionCode}
                       onChange={(e) => setConfirmEncryptionCode(e.target.value)}
                       placeholder="Ketik ulang kode enkripsi baru"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono font-medium"
+                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono font-medium"
                     />
                   </div>
 
                   <div className="pt-1 flex items-center justify-end gap-2">
                     <button
                       type="submit"
-                      className="px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white font-bold rounded-none flex items-center gap-2 cursor-pointer shadow-xs transition-all text-xs"
+                      className="px-4 py-2 bg-[#164e63] hover:bg-[#003865] text-white font-bold rounded-none flex items-center gap-2 cursor-pointer shadow-xs transition-all text-xs"
                     >
                       <Save className="w-3.5 h-3.5" />
                       <span>Simpan Kode Enkripsi</span>
@@ -1993,11 +1993,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
       {/* Modal: Tambah Sekolah / Guru Baru */}
       {showAddProfileModal && (
-        <div className="fixed inset-0 z-50 bg-[#004b87]/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#164e63]/60 backdrop-blur-xs flex items-center justify-center p-4">
           <div className="bg-white rounded-none max-w-lg w-full p-6 shadow-2xl border border-slate-200 animate-fadeIn space-y-4 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-100 pb-3">
               <div className="flex items-center gap-2">
-                <div className="p-2 bg-[#004b87] text-amber-300 rounded-none">
+                <div className="p-2 bg-[#164e63] text-amber-300 rounded-none">
                   <School className="w-5 h-5" />
                 </div>
                 <div>
@@ -2023,7 +2023,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   value={newSchoolName}
                   onChange={(e) => setNewSchoolName(e.target.value)}
                   placeholder="Contoh: SMA Negeri 2 Surabaya / MA Al-Azhar"
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
                 />
               </div>
 
@@ -2035,7 +2035,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     value={newNpsn}
                     onChange={(e) => setNewNpsn(e.target.value)}
                     placeholder="Contoh: 20532101"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono"
                   />
                 </div>
                 <div>
@@ -2045,7 +2045,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     value={newCity}
                     onChange={(e) => setNewCity(e.target.value)}
                     placeholder="Contoh: Surabaya"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
                   />
                 </div>
               </div>
@@ -2058,7 +2058,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   value={newTeacherName}
                   onChange={(e) => setNewTeacherName(e.target.value)}
                   placeholder="Contoh: Siti Rahmah, S.Pd., M.Si."
-                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
                 />
               </div>
 
@@ -2070,7 +2070,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     value={newTeacherTitle}
                     onChange={(e) => setNewTeacherTitle(e.target.value)}
                     placeholder="Contoh: Guru Penggerak"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
                   />
                 </div>
                 <div>
@@ -2080,7 +2080,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     value={newNip}
                     onChange={(e) => setNewNip(e.target.value)}
                     placeholder="Contoh: 19830415 200902 2 008"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono"
                   />
                 </div>
               </div>
@@ -2093,7 +2093,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     value={newSubjectRole}
                     onChange={(e) => setNewSubjectRole(e.target.value)}
                     placeholder="Contoh: Fisika / Biologi"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
                   />
                 </div>
                 <div>
@@ -2103,7 +2103,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     value={newGuardianClass}
                     onChange={(e) => setNewGuardianClass(e.target.value)}
                     placeholder="Contoh: X-1"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
                   />
                 </div>
               </div>
@@ -2117,7 +2117,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       value={newPrincipalName}
                       onChange={(e) => setNewPrincipalName(e.target.value)}
                       placeholder="Nama Kepala Sekolah"
-                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500"
                     />
                   </div>
                   <div>
@@ -2126,7 +2126,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       value={newPrincipalNip}
                       onChange={(e) => setNewPrincipalNip(e.target.value)}
                       placeholder="NIP Kepala Sekolah"
-                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono"
                     />
                   </div>
                 </div>
@@ -2142,7 +2142,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 text-xs font-bold text-white bg-[#004b87] hover:bg-[#003d6d] rounded-none shadow-md transition-all cursor-pointer flex items-center gap-1.5"
+                  className="px-4 py-2 text-xs font-bold text-white bg-[#164e63] hover:bg-[#003d6d] rounded-none shadow-md transition-all cursor-pointer flex items-center gap-1.5"
                 >
                   <Check className="w-4 h-4 text-amber-300" />
                   <span>Simpan & Gunakan Profil</span>
@@ -2214,7 +2214,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     value={lockAuthCodeInput}
                     onChange={(e) => setLockAuthCodeInput(e.target.value)}
                     placeholder="Masukkan kode enkripsi"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono font-bold text-slate-800"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono font-bold text-slate-800"
                   />
                   <button
                     type="button"
@@ -2240,7 +2240,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#004b87] hover:bg-[#003865] text-white rounded-none font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
+                  className="px-4 py-2 bg-[#164e63] hover:bg-[#003865] text-white rounded-none font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
                 >
                   <Check className="w-4 h-4 text-amber-300" />
                   <span>Konfirmasi & Eksekusi</span>

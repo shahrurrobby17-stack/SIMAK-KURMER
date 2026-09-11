@@ -459,7 +459,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
       case 'Pengayaan':
         return 'bg-emerald-100 text-emerald-800 border-emerald-300';
       case 'Proyek/Praktikum':
-        return 'bg-blue-100 text-blue-800 border-blue-300';
+        return 'bg-cyan-100 text-cyan-800 border-cyan-300';
       case 'Portofolio':
         return 'bg-purple-100 text-purple-800 border-purple-300';
       case 'Tugas Mandiri':
@@ -536,7 +536,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
           <button
             type="button"
             onClick={handleOpenCreateModal}
-            className="w-full px-3.5 py-2 bg-[#004b87] text-white text-xs font-semibold hover:bg-blue-900 transition-colors flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs border border-blue-900"
+            className="w-full px-3.5 py-2 bg-[#164e63] text-white text-xs font-semibold hover:bg-cyan-900 transition-colors flex items-center justify-center space-x-1.5 cursor-pointer shadow-xs border border-cyan-900"
           >
             <Plus className="w-4 h-4 shrink-0" />
             <span>Buat Tugas Baru</span>
@@ -558,7 +558,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
             <span className="text-[11px] px-2.5 py-0.5 bg-amber-100 text-amber-900 font-bold border border-amber-300">
               Mapel: {activeSubjectName}
             </span>
-            <span className="text-[11px] px-2.5 py-0.5 bg-blue-50 text-[#004b87] border border-blue-200 font-bold">
+            <span className="text-[11px] px-2.5 py-0.5 bg-cyan-50 text-[#164e63] border border-cyan-200 font-bold">
               KKTP: {kktp}
             </span>
           </div>
@@ -570,7 +570,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
               <select
                 value={selectedClass && selectedClass !== 'Semua Kelas' && selectedClass !== 'SEMUA' ? selectedClass : ''}
                 onChange={(e) => onSelectClass(e.target.value)}
-                className="w-full text-xs font-semibold bg-slate-50 border border-slate-300 px-3 py-2 text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                className="w-full text-xs font-semibold bg-slate-50 border border-slate-300 px-3 py-2 text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#164e63]"
               >
                 <option value="">Pilih Kelas</option>
                 {classList.filter(cls => cls !== 'Semua Kelas' && cls !== 'SEMUA').map(cls => (
@@ -585,7 +585,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
               <select
                 value={categoryFilter}
                 onChange={(e) => setCategoryFilter(e.target.value)}
-                className="w-full text-xs font-semibold bg-slate-50 border border-slate-300 px-3 py-2 text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                className="w-full text-xs font-semibold bg-slate-50 border border-slate-300 px-3 py-2 text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#164e63]"
               >
                 <option value="SEMUA">Semua Kategori ({tasks.length})</option>
                 {TASK_CATEGORIES.map(cat => (
@@ -604,12 +604,12 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
           <div className="bg-white border border-slate-200 shadow-xs">
             <div className="p-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <FileSpreadsheet className="w-4 h-4 text-[#004b87]" />
+                <FileSpreadsheet className="w-4 h-4 text-[#164e63]" />
                 <span className="text-xs font-bold text-slate-800 uppercase tracking-wide">
                   Daftar Tugas ({filteredTasks.length})
                 </span>
               </div>
-              <span className="text-[10px] bg-blue-100 text-[#004b87] px-2 py-0.5 font-bold">
+              <span className="text-[10px] bg-cyan-100 text-[#164e63] px-2 py-0.5 font-bold">
                 {selectedClass && selectedClass !== 'Semua Kelas' && selectedClass !== 'SEMUA' ? selectedClass : 'Pilih Kelas'}
               </span>
             </div>
@@ -645,7 +645,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                       onClick={() => setSelectedTaskId(t.id)}
                       className={`p-3 transition-colors cursor-pointer text-left relative ${
                         isSelected 
-                          ? 'bg-blue-50/80 border-l-4 border-[#004b87]' 
+                          ? 'bg-cyan-50/80 border-l-4 border-[#164e63]' 
                           : 'hover:bg-slate-50 border-l-4 border-transparent'
                       }`}
                     >
@@ -667,7 +667,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                             type="button"
                             onClick={(e) => handleOpenEditModal(t, e)}
                             title="Edit Tugas"
-                            className="p-1 text-slate-400 hover:text-blue-700 hover:bg-white transition-colors"
+                            className="p-1 text-slate-400 hover:text-cyan-700 hover:bg-white transition-colors"
                           >
                             <Edit3 className="w-3.5 h-3.5" />
                           </button>
@@ -702,7 +702,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                       {/* Progress bar */}
                       <div className="w-full bg-slate-200 h-1.5 mt-1.5 overflow-hidden">
                         <div 
-                          className="bg-[#004b87] h-full transition-all duration-300"
+                          className="bg-[#164e63] h-full transition-all duration-300"
                           style={{ width: `${progressPct}%` }}
                         />
                       </div>
@@ -714,12 +714,12 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
           </div>
 
           {/* Quick Guidance Box */}
-          <div className="bg-blue-50 border border-blue-200 p-3 text-xs text-blue-900">
+          <div className="bg-cyan-50 border border-cyan-200 p-3 text-xs text-cyan-900">
             <div className="flex items-center space-x-2 font-bold mb-1">
-              <BookOpen className="w-4 h-4 text-[#004b87]" />
+              <BookOpen className="w-4 h-4 text-[#164e63]" />
               <span>Petunjuk Nilai Tugas Tambahan</span>
             </div>
-            <p className="text-[11px] text-blue-800 leading-relaxed">
+            <p className="text-[11px] text-cyan-800 leading-relaxed">
               Nilai tugas tambahan (Remedial/Pengayaan/Proyek) disimpan langsung ke database dan dapat disinkronkan ke rekap nilai formatif siswa. Gunakan tombol preset untuk pengisian massal.
             </p>
           </div>
@@ -740,7 +740,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                       <span className="text-xs font-bold text-slate-700 bg-slate-100 border border-slate-200 px-2 py-0.5">
                         Kelas: {activeTask.className}
                       </span>
-                      <span className="text-xs font-bold text-[#004b87] bg-blue-50 border border-blue-200 px-2 py-0.5">
+                      <span className="text-xs font-bold text-[#164e63] bg-cyan-50 border border-cyan-200 px-2 py-0.5">
                         Mapel: {activeSubjectName}
                       </span>
                       <span className={`text-[10px] px-2 py-0.5 font-bold border ${
@@ -810,7 +810,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                         <button
                           type="button"
                           onClick={() => handleSetAllScore(kktp)}
-                          className="px-2.5 py-1.5 bg-[#004b87] text-white text-xs font-semibold hover:bg-blue-900 transition-colors cursor-pointer"
+                          className="px-2.5 py-1.5 bg-[#164e63] text-white text-xs font-semibold hover:bg-cyan-900 transition-colors cursor-pointer"
                         >
                           Semua KKTP ({kktp})
                         </button>
@@ -839,7 +839,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                     <span className="text-[10px] text-slate-500 font-semibold block">
                       {activeTask.keterangan === 'Centang' || activeTask.evaluationType === 'Centang' ? 'Tingkat Ketuntasan' : 'Rata-rata Nilai'}
                     </span>
-                    <span className="text-sm font-bold text-[#004b87]">
+                    <span className="text-sm font-bold text-[#164e63]">
                       {activeTask.keterangan === 'Centang' || activeTask.evaluationType === 'Centang' ? `${stats.tuntasPct}%` : stats.avg}
                     </span>
                   </div>
@@ -855,7 +855,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                       placeholder="Cari nama / NISN siswa..."
                       value={studentSearchQuery}
                       onChange={(e) => setStudentSearchQuery(e.target.value)}
-                      className="w-full text-xs bg-slate-50 border border-slate-300 pl-7 pr-3 py-1.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                      className="w-full text-xs bg-slate-50 border border-slate-300 pl-7 pr-3 py-1.5 text-slate-800 focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                     />
                     <Search className="w-3 h-3 text-slate-400 absolute left-2 top-2" />
                   </div>
@@ -867,7 +867,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                     type="button"
                     onClick={() => setStatusFilter('ALL')}
                     className={`px-2 py-1 text-[11px] font-bold transition-colors cursor-pointer ${
-                      statusFilter === 'ALL' ? 'bg-[#004b87] text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
+                      statusFilter === 'ALL' ? 'bg-[#164e63] text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'
                     }`}
                   >
                     Semua ({classStudents.length})
@@ -941,7 +941,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                               <div className="text-[10px] text-slate-500 flex items-center gap-1.5 mt-0.5">
                                 <span>NISN: {student.nisn}</span>
                                 <span>•</span>
-                                <span className={`px-1 py-0.2 font-bold ${student.gender === 'L' ? 'bg-blue-50 text-blue-700' : 'bg-pink-50 text-pink-700'}`}>
+                                <span className={`px-1 py-0.2 font-bold ${student.gender === 'L' ? 'bg-cyan-50 text-cyan-700' : 'bg-pink-50 text-pink-700'}`}>
                                   {student.gender === 'L' ? 'Laki-laki' : 'Perempuan'}
                                 </span>
                               </div>
@@ -997,7 +997,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                                     value={grade.score === 0 ? '' : grade.score}
                                     placeholder="0"
                                     onChange={(e) => handleScoreChange(student.id, parseInt(e.target.value, 10))}
-                                    className={`w-16 px-2 py-1 text-center font-bold text-xs border focus:outline-none focus:ring-1 focus:ring-[#004b87] ${
+                                    className={`w-16 px-2 py-1 text-center font-bold text-xs border focus:outline-none focus:ring-1 focus:ring-[#164e63] ${
                                       isTuntas 
                                         ? 'border-emerald-300 bg-emerald-50/50 text-emerald-900 font-black' 
                                         : score > 0 
@@ -1014,7 +1014,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                               <td className="py-2.5 px-3 text-center">
                                 <span className={`inline-block w-6 h-6 leading-6 text-center font-bold text-xs rounded-none ${
                                   predicate === 'A' ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' :
-                                  predicate === 'B' ? 'bg-blue-100 text-blue-800 border border-blue-300' :
+                                  predicate === 'B' ? 'bg-cyan-100 text-cyan-800 border border-cyan-300' :
                                   predicate === 'C' ? 'bg-amber-100 text-amber-800 border border-amber-300' :
                                   'bg-rose-100 text-rose-800 border border-rose-300'
                                 }`}>
@@ -1030,14 +1030,14 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                                   placeholder="Ketik catatan / apresiasi guru..."
                                   value={grade.feedback || ''}
                                   onChange={(e) => handleFeedbackChange(student.id, e.target.value)}
-                                  className="w-full text-xs px-2.5 py-1 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#004b87] text-slate-800"
+                                  className="w-full text-xs px-2.5 py-1 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#164e63] text-slate-800"
                                 />
                                 <button
                                   type="button"
                                   onClick={() => handleGenerateAiFeedback(student)}
                                   disabled={loadingAiStudentId === student.id}
                                   title="Buat Masukan Otomatis AI Gemini"
-                                  className="p-1.5 bg-blue-50 border border-blue-200 text-[#004b87] hover:bg-[#004b87] hover:text-white transition-colors cursor-pointer shrink-0 disabled:opacity-50"
+                                  className="p-1.5 bg-cyan-50 border border-cyan-200 text-[#164e63] hover:bg-[#164e63] hover:text-white transition-colors cursor-pointer shrink-0 disabled:opacity-50"
                                 >
                                   {loadingAiStudentId === student.id ? (
                                     <RefreshCw className="w-3.5 h-3.5 animate-spin" />
@@ -1082,7 +1082,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                                     type="button"
                                     onClick={() => handleScoreChange(student.id, kktp)}
                                     title={`Beri Nilai KKTP (${kktp})`}
-                                    className="px-1.5 py-0.5 bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold hover:bg-blue-600 hover:text-white transition-colors cursor-pointer"
+                                    className="px-1.5 py-0.5 bg-cyan-50 text-cyan-700 border border-cyan-200 text-[10px] font-bold hover:bg-cyan-600 hover:text-white transition-colors cursor-pointer"
                                   >
                                     {kktp}
                                   </button>
@@ -1111,7 +1111,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                       setSuccessModalMessage(`Rekap nilai tugas tambahan untuk ${classStudents.length} siswa berhasil disimpan.`);
                       setShowSuccessModal(true);
                     }}
-                    className="px-4 py-2 bg-[#004b87] text-white text-xs font-semibold hover:bg-blue-900 transition-colors flex items-center space-x-1.5 cursor-pointer shadow-xs"
+                    className="px-4 py-2 bg-[#164e63] text-white text-xs font-semibold hover:bg-cyan-900 transition-colors flex items-center space-x-1.5 cursor-pointer shadow-xs"
                   >
                     <Save className="w-4 h-4" />
                     <span>Simpan Rekap Nilai</span>
@@ -1138,7 +1138,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                   <button
                     type="button"
                     onClick={handleOpenCreateModal}
-                    className="mt-4 px-4 py-2 bg-[#004b87] text-white text-xs font-semibold hover:bg-blue-900 transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
+                    className="mt-4 px-4 py-2 bg-[#164e63] text-white text-xs font-semibold hover:bg-cyan-900 transition-colors inline-flex items-center space-x-1.5 cursor-pointer"
                   >
                     <Plus className="w-4 h-4" />
                     <span>Buat Tugas Tambahan Baru</span>
@@ -1154,7 +1154,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
       {showTaskModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div className="bg-white border border-slate-300 shadow-2xl max-w-lg w-full overflow-hidden">
-            <div className="bg-[#004b87] text-white p-4 flex items-center justify-between">
+            <div className="bg-[#164e63] text-white p-4 flex items-center justify-between">
               <div className="flex items-center space-x-2">
                 <Award className="w-5 h-5 text-white" />
                 <h3 className="text-sm font-bold">
@@ -1179,10 +1179,10 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                   </label>
                   <div className="p-2 bg-slate-100 border border-slate-300 text-slate-800 font-semibold text-xs flex items-center justify-between">
                     <div className="flex items-center space-x-1.5 min-w-0">
-                      <BookOpen className="w-3.5 h-3.5 text-[#004b87] shrink-0" />
+                      <BookOpen className="w-3.5 h-3.5 text-[#164e63] shrink-0" />
                       <span className="truncate">{activeSubjectName}</span>
                     </div>
-                    <span className="text-[10px] bg-blue-100 text-[#004b87] px-1.5 py-0.5 font-bold shrink-0">
+                    <span className="text-[10px] bg-cyan-100 text-[#164e63] px-1.5 py-0.5 font-bold shrink-0">
                       KKTP: {kktp}
                     </span>
                   </div>
@@ -1195,7 +1195,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                   <select
                     value={taskForm.className}
                     onChange={(e) => setTaskForm({ ...taskForm, className: e.target.value })}
-                    className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                    className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                   >
                     {classList.filter(c => c !== 'Semua Kelas' && c !== 'SEMUA').map(cls => (
                       <option key={cls} value={cls}>{cls}</option>
@@ -1215,7 +1215,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                   placeholder="Contoh: Remedial Bab 2: Struktur & Fungsi Sel"
                   value={taskForm.title}
                   onChange={(e) => setTaskForm({ ...taskForm, title: e.target.value })}
-                  className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                  className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                 />
               </div>
 
@@ -1228,7 +1228,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                   <select
                     value={taskForm.category}
                     onChange={(e) => setTaskForm({ ...taskForm, category: e.target.value as StudentTaskCategory })}
-                    className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                    className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                   >
                     {TASK_CATEGORIES.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
@@ -1243,7 +1243,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                   <select
                     value={taskForm.keterangan}
                     onChange={(e) => setTaskForm({ ...taskForm, keterangan: e.target.value as 'Centang' | 'Nilai' })}
-                    className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#004b87] font-bold text-[#004b87]"
+                    className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#164e63] font-bold text-[#164e63]"
                   >
                     <option value="Centang">Centang (Checklist ✓)</option>
                     <option value="Nilai">Nilai (Skor Angka)</option>
@@ -1261,7 +1261,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                     disabled={taskForm.keterangan === 'Centang'}
                     value={taskForm.keterangan === 'Centang' ? 100 : taskForm.maxScore}
                     onChange={(e) => setTaskForm({ ...taskForm, maxScore: parseInt(e.target.value, 10) || 100 })}
-                    className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#004b87] disabled:opacity-60 disabled:bg-slate-100"
+                    className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#164e63] disabled:opacity-60 disabled:bg-slate-100"
                   />
                 </div>
               </div>
@@ -1276,7 +1276,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                   placeholder="Contoh: Pembuatan peta konsep organel sel tumbuhan dan hewan."
                   value={taskForm.description}
                   onChange={(e) => setTaskForm({ ...taskForm, description: e.target.value })}
-                  className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                  className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                 />
               </div>
 
@@ -1290,7 +1290,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                   placeholder="Contoh: Kerjakan di lembar folio bergaris atau format PDF..."
                   value={taskForm.instructions}
                   onChange={(e) => setTaskForm({ ...taskForm, instructions: e.target.value })}
-                  className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#004b87]"
+                  className="w-full text-xs p-2 bg-slate-50 border border-slate-300 focus:bg-white focus:outline-none focus:ring-1 focus:ring-[#164e63]"
                 />
               </div>
 
@@ -1305,7 +1305,7 @@ export const ExtraAssignmentGradesView: React.FC<ExtraAssignmentGradesViewProps>
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 bg-[#004b87] text-white font-semibold hover:bg-blue-900 transition-colors cursor-pointer shadow-xs"
+                  className="px-4 py-2 bg-[#164e63] text-white font-semibold hover:bg-cyan-900 transition-colors cursor-pointer shadow-xs"
                 >
                   {editingTask ? 'Simpan Perubahan' : 'Buat Tugas'}
                 </button>

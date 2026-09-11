@@ -13,7 +13,7 @@ import {
 import { TeacherProfile, UserAccount } from '../types';
 
 interface ProfilePromptModalProps {
-  teacher: TeacherProfile;
+  teacher?: TeacherProfile;
   currentUser: UserAccount | null;
   onClose: () => void;
   onOpenSettings?: () => void;
@@ -24,8 +24,8 @@ export const ProfilePromptModal: React.FC<ProfilePromptModalProps> = ({
   currentUser,
   onClose,
 }) => {
-  const teacherName = teacher.name || currentUser?.name || 'Bapak/Ibu Guru';
-  const schoolName = teacher.schoolName || currentUser?.schoolName || 'Nama Instansi';
+  const teacherName = teacher?.name || currentUser?.name || 'Bapak/Ibu Guru';
+  const schoolName = teacher?.schoolName || currentUser?.schoolName || 'Nama Instansi';
 
   const [dontShowAgain, setDontShowAgain] = useState<boolean>(() => {
     return localStorage.getItem('simak_dont_show_profile_prompt') === 'true';
@@ -41,14 +41,14 @@ export const ProfilePromptModal: React.FC<ProfilePromptModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#004b87]/60 backdrop-blur-xs flex items-center justify-center p-3 md:p-4 overflow-hidden animate-fadeIn select-none">
+    <div className="fixed inset-0 z-50 bg-[#164e63]/60 backdrop-blur-xs flex items-center justify-center p-3 md:p-4 overflow-hidden animate-fadeIn select-none">
       <div className="bg-white rounded-none max-w-lg w-full p-5 md:p-6 shadow-2xl border border-slate-200 space-y-4 my-auto select-text">
         
         {/* Header */}
         <div className="flex items-start justify-between border-b border-slate-100 pb-3">
           <div className="flex items-center gap-3">
-            <div className="p-2 bg-blue-50 text-[#004b87] rounded-none border border-blue-100 shadow-xs">
-              <UserCheck className="w-5 h-5 text-blue-700" />
+            <div className="p-2 bg-cyan-50 text-[#164e63] rounded-none border border-cyan-100 shadow-xs">
+              <UserCheck className="w-5 h-5 text-cyan-700" />
             </div>
             <div>
               <div className="flex items-center gap-2">
@@ -72,8 +72,8 @@ export const ProfilePromptModal: React.FC<ProfilePromptModalProps> = ({
         </div>
 
         {/* Message Banner */}
-        <div className="p-3 bg-gradient-to-r from-blue-50 to-indigo-50/60 border border-blue-200/80 rounded-none text-xs text-slate-700 space-y-1">
-          <div className="flex items-center gap-2 text-blue-900 font-bold text-xs">
+        <div className="p-3 bg-gradient-to-r from-cyan-50 to-indigo-50/60 border border-cyan-200/80 rounded-none text-xs text-slate-700 space-y-1">
+          <div className="flex items-center gap-2 text-cyan-900 font-bold text-xs">
             <Sparkles className="w-4 h-4 text-amber-500 shrink-0" />
             <span>Selamat Datang di SIMAK Guru!</span>
           </div>
@@ -85,13 +85,13 @@ export const ProfilePromptModal: React.FC<ProfilePromptModalProps> = ({
         {/* Data Checklist Items */}
         <div className="space-y-2 text-xs">
           <h4 className="font-bold text-slate-800 text-[11px] uppercase tracking-wider flex items-center gap-1.5">
-            <Info className="w-3.5 h-3.5 text-blue-600" />
+            <Info className="w-3.5 h-3.5 text-cyan-600" />
             <span>Data Yang Perlu Diperiksa Dalam Sistem:</span>
           </h4>
 
           <div className="grid grid-cols-1 gap-1.5">
-            <div className="p-2.5 bg-slate-50 border border-slate-200/80 rounded-none flex items-start gap-2.5 hover:bg-white hover:border-blue-200 transition-all">
-              <div className="p-1.5 bg-blue-100 text-blue-700 rounded-none shrink-0 mt-0.5">
+            <div className="p-2.5 bg-slate-50 border border-slate-200/80 rounded-none flex items-start gap-2.5 hover:bg-white hover:border-cyan-200 transition-all">
+              <div className="p-1.5 bg-cyan-100 text-cyan-700 rounded-none shrink-0 mt-0.5">
                 <ShieldCheck className="w-3.5 h-3.5" />
               </div>
               <div>
@@ -102,7 +102,7 @@ export const ProfilePromptModal: React.FC<ProfilePromptModalProps> = ({
               </div>
             </div>
 
-            <div className="p-2.5 bg-slate-50 border border-slate-200/80 rounded-none flex items-start gap-2.5 hover:bg-white hover:border-blue-200 transition-all">
+            <div className="p-2.5 bg-slate-50 border border-slate-200/80 rounded-none flex items-start gap-2.5 hover:bg-white hover:border-cyan-200 transition-all">
               <div className="p-1.5 bg-indigo-100 text-indigo-700 rounded-none shrink-0 mt-0.5">
                 <FileSpreadsheet className="w-3.5 h-3.5" />
               </div>
@@ -114,7 +114,7 @@ export const ProfilePromptModal: React.FC<ProfilePromptModalProps> = ({
               </div>
             </div>
 
-            <div className="p-2.5 bg-slate-50 border border-slate-200/80 rounded-none flex items-start gap-2.5 hover:bg-white hover:border-blue-200 transition-all">
+            <div className="p-2.5 bg-slate-50 border border-slate-200/80 rounded-none flex items-start gap-2.5 hover:bg-white hover:border-cyan-200 transition-all">
               <div className="p-1.5 bg-amber-100 text-amber-700 rounded-none shrink-0 mt-0.5">
                 <Award className="w-3.5 h-3.5" />
               </div>
@@ -141,7 +141,7 @@ export const ProfilePromptModal: React.FC<ProfilePromptModalProps> = ({
               type="checkbox"
               checked={dontShowAgain}
               onChange={(e) => handleToggleDontShow(e.target.checked)}
-              className="w-4 h-4 text-[#004b87] rounded-none border-slate-300 focus:ring-blue-500 cursor-pointer accent-[#003366]"
+              className="w-4 h-4 text-[#164e63] rounded-none border-slate-300 focus:ring-cyan-500 cursor-pointer accent-[#003366]"
             />
             <span className="text-[11px]">Saya telah membaca, jangan tampilkan lagi</span>
           </label>
@@ -150,7 +150,7 @@ export const ProfilePromptModal: React.FC<ProfilePromptModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="px-6 py-2 bg-[#004b87] hover:bg-[#003d6d] text-white font-bold rounded-none shadow-md text-xs flex items-center gap-1.5 cursor-pointer transition-all hover:scale-[1.01]"
+              className="px-6 py-2 bg-[#164e63] hover:bg-[#003d6d] text-white font-bold rounded-none shadow-md text-xs flex items-center gap-1.5 cursor-pointer transition-all hover:scale-[1.01]"
             >
               <CheckCircle2 className="w-4 h-4 text-emerald-400" />
               <span>OK</span>

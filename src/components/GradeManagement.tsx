@@ -255,14 +255,14 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
           <div className="flex items-center flex-wrap gap-2.5">
             {/* Subject Dropdown */}
             <div className="flex items-center space-x-2 bg-slate-50 px-3 py-1.5 rounded-none border border-slate-300 text-xs text-slate-700">
-              <span className="font-bold text-[#004b87]">Mata Pelajaran:</span>
+              <span className="font-bold text-[#164e63]">Mata Pelajaran:</span>
               <select
                 value={selectedSubject.id}
                 onChange={(e) => {
                   const sub = subjects.find(s => s.id === e.target.value);
                   if (sub) onSelectSubject(sub);
                 }}
-                className="bg-white font-bold text-slate-800 px-2 py-0.5 rounded-none border border-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer text-xs"
+                className="bg-white font-bold text-slate-800 px-2 py-0.5 rounded-none border border-slate-200 focus:outline-none focus:border-cyan-500 cursor-pointer text-xs"
               >
                 {subjects.map((sub) => (
                   <option key={sub.id} value={sub.id}>{sub.name} (KKTP: {sub.kktp})</option>
@@ -282,7 +282,7 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
                   const val = parseInt(e.target.value) || 0;
                   if (onUpdateKktp) onUpdateKktp(val);
                 }}
-                className="w-14 bg-white font-bold text-slate-800 text-center px-2 py-0.5 rounded-none border border-slate-200 focus:outline-none focus:border-blue-500 cursor-pointer text-xs"
+                className="w-14 bg-white font-bold text-slate-800 text-center px-2 py-0.5 rounded-none border border-slate-200 focus:outline-none focus:border-cyan-500 cursor-pointer text-xs"
               />
             </div>
           </div>
@@ -305,7 +305,7 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
                 placeholder="Cari siswa atau NISN..." 
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 text-xs pl-9 pr-3 py-2 rounded-none focus:outline-none focus:border-blue-500 text-slate-800"
+                className="w-full bg-slate-50 border border-slate-300 text-xs pl-9 pr-3 py-2 rounded-none focus:outline-none focus:border-cyan-500 text-slate-800"
               />
             </div>
 
@@ -313,7 +313,7 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
               <button
                 onClick={() => setFilterKktp('ALL')}
                 className={`px-3 py-1.5 rounded-none text-xs font-bold transition-all cursor-pointer ${
-                  filterKktp === 'ALL' ? 'bg-blue-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                  filterKktp === 'ALL' ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
               >
                 Semua Siswa ({classStudents.length})
@@ -354,7 +354,7 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
               <select
                 value={selectedClass}
                 onChange={(e) => onSelectClass && onSelectClass(e.target.value)}
-                className="bg-white font-bold text-slate-800 px-2 py-0.5 rounded-none border border-slate-300 focus:outline-none focus:border-blue-500 cursor-pointer text-xs"
+                className="bg-white font-bold text-slate-800 px-2 py-0.5 rounded-none border border-slate-300 focus:outline-none focus:border-cyan-500 cursor-pointer text-xs"
               >
                 {Array.from(new Set(
                   classList && classList.length > 0
@@ -369,9 +369,9 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
             {/* Unduh PDF Button */}
             <button
               onClick={handleExportPdf}
-              className="flex items-center space-x-1.5 bg-white hover:bg-slate-50 text-[#004b87] border border-blue-200 px-4 py-2 rounded-none text-xs font-bold transition-all cursor-pointer shadow-2xs"
+              className="flex items-center space-x-1.5 bg-white hover:bg-slate-50 text-[#164e63] border border-cyan-200 px-4 py-2 rounded-none text-xs font-bold transition-all cursor-pointer shadow-2xs"
             >
-              <FileDown className="w-4 h-4 text-[#004b87]" />
+              <FileDown className="w-4 h-4 text-[#164e63]" />
               <span>Unduh PDF</span>
             </button>
           </div>
@@ -382,8 +382,8 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
       {showWeightModal && (
         <div className="fixed inset-0 bg-slate-950/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-none max-w-md w-full p-6 shadow-2xl space-y-4 border border-slate-200">
-            <h3 className="text-base font-bold text-[#004b87] border-b pb-2 flex items-center gap-2">
-              <Sliders className="w-4 h-4 text-blue-600" />
+            <h3 className="text-base font-bold text-[#164e63] border-b pb-2 flex items-center gap-2">
+              <Sliders className="w-4 h-4 text-cyan-600" />
               Pengaturan Bobot Penilaian Rapor
             </h3>
 
@@ -415,12 +415,12 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
             </div>
 
             <div className="pt-2 text-[11px] text-slate-500 font-medium bg-slate-50 p-3 rounded-none border border-slate-200">
-              Total Bobot: <span className="font-bold text-[#004b87]">{weights.formatif + weights.pts + weights.pas}%</span> (Formula: Nilai Formatif 40% + PTS 30% + PAS 30%)
+              Total Bobot: <span className="font-bold text-[#164e63]">{weights.formatif + weights.pts + weights.pas}%</span> (Formula: Nilai Formatif 40% + PTS 30% + PAS 30%)
             </div>
 
             <button
               onClick={() => setShowWeightModal(false)}
-              className="w-full bg-blue-600 text-white font-bold text-xs py-2 rounded-none hover:bg-blue-500 transition-colors cursor-pointer"
+              className="w-full bg-cyan-600 text-white font-bold text-xs py-2 rounded-none hover:bg-cyan-500 transition-colors cursor-pointer"
             >
               Simpan Pengaturan Bobot
             </button>
@@ -433,7 +433,7 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs border-collapse">
             <thead>
-              <tr className="bg-[#004b87] text-slate-200 uppercase tracking-wider text-[11px] font-bold">
+              <tr className="bg-[#164e63] text-slate-200 uppercase tracking-wider text-[11px] font-bold">
                 <th className="p-3 border-b border-slate-800 w-10 text-center">No</th>
                 <th className="p-3 border-b border-slate-800 min-w-[180px]">Nama Siswa</th>
                 <th className="p-3 border-b border-slate-800 text-center w-16">TP1</th>
@@ -465,7 +465,7 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
                     <tr key={student.id} className="hover:bg-slate-50 transition-colors">
                       <td className="p-3 text-center font-bold text-slate-500">{index + 1}</td>
                       <td className="p-3">
-                        <div className="font-bold text-[#004b87]">{student.name}</div>
+                        <div className="font-bold text-[#164e63]">{student.name}</div>
                         <div className="text-[10px] text-slate-400">NISN: {student.nisn}</div>
                       </td>
 
@@ -477,7 +477,7 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
                             min="0" max="100"
                             value={gr[tp]}
                             onChange={(e) => handleScoreChange(student.id, tp, parseInt(e.target.value) || 0)}
-                            className="w-12 bg-slate-50 border border-slate-300 rounded-none text-center text-xs font-semibold p-1 focus:bg-white focus:border-blue-500 focus:outline-none"
+                            className="w-12 bg-slate-50 border border-slate-300 rounded-none text-center text-xs font-semibold p-1 focus:bg-white focus:border-cyan-500 focus:outline-none"
                           />
                         </td>
                       ))}
@@ -489,7 +489,7 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
                           min="0" max="100"
                           value={gr.pts}
                           onChange={(e) => handleScoreChange(student.id, 'pts', parseInt(e.target.value) || 0)}
-                          className="w-12 bg-amber-50 border border-amber-300 rounded-none text-center text-xs font-bold text-[#004b87] p-1 focus:bg-white focus:border-amber-500 focus:outline-none"
+                          className="w-12 bg-amber-50 border border-amber-300 rounded-none text-center text-xs font-bold text-[#164e63] p-1 focus:bg-white focus:border-amber-500 focus:outline-none"
                         />
                       </td>
 
@@ -499,13 +499,13 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
                           min="0" max="100"
                           value={gr.pas}
                           onChange={(e) => handleScoreChange(student.id, 'pas', parseInt(e.target.value) || 0)}
-                          className="w-12 bg-amber-50 border border-amber-300 rounded-none text-center text-xs font-bold text-[#004b87] p-1 focus:bg-white focus:border-amber-500 focus:outline-none"
+                          className="w-12 bg-amber-50 border border-amber-300 rounded-none text-center text-xs font-bold text-[#164e63] p-1 focus:bg-white focus:border-amber-500 focus:outline-none"
                         />
                       </td>
 
                       {/* Final Calculated Score */}
                       <td className="p-3 text-center">
-                        <span className={`text-sm font-black ${isTuntas ? 'text-blue-700' : 'text-red-600'}`}>
+                        <span className={`text-sm font-black ${isTuntas ? 'text-cyan-700' : 'text-red-600'}`}>
                           {gr.finalScore}
                         </span>
                       </td>
@@ -514,7 +514,7 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
                       <td className="p-3 text-center">
                         <span className={`text-[10px] font-bold px-2 py-0.5 rounded-none ${
                           gr.predicate === 'A' ? 'bg-emerald-100 text-emerald-800' :
-                          gr.predicate === 'B' ? 'bg-blue-100 text-blue-800' :
+                          gr.predicate === 'B' ? 'bg-cyan-100 text-cyan-800' :
                           gr.predicate === 'C' ? 'bg-amber-100 text-amber-800' :
                           'bg-red-100 text-red-800'
                         }`}>
@@ -528,7 +528,7 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
                           rows={2}
                           value={gr.achievementDescription}
                           onChange={(e) => onUpdateGrade({ ...gr, achievementDescription: e.target.value })}
-                          className="w-full bg-slate-50 border border-slate-200 text-[11px] p-1.5 rounded-none focus:bg-white focus:border-blue-500 text-slate-800 leading-tight resize-none"
+                          className="w-full bg-slate-50 border border-slate-200 text-[11px] p-1.5 rounded-none focus:bg-white focus:border-cyan-500 text-slate-800 leading-tight resize-none"
                         />
                       </td>
 

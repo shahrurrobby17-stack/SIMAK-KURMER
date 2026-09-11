@@ -140,11 +140,11 @@ export const NewFeaturesModal: React.FC<NewFeaturesModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-[#004b87]/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fadeIn select-none">
+    <div className="fixed inset-0 z-50 bg-[#164e63]/70 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto animate-fadeIn select-none">
       <div className="bg-white rounded-none max-w-3xl w-full my-auto shadow-2xl border border-slate-200 overflow-hidden select-text flex flex-col max-h-[90vh]">
         
         {/* Header Modal */}
-        <div className="bg-gradient-to-r from-[#002f54] via-[#004b87] to-[#003d6d] text-white p-5 sm:p-6 relative shrink-0">
+        <div className="bg-gradient-to-r from-[#002f54] via-[#164e63] to-[#003d6d] text-white p-5 sm:p-6 relative shrink-0">
           {/* Close Button */}
           <button
             type="button"
@@ -164,12 +164,12 @@ export const NewFeaturesModal: React.FC<NewFeaturesModalProps> = ({
                 <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-none uppercase tracking-wider">
                   Update Terbaru Versi 3.7.0
                 </span>
-                <span className="text-xs text-blue-200 font-medium hidden sm:inline">SIMAK Guru System</span>
+                <span className="text-xs text-cyan-200 font-medium hidden sm:inline">SIMAK Guru System</span>
               </div>
               <h2 className="text-lg sm:text-xl font-extrabold text-white mt-1">
                 Informasi Fitur & Pembaruan Sistem
               </h2>
-              <p className="text-xs text-blue-100/90 mt-0.5 max-w-xl">
+              <p className="text-xs text-cyan-100/90 mt-0.5 max-w-xl">
                 Nikmati berbagai fitur canggih terbaru yang dirancang untuk mempermudah tugas mengajar dan administrasi guru.
               </p>
             </div>
@@ -202,19 +202,19 @@ export const NewFeaturesModal: React.FC<NewFeaturesModalProps> = ({
               return (
                 <div 
                   key={feature.id}
-                  className="bg-white rounded-none p-4 border border-slate-200 shadow-2xs hover:shadow-md hover:border-blue-300 transition-all flex flex-col justify-between group"
+                  className="bg-white rounded-none p-4 border border-slate-200 shadow-2xs hover:shadow-md hover:border-cyan-300 transition-all flex flex-col justify-between group"
                 >
                   <div className="space-y-2">
                     <div className="flex items-start justify-between gap-2">
                       <div className="flex items-center gap-2.5">
-                        <div className="p-2 bg-blue-50 text-[#004b87] rounded-none border border-blue-100 group-hover:bg-[#004b87] group-hover:text-amber-300 transition-colors shrink-0">
+                        <div className="p-2 bg-cyan-50 text-[#164e63] rounded-none border border-cyan-100 group-hover:bg-[#164e63] group-hover:text-amber-300 transition-colors shrink-0">
                           <Icon className="w-5 h-5" />
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold text-blue-600 bg-blue-50 px-2 py-0.5 rounded-none border border-blue-100 inline-block">
+                          <span className="text-[10px] font-bold text-cyan-600 bg-cyan-50 px-2 py-0.5 rounded-none border border-cyan-100 inline-block">
                             {feature.badge}
                           </span>
-                          <h3 className="text-xs sm:text-sm font-extrabold text-[#004b87] mt-0.5">
+                          <h3 className="text-xs sm:text-sm font-extrabold text-[#164e63] mt-0.5">
                             {feature.title}
                           </h3>
                         </div>
@@ -245,11 +245,11 @@ export const NewFeaturesModal: React.FC<NewFeaturesModalProps> = ({
           </div>
 
           {/* Additional Info Box */}
-          <div className="p-3.5 bg-blue-50/80 border border-blue-200 rounded-none flex items-start gap-3 text-xs text-blue-900">
-            <Layers className="w-5 h-5 text-blue-600 shrink-0 mt-0.5" />
+          <div className="p-3.5 bg-cyan-50/80 border border-cyan-200 rounded-none flex items-start gap-3 text-xs text-cyan-900">
+            <Layers className="w-5 h-5 text-cyan-600 shrink-0 mt-0.5" />
             <div>
-              <p className="font-bold text-blue-950">Informasi Penggunaan & Bantuan</p>
-              <p className="text-[11px] text-blue-800 leading-relaxed mt-0.5">
+              <p className="font-bold text-cyan-950">Informasi Penggunaan & Bantuan</p>
+              <p className="text-[11px] text-cyan-800 leading-relaxed mt-0.5">
                 Setiap menu di sidebar SIMAK dilengkapi petunjuk penggunaan langsung. Anda dapat melihat kembali informasi fitur ini kapan saja melalui tombol <span className="font-bold">"Fitur Baru"</span> di header bagian atas.
               </p>
             </div>
@@ -258,12 +258,12 @@ export const NewFeaturesModal: React.FC<NewFeaturesModalProps> = ({
 
         {/* Modal Footer */}
         <div className="p-4 bg-white border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 shrink-0">
-          <label className="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer hover:text-[#004b87]">
+          <label className="flex items-center gap-2 text-xs font-semibold text-slate-600 cursor-pointer hover:text-[#164e63]">
             <input 
               type="checkbox" 
               checked={dontShowAgain}
               onChange={(e) => setDontShowAgain(e.target.checked)}
-              className="w-4 h-4 rounded-none text-blue-600 focus:ring-blue-500 border-slate-300 cursor-pointer"
+              className="w-4 h-4 rounded-none text-cyan-600 focus:ring-cyan-500 border-slate-300 cursor-pointer"
             />
             <span>Jangan tampilkan pop-up ini lagi secara otomatis</span>
           </label>
@@ -271,7 +271,7 @@ export const NewFeaturesModal: React.FC<NewFeaturesModalProps> = ({
           <button
             type="button"
             onClick={handleClose}
-            className="w-full sm:w-auto px-5 py-2.5 bg-[#004b87] hover:bg-[#003d6d] text-white font-bold text-xs rounded-none shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-5 py-2.5 bg-[#164e63] hover:bg-[#003d6d] text-white font-bold text-xs rounded-none shadow-md hover:shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <span>Pahami & Mulai Gunakan</span>
             <ArrowRight className="w-4 h-4 text-amber-300" />
