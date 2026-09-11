@@ -51,6 +51,8 @@ import { SaveSuccessModal } from './SaveSuccessModal';
 import { CurriculumSystemView } from './systems/CurriculumSystemView';
 import { TeacherSystemView } from './systems/TeacherSystemView';
 import { AdministrationSystemView } from './systems/AdministrationSystemView';
+import { SarprasSystemView } from './systems/SarprasSystemView';
+import { LibrarySystemView } from './systems/LibrarySystemView';
 import { StudentSystemView } from './systems/StudentSystemView';
 
 interface MasterDataViewProps {
@@ -64,8 +66,8 @@ interface MasterDataViewProps {
   onUpdateInfoAnnouncement?: (updated: InfoAnnouncement) => void;
   renderUserModule?: (user: UserAccount, tab: string) => React.ReactNode;
   onNavigateTab?: (tab: string) => void;
-  activeCategory?: 'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Keuangan' | 'Siswa';
-  onCategoryChange?: (category: 'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Keuangan' | 'Siswa') => void;
+  activeCategory?: 'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa';
+  onCategoryChange?: (category: 'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa') => void;
 }
 
 export const MasterDataView: React.FC<MasterDataViewProps> = ({
@@ -86,10 +88,10 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
   const [statusFilter, setStatusFilter] = useState<string>('Semua');
   const [schoolFilter, setSchoolFilter] = useState<string>('Semua');
   const [roleFilter, setRoleFilter] = useState<string>('Semua');
-  const [internalCategory, setInternalCategory] = useState<'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Keuangan' | 'Siswa'>('Semua');
+  const [internalCategory, setInternalCategory] = useState<'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa'>('Semua');
   const selectedCategory = activeCategory !== undefined ? activeCategory : internalCategory;
 
-  const setSelectedCategory = (cat: 'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Keuangan' | 'Siswa') => {
+  const setSelectedCategory = (cat: 'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa') => {
     setInternalCategory(cat);
     onCategoryChange?.(cat);
   };
@@ -148,10 +150,12 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
     return e === 'shahrurrobby17@gmail.com' || n.includes('shahrur robby') || n.includes('shahrur');
   };
 
-  // Helper to categorize user into Kurikulum, Guru, TU, Siswa
-  const getUserCategory = (u: UserAccount): 'Kurikulum' | 'Guru' | 'TU' | 'Siswa' => {
+  // Helper to categorize user into Kurikulum, Guru, TU, Sarpras, Perpustakaan, Siswa
+  const getUserCategory = (u: UserAccount): 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Perpustakaan' | 'Siswa' => {
     const r = (u.role || '').toLowerCase();
     if (r.includes('kurikulum')) return 'Kurikulum';
+    if (r.includes('perpustakaan') || r.includes('pustaka') || r.includes('pustakawan')) return 'Perpustakaan';
+    if (r.includes('sarpras') || r.includes('sarana') || r.includes('prasarana')) return 'Sarpras';
     if (r.includes('tu') || r.includes('tata usaha') || r.includes('administrasi') || r.includes('operator') || r.includes('staf') || r.includes('staff')) return 'TU';
     if (r.includes('siswa') || r.includes('murid') || r.includes('peserta didik')) return 'Siswa';
     return 'Guru';
@@ -186,21 +190,23 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
   const masterAccountsCount = registeredUsers.filter(u => isMasterAccount(u.email, u.name)).length;
   const totalSchoolsCount = new Set(registeredUsers.map(u => u.schoolName || 'SD Negeri 1 SIMAK')).size;
 
-  // Category statistics for Kurikulum, Guru, TU, Siswa
+  // Category statistics for Kurikulum, Guru, TU, Sarpras, Perpustakaan, Siswa
   const kurikulumCount = registeredUsers.filter(u => getUserCategory(u) === 'Kurikulum').length;
   const guruCount = registeredUsers.filter(u => getUserCategory(u) === 'Guru').length;
   const tuCount = registeredUsers.filter(u => getUserCategory(u) === 'TU').length;
+  const sarprasCount = registeredUsers.filter(u => getUserCategory(u) === 'Sarpras').length;
+  const perpustakaanCount = registeredUsers.filter(u => getUserCategory(u) === 'Perpustakaan').length;
   const siswaCount = registeredUsers.filter(u => getUserCategory(u) === 'Siswa').length;
 
   // Handle header category navigation / filtering
   const handleCategoryDropdownChange = (value: string) => {
-    setSelectedCategory(value as 'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Keuangan' | 'Siswa');
+    setSelectedCategory(value as 'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa');
   };
 
   // Helper for quick navigation to dedicated system pages
   const handleQuickNavigate = (
-    tab: 'system-kurikulum' | 'system-guru' | 'system-tu' | 'system-keuangan' | 'system-kesiswaan',
-    cat: 'Kurikulum' | 'Guru' | 'TU' | 'Keuangan' | 'Siswa'
+    tab: 'system-kurikulum' | 'system-guru' | 'system-tu' | 'system-sarpras' | 'system-keuangan' | 'system-kesiswaan' | 'system-perpustakaan',
+    cat: 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa'
   ) => {
     if (onNavigateTab) {
       onNavigateTab(tab);
@@ -514,6 +520,18 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
           onOpenDeleteUserModal={handleOpenDeleteModal}
           onOpenModuleModal={handleOpenModuleModal}
           onSelectCategory={setSelectedCategory}
+        />
+      ) : selectedCategory === 'Sarpras' ? (
+        <SarprasSystemView
+          registeredUsers={registeredUsers}
+          teacher={teacher}
+          onNavigateTab={onNavigateTab}
+        />
+      ) : selectedCategory === 'Perpustakaan' ? (
+        <LibrarySystemView
+          registeredUsers={registeredUsers}
+          teacher={teacher}
+          onNavigateTab={onNavigateTab}
         />
       ) : selectedCategory === 'Siswa' ? (
         <StudentSystemView

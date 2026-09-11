@@ -23,7 +23,9 @@ import {
   Building2,
   ShieldCheck,
   FolderUp,
-  Wallet
+  Wallet,
+  Package,
+  Library
 } from 'lucide-react';
 
 export type NavTab = 
@@ -38,8 +40,10 @@ export type NavTab =
   | 'system-kurikulum'
   | 'system-guru'
   | 'system-tu'
+  | 'system-sarpras'
   | 'system-keuangan'
   | 'system-kesiswaan'
+  | 'system-perpustakaan'
   | 'sync' 
   | 'schedule' 
   | 'extracurricular' 
@@ -137,6 +141,12 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   const isTuRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('tu') || currentUser.role.toLowerCase().includes('tata usaha')) : false;
   const isTuOnlyMode = !isAdministrator && (activeTab === 'system-tu' || (isTuRole && activeTab === 'settings'));
 
+  const isSarprasRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('sarpras') || currentUser.role.toLowerCase().includes('sarana')) : false;
+  const isSarprasOnlyMode = !isAdministrator && (activeTab === 'system-sarpras' || (isSarprasRole && activeTab === 'settings'));
+
+  const isPerpustakaanRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('perpustakaan') || currentUser.role.toLowerCase().includes('pustaka') || currentUser.role.toLowerCase().includes('pustakawan')) : false;
+  const isPerpustakaanOnlyMode = !isAdministrator && (activeTab === 'system-perpustakaan' || (isPerpustakaanRole && activeTab === 'settings'));
+
   const isStudentRole = currentUser?.role ? currentUser.role.toLowerCase().includes('siswa') : false;
 
   React.useEffect(() => {
@@ -161,6 +171,22 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     label: 'TU',
     subtitle: 'Sistem Tata Usaha',
     icon: Building2,
+    badge: null
+  };
+
+  const sarprasItem = {
+    id: 'system-sarpras' as NavTab,
+    label: 'Sarpras',
+    subtitle: 'Sarana & Prasarana',
+    icon: Package,
+    badge: null
+  };
+
+  const perpustakaanItem = {
+    id: 'system-perpustakaan' as NavTab,
+    label: 'Perpustakaan',
+    subtitle: 'Katalog & Sirkulasi',
+    icon: Library,
     badge: null
   };
 
@@ -203,6 +229,13 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       badge: null
     },
     {
+      id: 'system-sarpras' as NavTab,
+      label: 'Sarpras',
+      subtitle: 'Sarana & Prasarana',
+      icon: Package,
+      badge: null
+    },
+    {
       id: 'system-keuangan' as NavTab,
       label: 'Keuangan',
       subtitle: 'Sistem Keuangan',
@@ -215,28 +248,26 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       subtitle: 'LMS & Kesiswaan',
       icon: GraduationCap,
       badge: null
+    },
+    {
+      id: 'system-perpustakaan' as NavTab,
+      label: 'Perpustakaan',
+      subtitle: 'Katalog & Sirkulasi',
+      icon: Library,
+      badge: null
     }
   ];
 
   const isMasterUserOrAdmin = isMasterUser || isAdmin || isAdministrator;
 
   const mainNavItems = [
-    ...(!isMasterUserOrAdmin ? [
-      {
-        id: 'students' as NavTab,
-        label: 'Data Siswa',
-        subtitle: 'Rapor & Rekap',
-        icon: GraduationCap,
-        badge: null
-      },
-      {
-        id: 'sync' as NavTab,
-        label: 'Sinkronisasi',
-        subtitle: 'Kenaikan & Pemindahan',
-        icon: RefreshCw,
-        badge: null
-      }
-    ] : []),
+    {
+      id: 'students' as NavTab,
+      label: 'Data Siswa',
+      subtitle: 'Rapor & Rekap',
+      icon: GraduationCap,
+      badge: null
+    },
     {
       id: 'schedule' as NavTab,
       label: 'Jadwal Mengajar',
@@ -302,30 +333,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     }
   ];
 
-  const masterDataItems = isMasterUserOrAdmin ? [
-    {
-      id: 'students' as NavTab,
-      label: 'Data Siswa',
-      subtitle: 'Rapor & Rekap',
-      icon: GraduationCap,
-      badge: null
-    },
-    {
-      id: 'sync' as NavTab,
-      label: 'Sinkronisasi',
-      subtitle: 'Kenaikan & Pemindahan',
-      icon: RefreshCw,
-      badge: null
-    },
-    {
-      id: 'master-data' as NavTab,
-      label: 'Monitoring Akun',
-      subtitle: 'Master Akun SIMAK',
-      icon: Database,
-      badge: null
-    },
-    ...systemItems
-  ] : [];
+  const masterDataItems: any[] = [];
 
   const studentNavItems = [
     {
@@ -392,6 +400,10 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     ? [kurikulumItem, settingsItem]
     : isTuOnlyMode
     ? [tuItem, settingsItem]
+    : isSarprasOnlyMode
+    ? [sarprasItem, settingsItem]
+    : isPerpustakaanOnlyMode
+    ? [perpustakaanItem, settingsItem]
     : [
         dashboardItem, 
         ...masterDataItems, 
@@ -538,7 +550,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           </div>
           
           <div className="px-2 py-1 text-[10px] font-bold text-cyan-300 uppercase tracking-wider flex items-center justify-between">
-            <span>{isStudentRole ? 'LMS Siswa Merdeka' : isKurikulumOnlyMode ? 'Sistem Kurikulum' : isTuOnlyMode ? 'Sistem Tata Usaha' : 'Navigasi Utama'}</span>
+            <span>{isStudentRole ? 'LMS Siswa Merdeka' : isKurikulumOnlyMode ? 'Sistem Kurikulum' : isTuOnlyMode ? 'Sistem Tata Usaha' : isSarprasOnlyMode ? 'Sistem Sarpras' : isPerpustakaanOnlyMode ? 'Sistem Perpustakaan' : 'Navigasi Utama'}</span>
           </div>
 
           <nav className="space-y-1">
@@ -557,6 +569,22 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             ) : isTuOnlyMode ? (
               <>
                 {renderDesktopItem(tuItem)}
+                {renderDesktopItem(settingsItem)}
+                <div className="pt-2 pb-1 px-1">
+                  <div className="border-b border-cyan-700/50 w-full" />
+                </div>
+              </>
+            ) : isSarprasOnlyMode ? (
+              <>
+                {renderDesktopItem(sarprasItem)}
+                {renderDesktopItem(settingsItem)}
+                <div className="pt-2 pb-1 px-1">
+                  <div className="border-b border-cyan-700/50 w-full" />
+                </div>
+              </>
+            ) : isPerpustakaanOnlyMode ? (
+              <>
+                {renderDesktopItem(perpustakaanItem)}
                 {renderDesktopItem(settingsItem)}
                 <div className="pt-2 pb-1 px-1">
                   <div className="border-b border-cyan-700/50 w-full" />

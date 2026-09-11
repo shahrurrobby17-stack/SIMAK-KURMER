@@ -74,8 +74,10 @@ import { MasterDataView } from './components/MasterDataView';
 import { CurriculumSystemView } from './components/systems/CurriculumSystemView';
 import { TeacherSystemView } from './components/systems/TeacherSystemView';
 import { AdministrationSystemView } from './components/systems/AdministrationSystemView';
+import { SarprasSystemView } from './components/systems/SarprasSystemView';
 import { FinanceSystemView } from './components/systems/FinanceSystemView';
 import { StudentSystemView } from './components/systems/StudentSystemView';
+import { LibrarySystemView } from './components/systems/LibrarySystemView';
 import { StudentLMSView } from './components/StudentLMSView';
 import { TeachingScheduleView } from './components/TeachingScheduleView';
 import { ExtracurricularAttendanceView } from './components/ExtracurricularAttendanceView';
@@ -1893,6 +1895,14 @@ export default function App() {
                     />
                   )}
 
+                  {activeTab === 'system-sarpras' && (
+                    <SarprasSystemView 
+                      registeredUsers={registeredUsers}
+                      teacher={teacher}
+                      onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
+                    />
+                  )}
+
                   {activeTab === 'system-keuangan' && (
                     <FinanceSystemView 
                       registeredUsers={registeredUsers}
@@ -1921,6 +1931,14 @@ export default function App() {
                     />
                   )}
 
+                  {activeTab === 'system-perpustakaan' && (
+                    <LibrarySystemView 
+                      registeredUsers={registeredUsers}
+                      teacher={teacher}
+                      onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
+                    />
+                  )}
+
               {activeTab === 'master-data' && isMasterUser && (
                 <MasterDataView 
                   registeredUsers={registeredUsers}
@@ -1937,7 +1955,9 @@ export default function App() {
                     if (cat === 'Kurikulum') handleTabChange('system-kurikulum');
                     else if (cat === 'Guru') handleTabChange('system-guru');
                     else if (cat === 'TU') handleTabChange('system-tu');
+                    else if (cat === 'Sarpras') handleTabChange('system-sarpras');
                     else if (cat === 'Keuangan') handleTabChange('system-keuangan');
+                    else if (cat === 'Perpustakaan') handleTabChange('system-perpustakaan');
                     else if (cat === 'Siswa') handleTabChange('system-kesiswaan');
                     else handleTabChange('master-data');
                   }}
