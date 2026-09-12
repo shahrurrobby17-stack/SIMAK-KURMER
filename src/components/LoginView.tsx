@@ -54,7 +54,6 @@ import { UserAccount, TeacherProfile, TeachingScheduleItem, Student, StudentGrad
 import { PRESET_THEMES } from './LoginBackgroundSettings';
 import { TutWuriHandayaniLogo } from './TutWuriHandayaniLogo';
 import { DashboardAnalytics } from './DashboardAnalytics';
-import { InfoBannerCard } from './InfoBannerCard';
 import { subscribeToEncryptionCode } from '../lib/firebaseService';
 import { 
   allDefaultStudents, 
@@ -434,7 +433,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
     ];
 
     let schedulesData = defaultSchedulesList;
-    const savedKey = localStorage.getItem('simak_schedules');
+    const savedKey = ((k: string) => null as any)('simak_schedules');
     if (savedKey) {
       try {
         const parsed = JSON.parse(savedKey);
@@ -484,7 +483,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   useEffect(() => {
     const unsubEnc = subscribeToEncryptionCode((code) => {
       if (code) {
-        localStorage.setItem('simak_encryption_code', code);
+        ((k: string, v: string) => void 0)('simak_encryption_code', code);
       }
     });
 
@@ -556,7 +555,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
       const cleanCheckNip = cleanCheckInput.replace(/\s+/g, '').toLowerCase();
 
       // Get local registered users & combined
-      const localRegUsersJson = localStorage.getItem('simak_registered_users');
+      const localRegUsersJson = ((k: string) => null as any)('simak_registered_users');
       const localRegUsers: UserAccount[] = localRegUsersJson ? JSON.parse(localRegUsersJson) : [];
       const allRegistered = [...registeredUsers, ...localRegUsers];
 
@@ -734,7 +733,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
     setIsLoading(true);
     setErrorMessage(null);
     
-    const localRegUsersJson = localStorage.getItem('simak_registered_users');
+    const localRegUsersJson = ((k: string) => null as any)('simak_registered_users');
     const localRegUsers: UserAccount[] = localRegUsersJson ? JSON.parse(localRegUsersJson) : [];
     const allRegistered = [...registeredUsers, ...localRegUsers];
     const matchedRegistered = allRegistered.find(u => 
@@ -810,7 +809,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
       const userEmail = user.email?.toLowerCase();
       const isMasterAdmin = userEmail === 'shahrurrobby17@gmail.com' || userEmail?.endsWith('@admin.simakmerdeka.ai.studio');
       
-      const localRegUsersJson = localStorage.getItem('simak_registered_users');
+      const localRegUsersJson = ((k: string) => null as any)('simak_registered_users');
       const localRegUsers: UserAccount[] = localRegUsersJson ? JSON.parse(localRegUsersJson) : [];
       const allRegistered = [...registeredUsers, ...localRegUsers];
       
@@ -892,7 +891,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
     if (isMasterDataLogin || isMasterAccount) {
       if (ssoSystem !== 'Guru') {
-        const activeEncryptionCode = localStorage.getItem('simak_encryption_code') || '292001';
+        const activeEncryptionCode = ((k: string) => null as any)('simak_encryption_code') || '292001';
         if (encryptionCode.trim() !== activeEncryptionCode) {
           setErrorMessage('Kode Enkripsi tidak valid! Harap masukkan kode enkripsi yang benar.');
           return;
@@ -909,7 +908,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
       const cleanInputNip = cleanInput.replace(/\s+/g, '').toLowerCase();
 
       // Search across registered accounts and teacher profiles
-      const localRegUsersJson = localStorage.getItem('simak_registered_users');
+      const localRegUsersJson = ((k: string) => null as any)('simak_registered_users');
       const localRegUsers: UserAccount[] = localRegUsersJson ? JSON.parse(localRegUsersJson) : [];
       const allRegistered = [...registeredUsers, ...localRegUsers];
 
@@ -1257,7 +1256,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
       return;
     }
 
-    const localRegUsersJson = localStorage.getItem('simak_registered_users');
+    const localRegUsersJson = ((k: string) => null as any)('simak_registered_users');
     const localRegUsers: UserAccount[] = localRegUsersJson ? JSON.parse(localRegUsersJson) : [];
     const allRegUsersToSearch = [...registeredUsers, ...localRegUsers];
 
@@ -1881,7 +1880,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   {/* Timestamp info */}
                   <div className="flex items-center justify-start space-x-2 text-[11px] sm:text-xs text-cyan-100 font-medium pt-0.5">
                     <Calendar className="w-3.5 h-3.5 text-white" />
-                    <span>Pembaruan terakhir: Kamis, 10 September 2026</span>
+                    <span>Pembaruan terakhir: Sabtu, 12 September 2026</span>
                   </div>
                 </div>
 
@@ -1985,22 +1984,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
           </div>
         </div>
 
-        {/* 2.5 KARTU INFO TERKINI TULISAN BERJALAN (DI ANTARA BACKGROUND ATAS DAN BAWAH) */}
-        {infoAnnouncement && (
-          <div className="relative z-20 w-full mt-3 sm:mt-4 py-1 sm:py-1.5 transition-all hidden md:block">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-              <InfoBannerCard
-                announcement={infoAnnouncement}
-                onUpdateAnnouncement={onUpdateInfoAnnouncement || (() => {})}
-                isMasterUser={isMasterUser}
-                currentUser={null}
-              />
-            </div>
-          </div>
-        )}
-
-        {/* ALUR GARIS LENGKAP: PENDAFTARAN SAMPAI LOGIN (TANPA KOTAK KARTU) - HIDDEN ON MOBILE */}
-        <div className="hidden sm:block relative z-20 w-full mt-4 sm:mt-6 pt-6 sm:pt-8 pb-4 sm:pb-6 transition-all bg-white rounded-t-[2.5rem] shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+        {/* ALUR GARIS LENGKAP: PENDAFTARAN SAMPAI LOGIN - HIDDEN ON MOBILE */}
+        <div className="hidden sm:block relative z-20 w-full mt-6 sm:mt-8 pt-6 sm:pt-8 pb-4 sm:pb-6 transition-all bg-white rounded-t-[2.5rem] shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Header Line Tag */}
             <div className="text-center mb-6 sm:mb-8 mt-4">
@@ -2008,88 +1993,183 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 Alur Sistem Pendaftaran & Aktivasi Akun SIMAK
               </h2>
               <div className="flex items-center justify-center gap-1.5 text-[11px] sm:text-xs text-slate-600 mt-2 font-medium">
-                <span>5 Tahap Terintegrasi</span>
+                <span>10 Tahap Terintegrasi (Registrasi, Formulir & Akses LMS)</span>
               </div>
             </div>
 
-            {/* Stepper Flow Line Container (No Box Card) */}
+            {/* Stepper Flow Line Container (Serpentine 2-Row Flow) */}
             <div className="w-full overflow-x-auto scrollbar-none py-2">
-              <div className="min-w-[700px] sm:min-w-full flex items-center justify-between relative px-4 sm:px-6">
-                {/* Continuous Connecting Line Behind Nodes */}
-                <div className="absolute left-10 right-10 top-5 -translate-y-1/2 h-0.5 bg-gradient-to-r from-slate-400 via-slate-600 to-slate-400 opacity-60 z-0"></div>
+              <div className="min-w-[760px] sm:min-w-full flex flex-col relative px-4 sm:px-6">
+                {/* BARIS 1: Tahap 1 sampai 5 (Kiri ke Kanan) */}
+                <div className="w-full flex items-center justify-between relative">
+                  {/* Continuous Connecting Line Behind Nodes Row 1 */}
+                  <div className="absolute left-12 right-12 top-5 -translate-y-1/2 h-0.5 bg-gradient-to-r from-slate-400 via-slate-600 to-slate-400 opacity-60 z-0"></div>
 
-                {/* Step 1: Pilih Peran */}
-                <div className="relative z-10 flex flex-col items-center" title="Tahap 1: Pilih Peran Pengguna">
-                  <div className="w-10 h-10 rounded-full bg-[#164e63] text-white border-2 border-white shadow-md flex items-center justify-center">
-                    <UserPlus className="w-4 h-4 text-white" />
+                  {/* Step 1: Pilih Peran */}
+                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 1: Pilih Peran Pengguna">
+                    <div className="w-10 h-10 rounded-full bg-[#164e63] text-white border-2 border-white shadow-md flex items-center justify-center">
+                      <UserPlus className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="mt-2 text-center">
+                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">1. Pilih Peran</span>
+                      <span className="text-[10px] text-slate-800 font-semibold block">Guru / Siswa</span>
+                    </div>
                   </div>
-                  <div className="mt-2 text-center">
-                    <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">1. Pilih Peran</span>
-                    <span className="text-[10px] text-slate-800 font-semibold block">Guru / Siswa</span>
+
+                  {/* Arrow Connector 1 */}
+                  <div className="relative z-10 text-slate-700 -mt-5">
+                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+
+                  {/* Step 2: Isi Formulir */}
+                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 2: Pengisian Biodata Akun">
+                    <div className="w-10 h-10 rounded-full bg-cyan-700 text-white border-2 border-white shadow-md flex items-center justify-center">
+                      <FileText className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="mt-2 text-center">
+                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">2. Isi Formulir</span>
+                      <span className="text-[10px] text-slate-800 font-semibold block">Biodata & Sandi</span>
+                    </div>
+                  </div>
+
+                  {/* Arrow Connector 2 */}
+                  <div className="relative z-10 text-slate-700 -mt-5">
+                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+
+                  {/* Step 3: Kirim Pendaftaran */}
+                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 3: Pengiriman Data ke Database">
+                    <div className="w-10 h-10 rounded-full bg-cyan-800 text-white border-2 border-white shadow-md flex items-center justify-center">
+                      <Send className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="mt-2 text-center">
+                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">3. Kirim Data</span>
+                      <span className="text-[10px] text-slate-800 font-semibold block">Tersimpan Sistem</span>
+                    </div>
+                  </div>
+
+                  {/* Arrow Connector 3 */}
+                  <div className="relative z-10 text-slate-700 -mt-5">
+                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+
+                  {/* Step 4: Aktivasi Operator */}
+                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 4: Verifikasi & Aktivasi oleh Operator Sekolah">
+                    <div className="w-10 h-10 rounded-full bg-sky-600 text-white border-2 border-white shadow-md flex items-center justify-center">
+                      <ShieldCheck className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="mt-2 text-center">
+                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">4. Aktivasi Akun</span>
+                      <span className="text-[10px] text-slate-800 font-semibold block">Verifikasi Operator</span>
+                    </div>
+                  </div>
+
+                  {/* Arrow Connector 4 */}
+                  <div className="relative z-10 text-slate-700 -mt-5">
+                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+
+                  {/* Step 5: Masuk (Login) */}
+                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 5: Masuk ke SIMAK Merdeka">
+                    <div className="w-10 h-10 rounded-full bg-[#164e63] text-white border-2 border-white shadow-md flex items-center justify-center ring-4 ring-slate-400/40">
+                      <LogIn className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="mt-2 text-center">
+                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">5. Masuk (Login)</span>
+                      <span className="text-[10px] text-black font-bold block">Akses SIMAK</span>
+                    </div>
                   </div>
                 </div>
 
-                {/* Arrow Connector 1 */}
-                <div className="relative z-10 text-slate-700 -mt-5">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-
-                {/* Step 2: Isi Formulir */}
-                <div className="relative z-10 flex flex-col items-center" title="Tahap 2: Pengisian Biodata Akun">
-                  <div className="w-10 h-10 rounded-full bg-cyan-700 text-white border-2 border-white shadow-md flex items-center justify-center">
-                    <FileText className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="mt-2 text-center">
-                    <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">2. Isi Formulir</span>
-                    <span className="text-[10px] text-slate-800 font-semibold block">Biodata & Sandi</span>
+                {/* PANAH KEBAWAH: Penghubung dari Tahap 5 ke Tahap 6 (di sisi kanan) */}
+                <div className="flex justify-end pr-0 relative z-10 my-2">
+                  <div className="w-28 sm:w-32 flex flex-col items-center">
+                    <div className="w-0.5 h-3 bg-gradient-to-b from-slate-400 to-[#164e63]"></div>
+                    <div className="p-1 rounded-full bg-cyan-100 border border-cyan-300 text-[#164e63] shadow-xs flex items-center justify-center" title="Lanjut ke pengisian profil">
+                      <ChevronDown className="w-4 h-4 stroke-[2.5]" />
+                    </div>
+                    <div className="w-0.5 h-3 bg-gradient-to-b from-[#164e63] to-slate-400"></div>
                   </div>
                 </div>
 
-                {/* Arrow Connector 2 */}
-                <div className="relative z-10 text-slate-700 -mt-5">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
+                {/* BARIS 2: Tahap 6 sampai 10 (Kanan ke Kiri dengan Panah Kekiri) */}
+                <div className="w-full flex items-center justify-between relative">
+                  {/* Continuous Connecting Line Behind Nodes Row 2 (Kanan ke Kiri) */}
+                  <div className="absolute left-12 right-12 top-5 -translate-y-1/2 h-0.5 bg-gradient-to-l from-slate-400 via-slate-600 to-slate-400 opacity-60 z-0"></div>
 
-                {/* Step 3: Kirim Pendaftaran */}
-                <div className="relative z-10 flex flex-col items-center" title="Tahap 3: Pengiriman Data ke Database">
-                  <div className="w-10 h-10 rounded-full bg-cyan-800 text-white border-2 border-white shadow-md flex items-center justify-center">
-                    <Send className="w-4 h-4 text-white" />
+                  {/* Step 10: Siap Digunakan (Paling Kiri, di bawah Step 1) */}
+                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 10: Akun Aktif & Siap Digunakan Penuh">
+                    <div className="w-10 h-10 rounded-full bg-[#164e63] text-white border-2 border-white shadow-md flex items-center justify-center ring-4 ring-slate-400/40">
+                      <CheckCircle2 className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="mt-2 text-center">
+                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">10. Siap Digunakan</span>
+                      <span className="text-[10px] text-black font-bold block">Akses LMS Penuh</span>
+                    </div>
                   </div>
-                  <div className="mt-2 text-center">
-                    <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">3. Kirim Data</span>
-                    <span className="text-[10px] text-slate-800 font-semibold block">Tersimpan Sistem</span>
-                  </div>
-                </div>
 
-                {/* Arrow Connector 3 */}
-                <div className="relative z-10 text-slate-700 -mt-5">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-
-                {/* Step 4: Aktivasi Operator */}
-                <div className="relative z-10 flex flex-col items-center" title="Tahap 4: Verifikasi & Aktivasi oleh Operator Sekolah">
-                  <div className="w-10 h-10 rounded-full bg-sky-600 text-white border-2 border-white shadow-md flex items-center justify-center">
-                    <ShieldCheck className="w-4 h-4 text-white" />
+                  {/* Arrow Connector 8 (Panah ke Kiri dari 9 ke 10) */}
+                  <div className="relative z-10 text-slate-700 -mt-5">
+                    <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
                   </div>
-                  <div className="mt-2 text-center">
-                    <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">4. Aktivasi Akun</span>
-                    <span className="text-[10px] text-slate-800 font-semibold block">Verifikasi Operator</span>
-                  </div>
-                </div>
 
-                {/* Arrow Connector 4 */}
-                <div className="relative z-10 text-slate-700 -mt-5">
-                  <ChevronRight className="w-4 h-4" />
-                </div>
-
-                {/* Step 5: Masuk (Login) */}
-                <div className="relative z-10 flex flex-col items-center" title="Tahap 5: Masuk ke SIMAK Merdeka">
-                  <div className="w-10 h-10 rounded-full bg-[#164e63] text-white border-2 border-white shadow-md flex items-center justify-center ring-4 ring-slate-400/40">
-                    <LogIn className="w-4 h-4 text-white" />
+                  {/* Step 9: Email & Sandi (di bawah Step 2) */}
+                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 9: Pembuatan Email Resmi & Kata Sandi Akun">
+                    <div className="w-10 h-10 rounded-full bg-blue-700 text-white border-2 border-white shadow-md flex items-center justify-center">
+                      <KeyRound className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="mt-2 text-center">
+                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">9. Email & Sandi</span>
+                      <span className="text-[10px] text-slate-800 font-semibold block">Kredensial Akun</span>
+                    </div>
                   </div>
-                  <div className="mt-2 text-center">
-                    <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">5. Masuk (Login)</span>
-                    <span className="text-[10px] text-black font-bold block">Akses SIMAK</span>
+
+                  {/* Arrow Connector 7 (Panah ke Kiri dari 8 ke 9) */}
+                  <div className="relative z-10 text-slate-700 -mt-5">
+                    <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+
+                  {/* Step 8: Hak Akses & NIP (di bawah Step 3) */}
+                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 8: Penentuan Hak Akses Peran & Identitas NIP/NISN">
+                    <div className="w-10 h-10 rounded-full bg-sky-700 text-white border-2 border-white shadow-md flex items-center justify-center">
+                      <ShieldCheck className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="mt-2 text-center">
+                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">8. Hak Akses & NIP</span>
+                      <span className="text-[10px] text-slate-800 font-semibold block">Peran Pengguna</span>
+                    </div>
+                  </div>
+
+                  {/* Arrow Connector 6 (Panah ke Kiri dari 7 ke 8) */}
+                  <div className="relative z-10 text-slate-700 -mt-5">
+                    <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+
+                  {/* Step 7: Isi Nama Instansi (di bawah Step 4) */}
+                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 7: Pengisian Nama Instansi atau Satuan Pendidikan">
+                    <div className="w-10 h-10 rounded-full bg-cyan-700 text-white border-2 border-white shadow-md flex items-center justify-center">
+                      <Building2 className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="mt-2 text-center">
+                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">7. Isi Nama Instansi</span>
+                      <span className="text-[10px] text-slate-800 font-semibold block">Sekolah / Satuan</span>
+                    </div>
+                  </div>
+
+                  {/* Arrow Connector 5 (Panah ke Kiri dari 6 ke 7) */}
+                  <div className="relative z-10 text-slate-700 -mt-5">
+                    <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+                  </div>
+
+                  {/* Step 6: Isi Biodata (Paling Kanan, tepat di bawah Step 5) */}
+                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 6: Pengisian Biodata Lengkap dan Gelar">
+                    <div className="w-10 h-10 rounded-full bg-teal-700 text-white border-2 border-white shadow-md flex items-center justify-center">
+                      <UserCheck className="w-4 h-4 text-white" />
+                    </div>
+                    <div className="mt-2 text-center">
+                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">6. Isi Biodata</span>
+                      <span className="text-[10px] text-slate-800 font-semibold block">Nama & Gelar</span>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -3420,7 +3500,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                   setTimeout(() => {
                                     setIsLoading(false);
                                     const cleanEmail = (activationData?.email || regEmail).toLowerCase();
-                                    const localRegUsersJson = localStorage.getItem('simak_registered_users');
+                                    const localRegUsersJson = ((k: string) => null as any)('simak_registered_users');
                                     const localRegUsers: UserAccount[] = localRegUsersJson ? JSON.parse(localRegUsersJson) : [];
                                     const allRegistered = [...registeredUsers, ...localRegUsers];
                                     const foundUser = allRegistered.find(u => u.email?.toLowerCase() === cleanEmail);

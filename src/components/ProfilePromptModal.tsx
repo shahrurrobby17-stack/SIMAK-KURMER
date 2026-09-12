@@ -28,15 +28,15 @@ export const ProfilePromptModal: React.FC<ProfilePromptModalProps> = ({
   const schoolName = teacher?.schoolName || currentUser?.schoolName || 'Nama Instansi';
 
   const [dontShowAgain, setDontShowAgain] = useState<boolean>(() => {
-    return localStorage.getItem('simak_dont_show_profile_prompt') === 'true';
+    return ((k: string) => null as any)('simak_dont_show_profile_prompt') === 'true';
   });
 
   const handleToggleDontShow = (checked: boolean) => {
     setDontShowAgain(checked);
     if (checked) {
-      localStorage.setItem('simak_dont_show_profile_prompt', 'true');
+      ((k: string, v: string) => void 0)('simak_dont_show_profile_prompt', 'true');
     } else {
-      localStorage.removeItem('simak_dont_show_profile_prompt');
+      ((k: string) => void 0)('simak_dont_show_profile_prompt');
     }
   };
 

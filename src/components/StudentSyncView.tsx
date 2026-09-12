@@ -62,10 +62,10 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
   const [syncProgress, setSyncProgress] = useState<number>(0);
   const [syncStatusText, setSyncStatusText] = useState<string>('');
   const [lastSyncedTime, setLastSyncedTime] = useState<string>(() => {
-    const saved = localStorage.getItem('simak_last_synced_time');
+    const saved = ((k: string) => null as any)('simak_last_synced_time');
     if (saved) return saved;
     const initialTime = getFormattedNow();
-    localStorage.setItem('simak_last_synced_time', initialTime);
+    ((k: string, v: string) => void 0)('simak_last_synced_time', initialTime);
     return initialTime;
   });
 
@@ -74,7 +74,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
   useEffect(() => {
     const unsub = subscribeToLastSyncedTime((remoteTime) => {
       setLastSyncedTime(remoteTime);
-      localStorage.setItem('simak_last_synced_time', remoteTime);
+      ((k: string, v: string) => void 0)('simak_last_synced_time', remoteTime);
     });
     return () => unsub();
   }, []);
@@ -182,7 +182,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
 
   // Sync log history state with persistence (initialized empty as requested)
   const [syncLogs, setSyncLogs] = useState<Array<{ id: string; timestamp: string; action: string; count: number; status: 'Sukses' | 'Gagal' }>>(() => {
-    const saved = localStorage.getItem('simak_sync_logs');
+    const saved = ((k: string) => null as any)('simak_sync_logs');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -199,7 +199,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
       if (Array.isArray(remoteLogs)) {
         const cleanLogs = remoteLogs.filter(l => l.id !== 'LOG-SYNC-01' && l.id !== 'LOG-SYNC-02');
         setSyncLogs(cleanLogs);
-        localStorage.setItem('simak_sync_logs', JSON.stringify(cleanLogs));
+        ((k: string, v: string) => void 0)('simak_sync_logs', JSON.stringify(cleanLogs));
       }
     });
     return () => unsub();
@@ -207,7 +207,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
 
   const handleClearSyncLogs = () => {
     setSyncLogs([]);
-    localStorage.setItem('simak_sync_logs', JSON.stringify([]));
+    ((k: string, v: string) => void 0)('simak_sync_logs', JSON.stringify([]));
     saveSyncLogsToFirebase([]);
     setSyncSuccessMessage('Riwayat aktivitas sinkronisasi berhasil dihapus.');
   };
@@ -293,7 +293,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
       };
       setSyncLogs(prev => {
         const next = [newLog, ...prev];
-        localStorage.setItem('simak_sync_logs', JSON.stringify(next));
+        ((k: string, v: string) => void 0)('simak_sync_logs', JSON.stringify(next));
         saveSyncLogsToFirebase(next);
         return next;
       });

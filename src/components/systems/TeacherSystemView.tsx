@@ -108,7 +108,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
 
   // Load and sync modules from localStorage
   const [modules, setModules] = useState<any[]>(() => {
-    const saved = localStorage.getItem('simak_teacher_modules');
+    const saved = ((k: string) => null as any)('simak_teacher_modules');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -120,7 +120,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
   });
 
   React.useEffect(() => {
-    const saved = localStorage.getItem('simak_teacher_modules');
+    const saved = ((k: string) => null as any)('simak_teacher_modules');
     if (saved) {
       try {
         setModules(JSON.parse(saved));
@@ -135,21 +135,21 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
     // Load grades from localStorage
     let gradesData: any[] = [];
     try {
-      const savedGrades = localStorage.getItem('simak_grades');
+      const savedGrades = ((k: string) => null as any)('simak_grades');
       if (savedGrades) gradesData = JSON.parse(savedGrades);
     } catch (e) {}
 
     // Load tasks from localStorage
     let tasksData: any[] = [];
     try {
-      const savedTasks = localStorage.getItem('simak_student_tasks');
+      const savedTasks = ((k: string) => null as any)('simak_student_tasks');
       if (savedTasks) tasksData = JSON.parse(savedTasks);
     } catch (e) {}
 
     // Load teacher profiles
     let profilesData: any[] = [];
     try {
-      const savedProfiles = localStorage.getItem('simak_teacher_profiles');
+      const savedProfiles = ((k: string) => null as any)('simak_teacher_profiles');
       if (savedProfiles) profilesData = JSON.parse(savedProfiles);
     } catch (e) {}
 

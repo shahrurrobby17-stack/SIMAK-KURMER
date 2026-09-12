@@ -66,7 +66,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
 }) => {
   const [extraList, setExtraList] = useState<string[]>(() => {
     if (!isDemoAdmin) return DEFAULT_EXTRAS;
-    const saved = localStorage.getItem('simak_extra_list');
+    const saved = ((k: string) => null as any)('simak_extra_list');
     return saved ? JSON.parse(saved) : DEFAULT_EXTRAS;
   });
 
@@ -80,7 +80,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
   // Instructor name per extracurricular, persisted in real-time
   const [instructors, setInstructors] = useState<Record<string, string>>(() => {
     if (!isDemoAdmin) return {};
-    const saved = localStorage.getItem('simak_extra_instructors');
+    const saved = ((k: string) => null as any)('simak_extra_instructors');
     if (saved) return JSON.parse(saved);
     return {
       'Pramuka (Wajib)': 'Kak Pembina Pramuka',
@@ -97,13 +97,13 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
 
   // Store records keyed by `${extraName}_${date}_${studentId}`
   const [extraRecords, setExtraRecords] = useState<Record<string, ExtraRecord>>(() => {
-    const saved = localStorage.getItem('simak_extra_records');
+    const saved = ((k: string) => null as any)('simak_extra_records');
     return saved ? JSON.parse(saved) : {};
   });
 
   const [extraMembers, setExtraMembers] = useState<Record<string, string[]>>(() => {
     if (!isDemoAdmin) return {};
-    const saved = localStorage.getItem('simak_extra_members');
+    const saved = ((k: string) => null as any)('simak_extra_members');
     return saved ? JSON.parse(saved) : {};
   });
 
@@ -123,19 +123,19 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
   }, []);
 
   React.useEffect(() => {
-    localStorage.setItem('simak_extra_list', JSON.stringify(extraList));
+    ((k: string, v: string) => void 0)('simak_extra_list', JSON.stringify(extraList));
   }, [extraList]);
 
   React.useEffect(() => {
-    localStorage.setItem('simak_extra_members', JSON.stringify(extraMembers));
+    ((k: string, v: string) => void 0)('simak_extra_members', JSON.stringify(extraMembers));
   }, [extraMembers]);
 
   React.useEffect(() => {
-    localStorage.setItem('simak_extra_records', JSON.stringify(extraRecords));
+    ((k: string, v: string) => void 0)('simak_extra_records', JSON.stringify(extraRecords));
   }, [extraRecords]);
 
   React.useEffect(() => {
-    localStorage.setItem('simak_extra_instructors', JSON.stringify(instructors));
+    ((k: string, v: string) => void 0)('simak_extra_instructors', JSON.stringify(instructors));
   }, [instructors]);
 
   // Handler to update instructor name in real-time
@@ -145,7 +145,7 @@ export const ExtracurricularAttendanceView: React.FC<ExtracurricularAttendanceVi
       [selectedExtra]: newName
     };
     setInstructors(updated);
-    localStorage.setItem('simak_extra_instructors', JSON.stringify(updated));
+    ((k: string, v: string) => void 0)('simak_extra_instructors', JSON.stringify(updated));
     const settingsScope = teacher?.id && !isDemoAdmin ? `_${teacher.id}` : '';
     saveExtracurricularSettingsToFirebase({ instructors: updated }, settingsScope);
   };

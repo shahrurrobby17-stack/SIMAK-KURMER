@@ -344,7 +344,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   const settingsScope = teacher?.id && !isMaster ? `_${teacher.id}` : '';
 
   const getInitialSchedules = () => {
-    const savedKey = localStorage.getItem(storageKey);
+    const savedKey = ((k: string) => null as any)(storageKey);
     if (savedKey) {
       try {
         const parsed = JSON.parse(savedKey);
@@ -352,7 +352,7 @@ export const Navbar: React.FC<NavbarProps> = ({
       } catch (e) {}
     }
     if (isMaster) {
-      const savedGen = localStorage.getItem('simak_schedules');
+      const savedGen = ((k: string) => null as any)('simak_schedules');
       if (savedGen) {
         try {
           const parsed = JSON.parse(savedGen);

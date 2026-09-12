@@ -130,7 +130,7 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
 
   // State 1: Inventaris Barang (with localStorage)
   const [items, setItems] = useState<SarprasItem[]>(() => {
-    const saved = localStorage.getItem('simak_sarpras_items');
+    const saved = ((k: string) => null as any)('simak_sarpras_items');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -256,7 +256,7 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
 
   // State 2: Ruangan & Gedung
   const [rooms, setRooms] = useState<SarprasRuang[]>(() => {
-    const saved = localStorage.getItem('simak_sarpras_rooms');
+    const saved = ((k: string) => null as any)('simak_sarpras_rooms');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -348,7 +348,7 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
 
   // State 3: Peminjaman Barang
   const [loans, setLoans] = useState<PeminjamanBarang[]>(() => {
-    const saved = localStorage.getItem('simak_sarpras_loans');
+    const saved = ((k: string) => null as any)('simak_sarpras_loans');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -406,7 +406,7 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
 
   // State 4: Tiket Perawatan & Pemeliharaan
   const [tickets, setTickets] = useState<PemeliharaanTiket[]>(() => {
-    const saved = localStorage.getItem('simak_sarpras_tickets');
+    const saved = ((k: string) => null as any)('simak_sarpras_tickets');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -461,17 +461,17 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
   // Save to localStorage when state changes
   const saveItems = (newItems: SarprasItem[]) => {
     setItems(newItems);
-    localStorage.setItem('simak_sarpras_items', JSON.stringify(newItems));
+    ((k: string, v: string) => void 0)('simak_sarpras_items', JSON.stringify(newItems));
   };
 
   const saveLoans = (newLoans: PeminjamanBarang[]) => {
     setLoans(newLoans);
-    localStorage.setItem('simak_sarpras_loans', JSON.stringify(newLoans));
+    ((k: string, v: string) => void 0)('simak_sarpras_loans', JSON.stringify(newLoans));
   };
 
   const saveTickets = (newTickets: PemeliharaanTiket[]) => {
     setTickets(newTickets);
-    localStorage.setItem('simak_sarpras_tickets', JSON.stringify(newTickets));
+    ((k: string, v: string) => void 0)('simak_sarpras_tickets', JSON.stringify(newTickets));
   };
 
   // Form states for adding new asset

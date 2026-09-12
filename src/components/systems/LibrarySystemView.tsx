@@ -351,7 +351,7 @@ export const LibrarySystemView: React.FC<LibrarySystemViewProps> = ({
 
   // State: Buku Koleksi (with localStorage)
   const [books, setBooks] = useState<BookItem[]>(() => {
-    const saved = localStorage.getItem('simak_library_books');
+    const saved = ((k: string) => null as any)('simak_library_books');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -364,7 +364,7 @@ export const LibrarySystemView: React.FC<LibrarySystemViewProps> = ({
 
   // State: Sirkulasi Peminjaman (with localStorage)
   const [loans, setLoans] = useState<PeminjamanBuku[]>(() => {
-    const saved = localStorage.getItem('simak_library_loans');
+    const saved = ((k: string) => null as any)('simak_library_loans');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -377,7 +377,7 @@ export const LibrarySystemView: React.FC<LibrarySystemViewProps> = ({
 
   // State: Kunjungan Harian (with localStorage)
   const [visits, setVisits] = useState<KunjunganPerpus[]>(() => {
-    const saved = localStorage.getItem('simak_library_visits');
+    const saved = ((k: string) => null as any)('simak_library_visits');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -391,17 +391,17 @@ export const LibrarySystemView: React.FC<LibrarySystemViewProps> = ({
   // Save to localStorage
   const saveBooks = (newBooks: BookItem[]) => {
     setBooks(newBooks);
-    localStorage.setItem('simak_library_books', JSON.stringify(newBooks));
+    ((k: string, v: string) => void 0)('simak_library_books', JSON.stringify(newBooks));
   };
 
   const saveLoans = (newLoans: PeminjamanBuku[]) => {
     setLoans(newLoans);
-    localStorage.setItem('simak_library_loans', JSON.stringify(newLoans));
+    ((k: string, v: string) => void 0)('simak_library_loans', JSON.stringify(newLoans));
   };
 
   const saveVisits = (newVisits: KunjunganPerpus[]) => {
     setVisits(newVisits);
-    localStorage.setItem('simak_library_visits', JSON.stringify(newVisits));
+    ((k: string, v: string) => void 0)('simak_library_visits', JSON.stringify(newVisits));
   };
 
   // Form states: New Book

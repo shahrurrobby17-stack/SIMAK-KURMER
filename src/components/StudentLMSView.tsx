@@ -87,7 +87,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
     // Check localStorage 'simak_teacher'
     if (!schoolName || !npsn) {
       try {
-        const savedTeacher = localStorage.getItem('simak_teacher');
+        const savedTeacher = ((k: string) => null as any)('simak_teacher');
         if (savedTeacher) {
           const parsed = JSON.parse(savedTeacher);
           if (!schoolName && parsed.schoolName) schoolName = parsed.schoolName;
@@ -101,7 +101,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
     // Check localStorage 'simak_teacher_profiles'
     if (!schoolName || !npsn) {
       try {
-        const savedProfiles = localStorage.getItem('simak_teacher_profiles');
+        const savedProfiles = ((k: string) => null as any)('simak_teacher_profiles');
         if (savedProfiles) {
           const profiles: TeacherProfile[] = JSON.parse(savedProfiles);
           const adminProf = profiles.find(p => p.id === 'PROF-ADMIN' || p.title?.toLowerCase().includes('admin')) || profiles[0];
@@ -118,7 +118,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
     // Check registered users for Administrator
     if (!schoolName) {
       try {
-        const savedUsers = localStorage.getItem('simak_registered_users');
+        const savedUsers = ((k: string) => null as any)('simak_registered_users');
         if (savedUsers) {
           const users: UserAccount[] = JSON.parse(savedUsers);
           const admin = users.find(u => u.role?.toLowerCase().includes('admin') || u.uid === 'USER-ADMIN');
@@ -203,7 +203,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
 
   // Read Modules State (Local Storage persistent)
   const [completedModules, setCompletedModules] = useState<Record<string, boolean>>(() => {
-    const saved = localStorage.getItem(`simak_completed_modules_${activeStudent.id}`);
+    const saved = ((k: string) => null as any)(`simak_completed_modules_${activeStudent.id}`);
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
     }
@@ -213,7 +213,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
   const toggleModuleRead = (modId: string) => {
     setCompletedModules(prev => {
       const next = { ...prev, [modId]: !prev[modId] };
-      localStorage.setItem(`simak_completed_modules_${activeStudent.id}`, JSON.stringify(next));
+      ((k: string, v: string) => void 0)(`simak_completed_modules_${activeStudent.id}`, JSON.stringify(next));
       return next;
     });
   };
@@ -227,7 +227,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
 
   // Available Modules list (from teacher modules or predefined list)
   const storedModules: TeacherModuleDocument[] = useMemo(() => {
-    const saved = localStorage.getItem('simak_teacher_modules');
+    const saved = ((k: string) => null as any)('simak_teacher_modules');
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -413,7 +413,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
   // Realtime Weekly Schedules from Curriculum
   const [weeklySchedules, setWeeklySchedules] = useState<WeeklyClassScheduleItem[]>(() => {
     try {
-      const saved = localStorage.getItem('simak_weekly_class_schedules');
+      const saved = ((k: string) => null as any)('simak_weekly_class_schedules');
       if (saved) {
         const parsed = JSON.parse(saved);
         if (Array.isArray(parsed) && parsed.length > 0) return parsed;
@@ -429,7 +429,7 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
     const unsubscribe = subscribeToWeeklySchedules((items) => {
       if (items && Array.isArray(items) && items.length > 0) {
         setWeeklySchedules(items);
-        localStorage.setItem('simak_weekly_class_schedules', JSON.stringify(items));
+        ((k: string, v: string) => void 0)('simak_weekly_class_schedules', JSON.stringify(items));
       }
     });
     return () => unsubscribe();
@@ -497,12 +497,12 @@ export const StudentLMSView: React.FC<StudentLMSViewProps> = ({
       onSaveTask(updatedTask);
     } else {
       // Local fallback
-      const savedTasksJson = localStorage.getItem('simak_student_tasks');
+      const savedTasksJson = ((k: string) => null as any)('simak_student_tasks');
       if (savedTasksJson) {
         try {
           const tasks: StudentTask[] = JSON.parse(savedTasksJson);
           const nextTasks = tasks.map(t => t.id === updatedTask.id ? updatedTask : t);
-          localStorage.setItem('simak_student_tasks', JSON.stringify(nextTasks));
+          ((k: string, v: string) => void 0)('simak_student_tasks', JSON.stringify(nextTasks));
         } catch (err) {}
       }
     }

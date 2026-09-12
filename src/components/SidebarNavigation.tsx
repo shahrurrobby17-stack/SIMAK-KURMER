@@ -91,14 +91,14 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   const settingsScope = teacher?.id && !isMasterUser ? `_${teacher.id}` : '';
 
   React.useEffect(() => {
-    const savedKey = localStorage.getItem(teacher?.id ? `simak_schedules_${teacher.id}` : 'simak_schedules');
+    const savedKey = ((k: string) => null as any)(teacher?.id ? `simak_schedules_${teacher.id}` : 'simak_schedules');
     if (savedKey) {
       try {
         const parsed = JSON.parse(savedKey);
         if (Array.isArray(parsed)) setSchedules(parsed);
       } catch (e) {}
     } else if (isMasterUser) {
-      const savedGen = localStorage.getItem('simak_schedules');
+      const savedGen = ((k: string) => null as any)('simak_schedules');
       if (savedGen) {
         try {
           const parsed = JSON.parse(savedGen);
@@ -333,7 +333,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     }
   ];
 
-  const masterDataItems: any[] = [];
+
 
   const studentNavItems = [
     {
@@ -406,7 +406,6 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     ? [perpustakaanItem, settingsItem]
     : [
         dashboardItem, 
-        ...masterDataItems, 
         ...mainNavItems
       ];
 
@@ -624,7 +623,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                           className="overflow-hidden mt-1 pl-1 space-y-1 border-l border-cyan-700/60"
                         >
                           {/* Master Data & System Items */}
-                          {masterDataItems.map(renderDesktopItem)}
+                          
                         </motion.div>
                       )}
                     </AnimatePresence>

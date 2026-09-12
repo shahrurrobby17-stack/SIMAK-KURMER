@@ -105,7 +105,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
 
   // Initialize and persist Pegawai Buku Induk
   const [pegawaiList, setPegawaiList] = useState<PegawaiBukuInduk[]>(() => {
-    const saved = localStorage.getItem('simak_buku_induk_pegawai');
+    const saved = ((k: string) => null as any)('simak_buku_induk_pegawai');
     if (saved !== null) {
       try {
         const parsed = JSON.parse(saved);
@@ -115,7 +115,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
       }
     }
     try {
-      localStorage.setItem('simak_buku_induk_pegawai', JSON.stringify(initialPegawaiList));
+      ((k: string, v: string) => void 0)('simak_buku_induk_pegawai', JSON.stringify(initialPegawaiList));
     } catch (e) {}
     return initialPegawaiList;
   });
@@ -125,7 +125,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
     const unsubscribe = subscribeToBukuIndukPegawai((items) => {
       if (Array.isArray(items)) {
         setPegawaiList(items);
-        localStorage.setItem('simak_buku_induk_pegawai', JSON.stringify(items));
+        ((k: string, v: string) => void 0)('simak_buku_induk_pegawai', JSON.stringify(items));
       }
     });
     return () => {
@@ -151,7 +151,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
 
   const savePegawaiList = (newList: PegawaiBukuInduk[]) => {
     setPegawaiList(newList);
-    localStorage.setItem('simak_buku_induk_pegawai', JSON.stringify(newList));
+    ((k: string, v: string) => void 0)('simak_buku_induk_pegawai', JSON.stringify(newList));
     saveBukuIndukPegawaiToFirebase(newList);
   };
 
@@ -232,7 +232,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
   ];
 
   const [mutasiList, setMutasiList] = useState<MutasiSiswaItem[]>(() => {
-    const saved = localStorage.getItem('simak_mutasi_siswa');
+    const saved = ((k: string) => null as any)('simak_mutasi_siswa');
     if (saved !== null) {
       try {
         const parsed = JSON.parse(saved);
@@ -242,7 +242,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
       }
     }
     try {
-      localStorage.setItem('simak_mutasi_siswa', JSON.stringify(initialMutasiList));
+      ((k: string, v: string) => void 0)('simak_mutasi_siswa', JSON.stringify(initialMutasiList));
     } catch (e) {}
     return initialMutasiList;
   });
@@ -251,7 +251,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
     const unsubscribe = subscribeToMutasiSiswa((items) => {
       if (Array.isArray(items)) {
         setMutasiList(items);
-        localStorage.setItem('simak_mutasi_siswa', JSON.stringify(items));
+        ((k: string, v: string) => void 0)('simak_mutasi_siswa', JSON.stringify(items));
       }
     });
     return () => {
@@ -276,7 +276,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
 
   const saveMutasiList = (newList: MutasiSiswaItem[]) => {
     setMutasiList(newList);
-    localStorage.setItem('simak_mutasi_siswa', JSON.stringify(newList));
+    ((k: string, v: string) => void 0)('simak_mutasi_siswa', JSON.stringify(newList));
     saveMutasiSiswaToFirebase(newList);
   };
 
@@ -411,7 +411,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
         }
         return u;
       });
-      localStorage.setItem('simak_registered_users', JSON.stringify(updatedUsers));
+      ((k: string, v: string) => void 0)('simak_registered_users', JSON.stringify(updatedUsers));
       saveRegisteredUsersToFirebase(updatedUsers);
       if (onUpdateRegisteredUsers) onUpdateRegisteredUsers(updatedUsers);
       setShowEditUserModalInternal(false);
@@ -428,7 +428,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
         status: userFormData.status
       };
       const updatedUsers = [newUser, ...registeredUsers];
-      localStorage.setItem('simak_registered_users', JSON.stringify(updatedUsers));
+      ((k: string, v: string) => void 0)('simak_registered_users', JSON.stringify(updatedUsers));
       saveRegisteredUsersToFirebase(updatedUsers);
       if (onUpdateRegisteredUsers) onUpdateRegisteredUsers(updatedUsers);
       setShowAddUserModalInternal(false);
@@ -448,7 +448,7 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
       return true;
     });
 
-    localStorage.setItem('simak_registered_users', JSON.stringify(updatedUsers));
+    ((k: string, v: string) => void 0)('simak_registered_users', JSON.stringify(updatedUsers));
     saveRegisteredUsersToFirebase(updatedUsers);
     if (onUpdateRegisteredUsers) {
       onUpdateRegisteredUsers(updatedUsers);

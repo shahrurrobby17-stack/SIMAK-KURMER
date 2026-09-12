@@ -242,7 +242,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   // Encryption code states
   const [currentEncryptionCode, setCurrentEncryptionCode] = useState<string>(() => {
-    return localStorage.getItem('simak_encryption_code') || '292001';
+    return ((k: string) => null as any)('simak_encryption_code') || '292001';
   });
   const [newEncryptionCode, setNewEncryptionCode] = useState<string>('');
   const [confirmEncryptionCode, setConfirmEncryptionCode] = useState<string>('');
@@ -313,7 +313,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     const unsub = subscribeToEncryptionCode((code) => {
       if (code) {
         setCurrentEncryptionCode(code);
-        localStorage.setItem('simak_encryption_code', code);
+        ((k: string, v: string) => void 0)('simak_encryption_code', code);
       }
     });
     return () => unsub();
@@ -337,7 +337,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
 
     setCurrentEncryptionCode(trimmedNew);
-    localStorage.setItem('simak_encryption_code', trimmedNew);
+    ((k: string, v: string) => void 0)('simak_encryption_code', trimmedNew);
     saveEncryptionCodeToFirebase(trimmedNew);
 
     setShowEncSaveSuccess(true);
@@ -348,7 +348,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   // Data Lock State Management
   const [localDataLockConfig, setLocalDataLockConfig] = useState<DataLockConfig>(() => {
     if (dataLockConfig) return dataLockConfig;
-    const saved = localStorage.getItem('simak_data_lock_config');
+    const saved = ((k: string) => null as any)('simak_data_lock_config');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -372,7 +372,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     const unsub = subscribeToDataLockConfig((remoteConfig) => {
       if (remoteConfig) {
         setLocalDataLockConfig(remoteConfig);
-        localStorage.setItem('simak_data_lock_config', JSON.stringify(remoteConfig));
+        ((k: string, v: string) => void 0)('simak_data_lock_config', JSON.stringify(remoteConfig));
         if (onUpdateDataLockConfig) {
           onUpdateDataLockConfig(remoteConfig);
         }
@@ -446,7 +446,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
 
     setLocalDataLockConfig(updatedConfig);
-    localStorage.setItem('simak_data_lock_config', JSON.stringify(updatedConfig));
+    ((k: string, v: string) => void 0)('simak_data_lock_config', JSON.stringify(updatedConfig));
     saveDataLockConfigToFirebase(updatedConfig);
     if (onUpdateDataLockConfig) {
       onUpdateDataLockConfig(updatedConfig);
@@ -492,8 +492,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       isMaintenance: false
     };
 
-    localStorage.setItem('simak_teacher', JSON.stringify(adminTeacherProfile));
-    localStorage.setItem('simak_user_account', JSON.stringify(adminUser));
+    ((k: string, v: string) => void 0)('simak_teacher', JSON.stringify(adminTeacherProfile));
+    ((k: string, v: string) => void 0)('simak_user_account', JSON.stringify(adminUser));
 
     setTeacherName('Shahrur Robby, S.Pd.');
     setTeacherTitle('Admin Utama / Guru');
@@ -517,14 +517,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   };
 
   const [classKkms, setClassKkms] = useState<Record<string, number>>(() => {
-    const saved = localStorage.getItem('simak_class_kkms');
+    const saved = ((k: string) => null as any)('simak_class_kkms');
     return saved ? JSON.parse(saved) : { 'X-IPA 2': 75, 'XI-IPA 1': 75, 'XI-IPA 2': 75, 'XII-IPA 1': 75 };
   });
 
   useEffect(() => {
     const unsub = subscribeToClassKkms((remoteKkms) => {
       setClassKkms(remoteKkms);
-      localStorage.setItem('simak_class_kkms', JSON.stringify(remoteKkms));
+      ((k: string, v: string) => void 0)('simak_class_kkms', JSON.stringify(remoteKkms));
     });
     return () => unsub();
   }, []);
@@ -636,7 +636,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       setManualClassInput('');
       setClassKkms(prev => {
         const next = { ...prev, [newClassName]: manualKkmInput || defaultKkm };
-        localStorage.setItem('simak_class_kkms', JSON.stringify(next));
+        ((k: string, v: string) => void 0)('simak_class_kkms', JSON.stringify(next));
         saveClassKkmsToFirebase(next);
         return next;
       });

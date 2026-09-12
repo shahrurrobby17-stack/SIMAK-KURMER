@@ -195,7 +195,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
   registeredUsers = []
 }) => {
   const [moduleList, setModuleList] = useState<TeacherModuleDocument[]>(() => {
-    const saved = localStorage.getItem('simak_teacher_modules');
+    const saved = ((k: string) => null as any)('simak_teacher_modules');
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -267,7 +267,7 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
   // Sync to localStorage
   const saveModules = (newList: TeacherModuleDocument[]) => {
     setModuleList(newList);
-    localStorage.setItem('simak_teacher_modules', JSON.stringify(newList));
+    ((k: string, v: string) => void 0)('simak_teacher_modules', JSON.stringify(newList));
   };
 
   // Stats Calculations

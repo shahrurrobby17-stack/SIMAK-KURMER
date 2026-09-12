@@ -97,7 +97,7 @@ import { Lock } from 'lucide-react';
 export default function App() {
   // Load initial states with localStorage & Firebase fallback
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
-    const saved = localStorage.getItem('simak_user_account');
+    const saved = null;
     if (saved) {
       let parsed: UserAccount = JSON.parse(saved);
       const demoEmails = ['bambang.susanto@simakmerdeka.ai.studio', 'siti.rahmah@simakmerdeka.ai.studio', 'ahmad.hidayat@simakmerdeka.ai.studio'];
@@ -109,18 +109,17 @@ export default function App() {
 
         if (!isRealMaster && (parsed.role?.toLowerCase().includes('admin') || parsed.role?.toLowerCase().includes('master'))) {
           parsed.role = 'Guru Pengampu';
-          localStorage.setItem('simak_user_account', JSON.stringify(parsed));
         }
         return parsed;
       }
-      localStorage.removeItem('simak_user_account');
+      
     }
     return null;
   });
 
   const [teacher, setTeacher] = useState<TeacherProfile>(() => {
-    const savedTeacher = localStorage.getItem('simak_teacher');
-    const savedUser = localStorage.getItem('simak_user_account');
+    const savedTeacher = null;
+    const savedUser = null;
     const demoIds = ['PROF-001', 'PROF-002', 'PROF-003'];
     const demoNames = ['drs. h. bambang susanto, m.pd.', 'siti rahmah, s.pd., m.si.', 'ahmad hidayat, s.kom., m.t.', 'ahmad hidayat, s.kom., gr.'];
 
@@ -175,12 +174,12 @@ export default function App() {
 
   const [subjects, setSubjects] = useState<Subject[]>(() => {
     if (!isDemoAdmin) return initialSubjects;
-    const saved = localStorage.getItem('simak_subjects');
+    const saved = null;
     return saved ? JSON.parse(saved) : initialSubjects;
   });
 
   const [allStudents, setStudents] = useState<Student[]>(() => {
-    const saved = localStorage.getItem('simak_students');
+    const saved = null;
     const list: Student[] = saved ? JSON.parse(saved) : allDefaultStudents;
     const map = new Map<string, Student>();
     allDefaultStudents.forEach(s => map.set(s.id, s));
@@ -193,14 +192,14 @@ export default function App() {
   });
 
   const [allGrades, setGrades] = useState<StudentGrade[]>(() => {
-    const saved = localStorage.getItem('simak_grades');
+    const saved = null;
     if (!saved) return initialGrades.map(g => ({ ...g, schoolName: g.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak' }));
     const parsed = JSON.parse(saved);
     return parsed.map((g: StudentGrade) => ({ ...g, subjectId: 'SUB-BIO', schoolName: g.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak' }));
   });
 
   const [allAttendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => {
-    const saved = localStorage.getItem('simak_attendance');
+    const saved = null;
     if (!saved) return initialAttendanceRecords.map(r => ({ ...r, schoolName: r.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak' }));
     try {
       const parsed: AttendanceRecord[] = JSON.parse(saved);
@@ -224,14 +223,14 @@ export default function App() {
   });
 
   const [allTeachingLogs, setTeachingLogs] = useState<TeachingLog[]>(() => {
-    const saved = localStorage.getItem('simak_logs');
+    const saved = null;
     if (!saved) return initialTeachingLogs.map(l => ({ ...l, schoolName: l.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak' }));
     const parsed = JSON.parse(saved);
     return parsed.map((l: TeachingLog) => ({ ...l, subjectId: 'SUB-BIO', schoolName: l.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak' }));
   });
 
   const [allStudentTasks, setStudentTasks] = useState<StudentTask[]>(() => {
-    const saved = localStorage.getItem('simak_student_tasks');
+    const saved = null;
     const list: StudentTask[] = saved ? JSON.parse(saved) : initialStudentTasks;
     return list.map(t => ({ ...t, schoolName: t.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak' }));
   });
@@ -245,18 +244,18 @@ export default function App() {
   
   const [customClasses, setCustomClasses] = useState<string[]>(() => {
     if (!isDemoAdmin) return [];
-    const saved = localStorage.getItem('simak_custom_classes');
+    const saved = null;
     return saved ? JSON.parse(saved) : [];
   });
 
   const [removedClasses, setRemovedClasses] = useState<string[]>(() => {
     if (!isDemoAdmin) return [];
-    const saved = localStorage.getItem('simak_removed_classes');
+    const saved = null;
     return saved ? JSON.parse(saved) : [];
   });
 
   const [inactiveClasses, setInactiveClasses] = useState<string[]>(() => {
-    const saved = localStorage.getItem('simak_inactive_classes');
+    const saved = null;
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -270,7 +269,7 @@ export default function App() {
 
   // Data Lock Global State
   const [dataLockConfig, setDataLockConfig] = useState<DataLockConfig>(() => {
-    const saved = localStorage.getItem('simak_data_lock_config');
+    const saved = null;
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
     }
@@ -290,7 +289,6 @@ export default function App() {
     const unsub = subscribeToDataLockConfig((remoteConfig) => {
       if (remoteConfig) {
         setDataLockConfig(remoteConfig);
-        localStorage.setItem('simak_data_lock_config', JSON.stringify(remoteConfig));
       }
     });
     return () => unsub();
@@ -298,7 +296,7 @@ export default function App() {
 
   // Login Background Global State & Sync
   const [loginBackgroundConfig, setLoginBackgroundConfig] = useState<LoginBackgroundConfig>(() => {
-    const saved = localStorage.getItem('simak_login_bg_config');
+    const saved = null;
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -312,7 +310,6 @@ export default function App() {
       if (remoteConfig) {
         setLoginBackgroundConfig(remoteConfig);
         try {
-          localStorage.setItem('simak_login_bg_config', JSON.stringify(remoteConfig));
         } catch (e) {}
       }
     });
@@ -322,7 +319,6 @@ export default function App() {
   const handleUpdateLoginBackgroundConfig = (newConfig: LoginBackgroundConfig) => {
     setLoginBackgroundConfig(newConfig);
     try {
-      localStorage.setItem('simak_login_bg_config', JSON.stringify(newConfig));
     } catch (err) {
       console.warn('Error saving to localStorage:', err);
     }
@@ -331,7 +327,7 @@ export default function App() {
 
   // User & Teacher Profiles State
   const [teacherProfiles, setTeacherProfiles] = useState<TeacherProfile[]>(() => {
-    const saved = localStorage.getItem('simak_teacher_profiles');
+    const saved = null;
     const demoIds = ['PROF-001', 'PROF-002', 'PROF-003'];
     const demoNames = ['drs. h. bambang susanto, m.pd.', 'siti rahmah, s.pd., m.si.', 'ahmad hidayat, s.kom., m.t.', 'ahmad hidayat, s.kom., gr.'];
     let list: TeacherProfile[] = [];
@@ -342,12 +338,11 @@ export default function App() {
     if (!list.some(p => p.id === 'PROF-ADMIN' || p.name.toLowerCase().includes('shahrur'))) {
       list.unshift(initialTeacherProfile);
     }
-    localStorage.setItem('simak_teacher_profiles', JSON.stringify(list));
     return list;
   });
 
   const [registeredUsers, setRegisteredUsers] = useState<UserAccount[]>(() => {
-    const saved = localStorage.getItem('simak_registered_users');
+    const saved = null;
     const demoEmails = ['bambang.susanto@simakmerdeka.ai.studio', 'siti.rahmah@simakmerdeka.ai.studio', 'ahmad.hidayat@simakmerdeka.ai.studio'];
     const demoUids = ['USER-001', 'USER-002', 'USER-003'];
     let list: UserAccount[] = [];
@@ -383,7 +378,6 @@ export default function App() {
     if (!list.some(u => u.email?.toLowerCase() === 'shahrurrobby17@gmail.com' || u.uid === 'USER-ADMIN')) {
       list.unshift(adminUser);
     }
-    localStorage.setItem('simak_registered_users', JSON.stringify(list));
     return list;
   });
 
@@ -391,7 +385,7 @@ export default function App() {
 
   // Info Terkini Announcement state (running text below header)
   const [infoAnnouncement, setInfoAnnouncement] = useState<InfoAnnouncement>(() => {
-    const saved = localStorage.getItem('simak_info_announcement');
+    const saved = null;
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
@@ -425,7 +419,6 @@ export default function App() {
 
   const handleUpdateInfoAnnouncement = (updated: InfoAnnouncement) => {
     setInfoAnnouncement(updated);
-    localStorage.setItem('simak_info_announcement', JSON.stringify(updated));
     saveInfoAnnouncementToFirebase(updated);
   };
 
@@ -649,7 +642,6 @@ export default function App() {
   const handleRegisterNewAccount = (newUser: UserAccount, newProfile?: TeacherProfile) => {
     const updatedUsers = [...registeredUsers.filter(u => u.email?.toLowerCase() !== newUser.email.toLowerCase()), newUser];
     setRegisteredUsers(updatedUsers);
-    localStorage.setItem('simak_registered_users', JSON.stringify(updatedUsers));
     saveRegisteredUsersToFirebase(updatedUsers);
 
     if (newProfile) {
@@ -678,7 +670,6 @@ export default function App() {
     }
 
     setRegisteredUsers(updatedUsers);
-    localStorage.setItem('simak_registered_users', JSON.stringify(updatedUsers));
     saveRegisteredUsersToFirebase(updatedUsers);
   };
 
@@ -687,7 +678,6 @@ export default function App() {
     const matched = listToSearch.find(p => p.id === profileId);
     if (matched) {
       setTeacher(matched);
-      localStorage.setItem('simak_teacher', JSON.stringify(matched));
 
       if (currentUser) {
         const updatedUser: UserAccount = {
@@ -699,7 +689,6 @@ export default function App() {
           profileId: matched.id
         };
         setCurrentUser(updatedUser);
-        localStorage.setItem('simak_user_account', JSON.stringify(updatedUser));
 
         const updatedUsers = registeredUsers.map(u => 
           (u.uid === currentUser.uid || u.email?.toLowerCase() === currentUser.email?.toLowerCase())
@@ -707,7 +696,6 @@ export default function App() {
             : u
         );
         setRegisteredUsers(updatedUsers);
-        localStorage.setItem('simak_registered_users', JSON.stringify(updatedUsers));
         saveRegisteredUsersToFirebase(updatedUsers);
       }
     }
@@ -716,7 +704,6 @@ export default function App() {
   const handleAddTeacherProfile = (newProfile: TeacherProfile) => {
     const updated = [...teacherProfiles, newProfile];
     setTeacherProfiles(updated);
-    localStorage.setItem('simak_teacher_profiles', JSON.stringify(updated));
     saveTeacherProfilesToFirebase(updated);
     handleSelectTeacherProfile(newProfile.id!, updated);
   };
@@ -724,7 +711,6 @@ export default function App() {
   const handleDeleteTeacherProfile = (profileId: string) => {
     const updated = teacherProfiles.filter(p => p.id !== profileId);
     setTeacherProfiles(updated);
-    localStorage.setItem('simak_teacher_profiles', JSON.stringify(updated));
     saveTeacherProfilesToFirebase(updated);
     if (teacher.id === profileId && updated.length > 0) {
       handleSelectTeacherProfile(updated[0].id!, updated);
@@ -733,7 +719,6 @@ export default function App() {
 
   const handleUpdateRegisteredUsers = (updatedUsers: UserAccount[]) => {
     setRegisteredUsers(updatedUsers);
-    localStorage.setItem('simak_registered_users', JSON.stringify(updatedUsers));
     saveRegisteredUsersToFirebase(updatedUsers);
 
     // Sync currentUser if logged in
@@ -745,7 +730,6 @@ export default function App() {
       if (match) {
         const updatedUser = { ...currentUser, ...match };
         setCurrentUser(updatedUser);
-        localStorage.setItem('simak_user_account', JSON.stringify(updatedUser));
       }
     }
 
@@ -756,7 +740,7 @@ export default function App() {
         (u.profileId && u.profileId === prof.id) ||
         (u.name && prof.name && u.name.toLowerCase() === prof.name.toLowerCase()) ||
         (u.email && prof.nip && `${prof.nip.replace(/\s+/g, '')}@simakmerdeka.ai.studio` === u.email?.toLowerCase())
-      );
+        );
       if (matchUser) {
         profilesChanged = true;
         return {
@@ -770,7 +754,6 @@ export default function App() {
 
     if (profilesChanged) {
       setTeacherProfiles(updatedProfiles);
-      localStorage.setItem('simak_teacher_profiles', JSON.stringify(updatedProfiles));
       saveTeacherProfilesToFirebase(updatedProfiles);
 
       if (teacher) {
@@ -778,7 +761,6 @@ export default function App() {
         if (matchProf) {
           const updatedTeacher = { ...teacher, ...matchProf };
           setTeacher(updatedTeacher);
-          localStorage.setItem('simak_teacher', JSON.stringify(updatedTeacher));
         }
       }
     }
@@ -786,14 +768,13 @@ export default function App() {
 
   const handleUpdateTeacherProfiles = (updatedProfiles: TeacherProfile[]) => {
     setTeacherProfiles(updatedProfiles);
-    localStorage.setItem('simak_teacher_profiles', JSON.stringify(updatedProfiles));
     saveTeacherProfilesToFirebase(updatedProfiles);
   };
 
   const handleLogout = () => {
     setCurrentUser(null);
-    localStorage.removeItem('simak_user_account');
-    localStorage.removeItem('simak_teacher');
+    
+    
     setShowLoginScreen(true);
   };
 
@@ -814,15 +795,12 @@ export default function App() {
         const data = snapshot.data();
         if (data.customClasses && Array.isArray(data.customClasses)) {
           setCustomClasses(data.customClasses);
-          localStorage.setItem('simak_custom_classes', JSON.stringify(data.customClasses));
         }
         if (data.removedClasses && Array.isArray(data.removedClasses)) {
           setRemovedClasses(data.removedClasses);
-          localStorage.setItem('simak_removed_classes', JSON.stringify(data.removedClasses));
         }
         if (data.inactiveClasses && Array.isArray(data.inactiveClasses)) {
           setInactiveClasses(data.inactiveClasses);
-          localStorage.setItem('simak_inactive_classes', JSON.stringify(data.inactiveClasses));
         }
       }
     }, handleListenerError('classLists'));
@@ -832,7 +810,6 @@ export default function App() {
         const data = snapshot.data();
         if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
           setSubjects(data.items);
-          localStorage.setItem('simak_subjects', JSON.stringify(data.items));
         }
       }
     }, handleListenerError('subjects'));
@@ -849,7 +826,6 @@ export default function App() {
           schoolName: s.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak'
         })).sort((a, b) => a.name.localeCompare(b.name));
         setStudents(formatted);
-        localStorage.setItem('simak_students', JSON.stringify(formatted));
       } else if (!snapshot.metadata.hasPendingWrites && !snapshot.metadata.fromCache) {
         // If Firestore remote collection is truly empty, seed default data
         seedInitialDataIfEmpty();
@@ -864,7 +840,6 @@ export default function App() {
       });
       if (list.length > 0) {
         setGrades(list);
-        localStorage.setItem('simak_grades', JSON.stringify(list));
       }
     }, handleListenerError('grades'));
 
@@ -876,7 +851,6 @@ export default function App() {
       });
       if (list.length > 0) {
         setAttendanceRecords(list);
-        localStorage.setItem('simak_attendance', JSON.stringify(list));
       }
     }, handleListenerError('attendance'));
 
@@ -888,7 +862,6 @@ export default function App() {
       });
       if (list.length > 0) {
         setTeachingLogs(list);
-        localStorage.setItem('simak_logs', JSON.stringify(list));
       }
     }, handleListenerError('teachingLogs'));
 
@@ -900,7 +873,6 @@ export default function App() {
       });
       if (list.length > 0) {
         setStudentTasks(list);
-        localStorage.setItem('simak_student_tasks', JSON.stringify(list));
       }
     }, handleListenerError('studentTasks'));
 
@@ -931,13 +903,11 @@ export default function App() {
           });
         }
         setRegisteredUsers(mergedUsers);
-        localStorage.setItem('simak_registered_users', JSON.stringify(mergedUsers));
         setCurrentUser(prevUser => {
           if (!prevUser) return prevUser;
           const matchingUser = mergedUsers.find(u => u.uid === prevUser.uid || u.email?.toLowerCase() === prevUser.email.toLowerCase());
           if (matchingUser && (matchingUser.isMaintenance !== prevUser.isMaintenance || matchingUser.status !== prevUser.status)) {
             const updated = { ...prevUser, isMaintenance: matchingUser.isMaintenance, status: matchingUser.status };
-            localStorage.setItem('simak_user_account', JSON.stringify(updated));
             return updated;
           }
           return prevUser;
@@ -961,13 +931,11 @@ export default function App() {
           mergedProfiles.unshift(initialTeacherProfile);
         }
         setTeacherProfiles(mergedProfiles);
-        localStorage.setItem('simak_teacher_profiles', JSON.stringify(mergedProfiles));
         setTeacher(prevTeacher => {
           if (!prevTeacher) return prevTeacher;
           const matchingProf = mergedProfiles.find(p => p.id === prevTeacher.id || p.name.toLowerCase() === prevTeacher.name.toLowerCase());
           if (matchingProf) {
             const updated = { ...prevTeacher, ...matchingProf };
-            localStorage.setItem('simak_teacher', JSON.stringify(updated));
             return updated;
           }
           return prevTeacher;
@@ -978,14 +946,12 @@ export default function App() {
     const unsubSchedules = subscribeToSchedules((remoteSchedules) => {
       if (remoteSchedules && Array.isArray(remoteSchedules)) {
         const scheduleStorageKey = teacher?.id ? `simak_schedules_${teacher.id}` : 'simak_schedules';
-        localStorage.setItem(scheduleStorageKey, JSON.stringify(remoteSchedules));
       }
     }, settingsScope);
 
     const unsubInfo = subscribeToInfoAnnouncement((remoteInfo) => {
       if (remoteInfo && remoteInfo.text) {
         setInfoAnnouncement(remoteInfo);
-        localStorage.setItem('simak_info_announcement', JSON.stringify(remoteInfo));
       }
     });
 
@@ -1032,7 +998,6 @@ export default function App() {
         const needsUpdate = prev.some(s => s.name !== activeRole || (teacher.kkm !== undefined && s.kktp !== teacher.kkm));
         if (needsUpdate) {
           const updated = prev.map(s => ({ ...s, name: activeRole, kktp: activeKkm }));
-          localStorage.setItem('simak_subjects', JSON.stringify(updated));
           saveSubjectsToFirebase(updated);
           return updated;
         }
@@ -1046,7 +1011,6 @@ export default function App() {
     const targetId = subjectId || selectedSubject.id;
     const updatedSubjects = subjects.map(s => s.id === targetId ? { ...s, kktp: newKktp } : s);
     setSubjects(updatedSubjects);
-    localStorage.setItem('simak_subjects', JSON.stringify(updatedSubjects));
     saveSubjectsToFirebase(updatedSubjects);
 
     const updatedSel = updatedSubjects.find(s => s.id === selectedSubject.id);
@@ -1064,7 +1028,6 @@ export default function App() {
     if (checkIsDataLocked('settings')) return false;
     // 1. Update active teacher in state & localStorage
     setTeacher(newProfile);
-    localStorage.setItem('simak_teacher', JSON.stringify(newProfile));
 
     // Only update global single teacher document in Firebase for Master Admin
     if (currentUser?.email?.toLowerCase() === 'shahrurrobby17@gmail.com' || currentUser?.uid === 'USER-ADMIN') {
@@ -1085,7 +1048,6 @@ export default function App() {
       updatedProfiles.push({ ...newProfile, id: profileIdToMatch || `PROF-${Date.now()}` });
     }
     setTeacherProfiles(updatedProfiles);
-    localStorage.setItem('simak_teacher_profiles', JSON.stringify(updatedProfiles));
     saveTeacherProfilesToFirebase(updatedProfiles);
 
     // 3. Update active currentUser in state & localStorage
@@ -1100,7 +1062,6 @@ export default function App() {
         profileId: profileIdToMatch || currentUser.profileId
       };
       setCurrentUser(updatedUser);
-      localStorage.setItem('simak_user_account', JSON.stringify(updatedUser));
 
       // 4. Update registeredUsers list in state, localStorage & Firebase strictly for this user
       const updatedUsers = registeredUsers.map(u => {
@@ -1120,7 +1081,6 @@ export default function App() {
         return u;
       });
       setRegisteredUsers(updatedUsers);
-      localStorage.setItem('simak_registered_users', JSON.stringify(updatedUsers));
       saveRegisteredUsersToFirebase(updatedUsers);
     }
 
@@ -1133,7 +1093,6 @@ export default function App() {
         kktp: newProfile.kkm !== undefined ? newProfile.kkm : s.kktp 
       }));
       setSubjects(updatedSubjects);
-      localStorage.setItem('simak_subjects', JSON.stringify(updatedSubjects));
       saveSubjectsToFirebase(updatedSubjects);
 
       setSelectedSubject(prev => ({
@@ -1144,7 +1103,6 @@ export default function App() {
     } else if (newProfile.kkm !== undefined) {
       const updatedSubjects = subjects.map(s => ({ ...s, kktp: newProfile.kkm }));
       setSubjects(updatedSubjects);
-      localStorage.setItem('simak_subjects', JSON.stringify(updatedSubjects));
       saveSubjectsToFirebase(updatedSubjects);
 
       const updatedSel = updatedSubjects.find(s => s.id === selectedSubject.id);
@@ -1164,7 +1122,6 @@ export default function App() {
       setRemovedClasses(updatedRemoved);
       setCustomClasses(updatedCustom);
       setInactiveClasses(updatedInactive);
-      localStorage.setItem('simak_inactive_classes', JSON.stringify(updatedInactive));
       const settingsScope = currentUser && !isDemoAdmin ? `_${currentUser.uid}` : '';
       saveClassListsToFirebase(updatedCustom, updatedRemoved, settingsScope, updatedInactive);
     }
@@ -1177,7 +1134,6 @@ export default function App() {
       : [...inactiveClasses, classNameToToggle];
     
     setInactiveClasses(updatedInactive);
-    localStorage.setItem('simak_inactive_classes', JSON.stringify(updatedInactive));
     const settingsScope = currentUser && !isDemoAdmin ? `_${currentUser.uid}` : '';
     saveClassListsToFirebase(customClasses, removedClasses, settingsScope, updatedInactive);
   };
@@ -1189,7 +1145,6 @@ export default function App() {
     setCustomClasses(updatedCustom);
     setRemovedClasses(updatedRemoved);
     setInactiveClasses(updatedInactive);
-    localStorage.setItem('simak_inactive_classes', JSON.stringify(updatedInactive));
     const settingsScope = currentUser && !isDemoAdmin ? `_${currentUser.uid}` : '';
     saveClassListsToFirebase(updatedCustom, updatedRemoved, settingsScope, updatedInactive);
     
@@ -1208,7 +1163,7 @@ export default function App() {
 
     const existingRecord = attendanceRecords.find(r => 
       r.studentId === studentId && (Number(r.meetingNo) === targetMeeting || (!r.meetingNo && targetMeeting === 1))
-    );
+        );
     const recordToSave: AttendanceRecord = existingRecord
       ? {
           ...existingRecord,
@@ -1233,7 +1188,7 @@ export default function App() {
     setAttendanceRecords(prev => {
       const existingIdx = prev.findIndex(r => 
         r.studentId === studentId && (Number(r.meetingNo) === targetMeeting || (!r.meetingNo && targetMeeting === 1))
-      );
+        );
       let updated: AttendanceRecord[];
       if (existingIdx >= 0) {
         updated = [...prev];
@@ -1241,7 +1196,6 @@ export default function App() {
       } else {
         updated = [...prev, recordToSave];
       }
-      localStorage.setItem('simak_attendance', JSON.stringify(updated));
       return updated;
     });
 
@@ -1259,7 +1213,7 @@ export default function App() {
     const recordsToSave: AttendanceRecord[] = classStudents.map(st => {
       const existing = attendanceRecords.find(r => 
         r.studentId === st.id && (Number(r.meetingNo) === targetMeeting || (!r.meetingNo && targetMeeting === 1))
-      );
+        );
       if (existing) {
         return {
           ...existing,
@@ -1295,7 +1249,6 @@ export default function App() {
           updated.push(rec);
         }
       });
-      localStorage.setItem('simak_attendance', JSON.stringify(updated));
       return updated;
     });
 
@@ -1331,7 +1284,6 @@ export default function App() {
           .map(r => r.id);
         updated = prev.filter(r => !(classStudentIds.has(r.studentId) && ((Number(r.meetingNo) === targetMeeting) || (!r.meetingNo && targetMeeting === 1))));
       }
-      localStorage.setItem('simak_attendance', JSON.stringify(updated));
       return updated;
     });
 
@@ -1392,7 +1344,6 @@ export default function App() {
           updated.push(rec);
         }
       });
-      localStorage.setItem('simak_attendance', JSON.stringify(updated));
       return updated;
     });
     saveAttendanceRecordsBatchToFirebase(injected);
@@ -1429,7 +1380,6 @@ export default function App() {
         return sSchool !== activeSchoolName && !activeIds.has(s.id);
       });
       const combined = [...otherStudents, ...injected].sort((a, b) => a.name.localeCompare(b.name));
-      localStorage.setItem('simak_students', JSON.stringify(combined));
       saveStudentsBatchToFirebase(combined);
       return combined;
     });
@@ -1466,7 +1416,6 @@ export default function App() {
       } else {
         updated = [taskWithSchool, ...prev];
       }
-      localStorage.setItem('simak_student_tasks', JSON.stringify(updated));
       return updated;
     });
     saveStudentTaskToFirebase(taskWithSchool);
@@ -1478,7 +1427,6 @@ export default function App() {
     newTask = injectSchool(newTask);
     setStudentTasks(prev => {
       const updated = [newTask, ...prev];
-      localStorage.setItem('simak_student_tasks', JSON.stringify(updated));
       return updated;
     });
     saveStudentTaskToFirebase(newTask);
@@ -1490,7 +1438,6 @@ export default function App() {
     updatedTask = injectSchool(updatedTask);
     setStudentTasks(prev => {
       const updated = prev.map(t => t.id === updatedTask.id ? updatedTask : t);
-      localStorage.setItem('simak_student_tasks', JSON.stringify(updated));
       return updated;
     });
     saveStudentTaskToFirebase(updatedTask);
@@ -1502,7 +1449,6 @@ export default function App() {
     if (checkIsDataLocked('grades')) return false;
     setStudentTasks(prev => {
       const updated = prev.filter(t => t.id !== taskId);
-      localStorage.setItem('simak_student_tasks', JSON.stringify(updated));
       return updated;
     });
     deleteStudentTaskFromFirebase(taskId);
@@ -1517,8 +1463,8 @@ export default function App() {
   const currentMatchingAccount = registeredUsers.find(u => 
     (currentUser && u.email?.toLowerCase() === currentUser.email?.toLowerCase()) ||
     (teacher && u.name.toLowerCase() === teacher.name.toLowerCase())
-  );
 
+        );
   const isExemptAdmin = (name: string = '', email: string = '') => {
     const lowerName = name.toLowerCase();
     const lowerEmail = email.toLowerCase();
@@ -1535,9 +1481,9 @@ export default function App() {
       currentUser.name?.toLowerCase().includes('shahrur') ||
       currentUser.role?.toLowerCase().includes('master')
     )
-  );
 
   // Data Lock Prevention Check & Alert Modal
+        );
   const [showDataLockAlertModal, setShowDataLockAlertModal] = useState<boolean>(false);
 
   const checkIsDataLocked = (moduleKey?: 'students' | 'grades' | 'attendance' | 'journal' | 'settings'): boolean => {
@@ -1573,8 +1519,8 @@ export default function App() {
       currentMatchingAccount
         ? Boolean(currentMatchingAccount.isMaintenance || currentMatchingAccount.status === 'Nonaktif')
         : Boolean(teacher?.isMaintenance || teacher?.status === 'Nonaktif')
-    );
 
+        );
   useEffect(() => {
     const isMasterTab = activeTab === 'master-data';
     if (isMasterTab && !isMasterUser) {
@@ -1618,7 +1564,6 @@ export default function App() {
         isMasterUser={isMasterUser}
         onLoginSuccess={(user, profileId, targetTab) => {
           setCurrentUser(user);
-          localStorage.setItem('simak_user_account', JSON.stringify(user));
           setShowLoginScreen(false);
 
           if (targetTab) {
@@ -1626,7 +1571,7 @@ export default function App() {
           }
 
           // Search in active state, saved localStorage, and initial defaults
-          const savedProfilesJson = localStorage.getItem('simak_teacher_profiles');
+          const savedProfilesJson = null;
           const savedProfiles: TeacherProfile[] = savedProfilesJson ? JSON.parse(savedProfilesJson) : [];
 
           const profilesToSearch = [
@@ -1640,8 +1585,8 @@ export default function App() {
                  (user.profileId && p.id === user.profileId) ||
                  (user.nip && p.nip && p.nip.replace(/\s+/g, '') === user.nip.replace(/\s+/g, '')) ||
                  (p.name && user.name && p.name.toLowerCase() === user.name.toLowerCase())
-          );
 
+        );
           if (matchedProf) {
             // Sync profile status and title (jabatan) with user status and selected login role
             matchedProf = {
@@ -1655,7 +1600,6 @@ export default function App() {
               updatedProfiles.push(matchedProf);
             }
             setTeacherProfiles(updatedProfiles);
-            localStorage.setItem('simak_teacher_profiles', JSON.stringify(updatedProfiles));
             saveTeacherProfilesToFirebase(updatedProfiles);
           } else {
             matchedProf = {
@@ -1678,20 +1622,18 @@ export default function App() {
             };
             const updatedProfiles = [...teacherProfiles.filter(p => p.id !== matchedProf!.id), matchedProf];
             setTeacherProfiles(updatedProfiles);
-            localStorage.setItem('simak_teacher_profiles', JSON.stringify(updatedProfiles));
             saveTeacherProfilesToFirebase(updatedProfiles);
           }
 
           setTeacher(matchedProf);
-          localStorage.setItem('simak_teacher', JSON.stringify(matchedProf));
 
-          const dontShowPrompt = localStorage.getItem('simak_dont_show_profile_prompt') === 'true';
+          const dontShowPrompt = null === 'true';
           if (!dontShowPrompt) {
             setShowProfilePromptModal(true);
           }
         }}
       />
-    );
+        );
   }
 
   const handleSyncToGoogleSheets = async (token: string): Promise<string> => {
@@ -2158,5 +2100,5 @@ export default function App() {
         </div>
       )}
     </div>
-  );
+        );
 }

@@ -52,7 +52,7 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
   const settingsScope = teacher?.id && !isMaster ? `_${teacher.id}` : '';
 
   const getInitialSchedules = () => {
-    const savedKey = localStorage.getItem(storageKey);
+    const savedKey = ((k: string) => null as any)(storageKey);
     if (savedKey) {
       try {
         const parsed = JSON.parse(savedKey);
@@ -61,7 +61,7 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
     }
 
     if (isMaster) {
-      const savedGen = localStorage.getItem('simak_schedules');
+      const savedGen = ((k: string) => null as any)('simak_schedules');
       if (savedGen) {
         try {
           const parsed = JSON.parse(savedGen);
@@ -96,9 +96,9 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
     const unsub = subscribeToSchedules((remoteSchedules) => {
       if (remoteSchedules && Array.isArray(remoteSchedules)) {
         setSchedules(remoteSchedules);
-        localStorage.setItem(storageKey, JSON.stringify(remoteSchedules));
+        ((k: string, v: string) => void 0)(storageKey, JSON.stringify(remoteSchedules));
         if (isMaster) {
-          localStorage.setItem('simak_schedules', JSON.stringify(remoteSchedules));
+          ((k: string, v: string) => void 0)('simak_schedules', JSON.stringify(remoteSchedules));
         }
       }
     }, settingsScope);
@@ -107,9 +107,9 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
 
   const handleSaveSchedules = (newSchedules: TeachingScheduleItem[]) => {
     setSchedules(newSchedules);
-    localStorage.setItem(storageKey, JSON.stringify(newSchedules));
+    ((k: string, v: string) => void 0)(storageKey, JSON.stringify(newSchedules));
     if (isMaster) {
-      localStorage.setItem('simak_schedules', JSON.stringify(newSchedules));
+      ((k: string, v: string) => void 0)('simak_schedules', JSON.stringify(newSchedules));
     }
     saveTeachingSchedulesToFirebase(newSchedules, settingsScope);
   };

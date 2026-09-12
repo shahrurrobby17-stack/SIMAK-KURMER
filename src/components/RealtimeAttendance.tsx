@@ -46,28 +46,21 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
     new Date().toISOString().split('T')[0]
   );
   const [manualClass, setManualClass] = useState<string>('');
-  const [selectedMeetingNo, setSelectedMeetingNo] = useState<number>(2);
-
-  // Modal State for Tambah Presensi
+  const [selectedMeetingNo, setSelectedMeetingNo] = useState<number>(1);
   const [showAddModal, setShowAddModal] = useState<boolean>(false);
   const [modalClass, setModalClass] = useState<string>('');
-  const [modalDate, setModalDate] = useState<string>(new Date().toISOString().split('T')[0]);
-  const [modalMeetingNo, setModalMeetingNo] = useState<number>(3);
-  const [modalDefaultStatus, setModalDefaultStatus] = useState<AttendanceStatus>('HADIR');
+  const [modalMeetingNo, setModalMeetingNo] = useState<number>(1);
+  const [modalDefaultStatus, setModalDefaultStatus] = useState<string>('HADIR');
   const [modalNote, setModalNote] = useState<string>('');
-
-  // Modal State for Hapus Pertemuan
   const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false);
-  const [meetingToDelete, setMeetingToDelete] = useState<number>(2);
-
+  const [meetingToDelete, setMeetingToDelete] = useState<number | null>(null);
   const [showSaveSuccess, setShowSaveSuccess] = useState<boolean>(false);
-
   const isMaster = isMasterUser || teacher?.id === 'PROF-ADMIN';
   const storageKey = teacher?.id ? `simak_schedules_${teacher.id}` : 'simak_schedules';
   const settingsScope = teacher?.id && !isMaster ? `_${teacher.id}` : '';
 
   const getInitialSchedules = () => {
-    const savedKey = localStorage.getItem(storageKey);
+    const savedKey = null;
     if (savedKey) {
       try {
         const parsed = JSON.parse(savedKey);
@@ -75,7 +68,7 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
       } catch (e) {}
     }
     if (isMaster) {
-      const savedGen = localStorage.getItem('simak_schedules');
+      const savedGen = null;
       if (savedGen) {
         try {
           const parsed = JSON.parse(savedGen);
@@ -87,20 +80,13 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
     return [];
   };
 
-  const [schedules, setSchedules] = useState<TeachingScheduleItem[]>(getInitialSchedules);
 
-  useEffect(() => {
-    setSchedules(getInitialSchedules());
-  }, [teacher?.id, isMaster]);
+  const [schedules, setSchedules] = useState<TeachingScheduleItem[]>(getInitialSchedules);
 
   useEffect(() => {
     const unsub = subscribeToSchedules((remoteSchedules) => {
       if (remoteSchedules && Array.isArray(remoteSchedules)) {
         setSchedules(remoteSchedules);
-        localStorage.setItem(storageKey, JSON.stringify(remoteSchedules));
-        if (isMaster) {
-          localStorage.setItem('simak_schedules', JSON.stringify(remoteSchedules));
-        }
       }
     }, settingsScope);
     return () => unsub();
@@ -117,9 +103,8 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
 
   // Calculate unique meeting numbers that actually exist for the current class
   const existingMeetingNumbers = useMemo(() => {
-    const studentIds = new Set(classStudents.map(s => s.id));
     const meetingSet = new Set<number>();
-
+    const studentIds = new Set(classStudents.map(s => s.id));
     attendanceRecords.forEach(r => {
       if (studentIds.has(r.studentId)) {
         const m = r.meetingNo !== undefined && r.meetingNo !== null ? Number(r.meetingNo) : 1;
@@ -128,41 +113,32 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
         }
       }
     });
-
     if (meetingSet.size === 0) {
       return [1];
     }
-
     return Array.from(meetingSet).sort((a, b) => a - b);
-  }, [classStudents, attendanceRecords]);
+  }, [attendanceRecords, classStudents]);
 
-  // When class or existingMeetingNumbers changes, sync selectedMeetingNo if it's not present
   useEffect(() => {
     if (existingMeetingNumbers.length > 0) {
       if (!existingMeetingNumbers.includes(selectedMeetingNo)) {
         const latest = existingMeetingNumbers[existingMeetingNumbers.length - 1];
         setSelectedMeetingNo(latest);
-        
-        const studentIds = new Set(classStudents.map(s => s.id));
-        const rec = attendanceRecords.find(r => studentIds.has(r.studentId) && Number(r.meetingNo) === latest && r.date);
-        if (rec && rec.date) {
-          setSelectedDate(rec.date);
-        }
       }
     }
-  }, [existingMeetingNumbers, selectedMeetingNo, classStudents, attendanceRecords]);
+  }, [existingMeetingNumbers, selectedMeetingNo]);
 
   // Attendance for selected meeting & student
   const getRecordForStudent = (studentId: string) => {
     const match = attendanceRecords.find(r => 
       r.studentId === studentId && Number(r.meetingNo) === Number(selectedMeetingNo)
-    );
+      );
     if (match) return match;
 
     if (Number(selectedMeetingNo) === 1) {
       const legacyMatch = attendanceRecords.find(r => 
         r.studentId === studentId && (!r.meetingNo || Number(r.meetingNo) === 1)
-      );
+        );
       if (legacyMatch) return legacyMatch;
     }
 
@@ -170,29 +146,24 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
   };
 
   const handleMeetingChange = (newMeeting: number) => {
-    const valid = Math.max(1, newMeeting || 1);
-    setSelectedMeetingNo(valid);
     
     // Auto-sync date if there are existing records for this meeting
     const classStudentIds = classStudents.map(s => s.id);
     const existingRec = attendanceRecords.find(r => 
-      classStudentIds.includes(r.studentId) && Number(r.meetingNo) === valid && r.date
-    );
+      classStudentIds.includes(r.studentId) && Number(r.meetingNo) === newMeeting && r.date
+      );
     if (existingRec && existingRec.date) {
-      setSelectedDate(existingRec.date);
     }
   };
 
   const handleDateChange = (newDate: string) => {
-    setSelectedDate(newDate);
 
     // Auto-sync meetingNo if there is a record for this class on this date
     const classStudentIds = classStudents.map(s => s.id);
     const existingRec = attendanceRecords.find(r => 
       classStudentIds.includes(r.studentId) && r.date === newDate && r.meetingNo
-    );
+      );
     if (existingRec && existingRec.meetingNo) {
-      setSelectedMeetingNo(Number(existingRec.meetingNo));
     }
   };
 
@@ -205,8 +176,8 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
   let alpaCount = 0;
 
   classStudents.forEach(student => {
-    const rec = getRecordForStudent(student.id);
-    const st = rec?.status || 'HADIR';
+    const record = getRecordForStudent(student.id);
+    const st = record?.status || 'HADIR';
     if (st === 'HADIR') hadirCount++;
     else if (st === 'IZIN') izinCount++;
     else if (st === 'SAKIT') sakitCount++;
@@ -218,8 +189,7 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
 
   // Helper to get next meeting number for a given class name
   const getNextMeetingForClass = (clsName: string) => {
-    const clsStudents = students.filter(s => !clsName || clsName === 'Semua Kelas' ? true : s.className === clsName);
-    const clsStudentIds = new Set(clsStudents.map(s => s.id));
+    const clsStudentIds = new Set(students.filter(s => s.className === clsName).map(s => s.id));
     const mSet = new Set<number>();
     attendanceRecords.forEach(r => {
       if (clsStudentIds.has(r.studentId) && r.meetingNo) {
@@ -231,45 +201,27 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
 
   // Open modal handler
   const handleOpenAddModal = () => {
-    const activeCls = targetClass && targetClass !== 'Semua Kelas' ? targetClass : (students[0]?.className || '');
-    setModalClass(activeCls);
-    setModalDate(new Date().toISOString().split('T')[0]);
-    const nextMeeting = getNextMeetingForClass(activeCls);
-    setModalMeetingNo(nextMeeting);
-    setModalDefaultStatus('HADIR');
-    setModalNote('');
-    setShowAddModal(true);
   };
 
   // When class changes inside the modal
   const handleModalClassChange = (newCls: string) => {
-    setModalClass(newCls);
-    const nextMeeting = getNextMeetingForClass(newCls);
-    setModalMeetingNo(nextMeeting);
   };
 
   // Submit modal handler
   const handleSubmitAddModal = (e: React.FormEvent) => {
-    e.preventDefault();
     const studentsToMark = students.filter(s => {
       if (!modalClass || modalClass === 'Semua Kelas') return true;
       return s.className === modalClass;
     });
 
     if (studentsToMark.length === 0) {
-      alert('Tidak ada siswa di kelas yang dipilih.');
       return;
     }
 
     studentsToMark.forEach(st => {
-      onUpdateAttendance(st.id, modalDefaultStatus, modalNote, modalDate, modalMeetingNo);
-    });
 
-    setSelectedDate(modalDate);
-    if (modalClass) setManualClass(modalClass);
-    setSelectedMeetingNo(modalMeetingNo);
-    setShowAddModal(false);
-    setShowSaveSuccess(true);
+      onUpdateAttendance(st.id, modalDefaultStatus as AttendanceStatus, '', selectedDate, selectedMeetingNo);
+    });
   };
 
   const handleSaveAttendance = () => {
@@ -277,17 +229,16 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
     let savedSuccessfully = true;
     for (const st of listToSave) {
       const rec = getRecordForStudent(st.id);
-      const status = rec?.status || 'HADIR';
+      const status = (rec?.status || 'HADIR') as AttendanceStatus;
       const note = rec?.note || '';
       const date = rec?.date || selectedDate;
-      const res = onUpdateAttendance(st.id, status, note, date, selectedMeetingNo);
+      const res = onUpdateAttendance(st.id, status as AttendanceStatus, note, date, selectedMeetingNo);
       if (res === false) {
         savedSuccessfully = false;
         break;
       }
     }
     if (savedSuccessfully) {
-      setShowSaveSuccess(true);
     }
   };
 
@@ -295,7 +246,6 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
     const tableHeaders = ['No', 'Nama Siswa', 'Pertemuan Ke-', 'Status Kehadiran', 'Waktu Masuk', 'Keterangan'];
     const exportList = filteredStudents.length > 0 ? filteredStudents : classStudents;
     const tableRows = exportList.map((student, idx) => {
-      const rec = getRecordForStudent(student.id);
       return [
         idx + 1,
         student.name,
@@ -306,6 +256,7 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
       ];
     });
 
+    const rec = getRecordForStudent(exportList[0]?.id || '');
     generatePdfReport({
       title: `Laporan Presensi Kehadiran Siswa ${targetClass && targetClass !== 'Semua Kelas' ? `Kelas ${targetClass}` : 'Semua Kelas'}`,
       subtitle: `Tanggal Presensi: ${selectedDate} | Pertemuan Ke: ${selectedMeetingNo} | Total Siswa: ${exportList.length} Orang`,
@@ -450,8 +401,6 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
           <button
             type="button"
             onClick={() => {
-              setMeetingToDelete(selectedMeetingNo);
-              setShowDeleteModal(true);
             }}
             className="flex items-center space-x-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 px-3 py-1 rounded-none text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs shrink-0"
             title="Hapus Sesi Pertemuan Tertentu"
@@ -529,19 +478,13 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
                   onClick={() => {
                     let res: any = true;
                     if (onDeleteMeeting) {
-                      res = onDeleteMeeting(meetingToDelete, targetClass);
                     }
                     if (res !== false) {
-                      const remaining = existingMeetingNumbers.filter(m => m !== meetingToDelete);
-                      if (remaining.length > 0) {
-                        setSelectedMeetingNo(remaining[remaining.length - 1]);
+                      const remaining = attendanceRecords.filter(r => r.meetingNo !== meetingToDelete);
+    if (remaining.length > 0) {
                       } else {
-                        setSelectedMeetingNo(1);
                       }
-                      setShowDeleteModal(false);
-                      setShowSaveSuccess(true);
                     } else {
-                      setShowDeleteModal(false);
                     }
                   }}
                   className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold rounded-none shadow-md transition-colors cursor-pointer flex items-center space-x-1.5"
@@ -707,7 +650,6 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
                   const currentStatus: AttendanceStatus = record?.status || 'HADIR';
                   const currentNote = record?.note || '';
                   const currentMeeting = selectedMeetingNo;
-
                   return (
                     <tr key={student.id} className="hover:bg-slate-50/80 transition-colors">
                       <td className="p-3.5 text-center font-bold text-slate-500">{index + 1}</td>
@@ -809,3 +751,4 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
     </div>
   );
 };
+export default RealtimeAttendance;
