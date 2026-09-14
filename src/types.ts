@@ -90,8 +90,9 @@ export interface TeacherProfile {
   principalNip: string;
   city?: string;
   avatarUrl?: string;
+  gender?: 'Laki-laki' | 'Perempuan' | string;
   isMaintenance?: boolean;
-  status?: 'Aktif' | 'Nonaktif' | 'Maintenance';
+  status?: 'Aktif' | 'Nonaktif' | 'Maintenance' | 'Menunggu Aktivasi';
 }
 
 export interface DataLockConfig {
@@ -181,8 +182,15 @@ export interface UserAccount {
   profileId?: string;
   password?: string;
   nip?: string;
+  phone?: string;
+  birthPlace?: string;
+  birthDate?: string;
+  gender?: 'Laki-laki' | 'Perempuan' | string;
+  ktpFile?: string;
+  selfieFile?: string;
+  registeredAt?: string;
   isMaintenance?: boolean;
-  status?: 'Aktif' | 'Nonaktif' | 'Maintenance';
+  status?: 'Aktif' | 'Nonaktif' | 'Maintenance' | 'Menunggu Aktivasi';
 }
 
 export interface InfoAnnouncementItem {

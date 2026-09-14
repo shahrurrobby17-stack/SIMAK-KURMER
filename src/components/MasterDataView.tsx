@@ -170,11 +170,18 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
       u.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       u.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (u.nip && u.nip.includes(searchTerm)) ||
+      (u.phone && u.phone.includes(searchTerm)) ||
       (u.schoolName && u.schoolName.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (u.role && u.role.toLowerCase().includes(searchTerm.toLowerCase()));
 
-    const currentStatus = u.isMaintenance || u.status === 'Nonaktif' ? 'Nonaktif' : 'Aktif';
-    const matchesStatus = statusFilter === 'Semua' || currentStatus === statusFilter;
+    const isPending = u.status === 'Menunggu Aktivasi';
+    const isNonaktif = u.isMaintenance || u.status === 'Nonaktif';
+    const matchesStatus =
+      statusFilter === 'Semua' ||
+      (statusFilter === 'Menunggu Aktivasi' && isPending) ||
+      (statusFilter === 'Aktif' && !isNonaktif && !isPending) ||
+      (statusFilter === 'Nonaktif' && isNonaktif);
+
     const matchesSchool = schoolFilter === 'Semua' || (u.schoolName || 'SD Negeri 1 SIMAK') === schoolFilter;
     const matchesRole = roleFilter === 'Semua' || (u.role || 'Guru Pengampu') === roleFilter;
     const userCategory = getUserCategory(u);
@@ -185,8 +192,9 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
 
   // Calculate statistics
   const totalCount = registeredUsers.length;
-  const activeCount = registeredUsers.filter(u => !u.isMaintenance && u.status !== 'Nonaktif').length;
-  const nonActiveCount = totalCount - activeCount;
+  const pendingCount = registeredUsers.filter(u => u.status === 'Menunggu Aktivasi').length;
+  const activeCount = registeredUsers.filter(u => !u.isMaintenance && u.status !== 'Nonaktif' && u.status !== 'Menunggu Aktivasi').length;
+  const nonActiveCount = registeredUsers.filter(u => u.isMaintenance || u.status === 'Nonaktif').length;
   const masterAccountsCount = registeredUsers.filter(u => isMasterAccount(u.email, u.name)).length;
   const totalSchoolsCount = new Set(registeredUsers.map(u => u.schoolName || 'SD Negeri 1 SIMAK')).size;
 
@@ -217,19 +225,20 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
     }
   };
 
-  // Toggle user active status
+  // Toggle user active status / Admin Activation
   const handleToggleUserStatus = (targetUser: UserAccount) => {
     if (isMasterAccount(targetUser.email, targetUser.name)) {
       showToast(`Akun milik ${targetUser.name} adalah Akun Utama / Master Data dan selalu aktif.`, 'info');
       return;
     }
 
+    const isPending = targetUser.status === 'Menunggu Aktivasi';
     const currentIsDisabled = targetUser.isMaintenance || targetUser.status === 'Nonaktif';
-    const newIsDisabled = !currentIsDisabled;
-    const newStatus: 'Aktif' | 'Nonaktif' = newIsDisabled ? 'Nonaktif' : 'Aktif';
+    const newIsDisabled = isPending ? false : !currentIsDisabled;
+    const newStatus: 'Aktif' | 'Nonaktif' = isPending ? 'Aktif' : (newIsDisabled ? 'Nonaktif' : 'Aktif');
 
     const updatedUsers = registeredUsers.map(u => {
-      if (u.uid === targetUser.uid || u.email.toLowerCase() === targetUser.email.toLowerCase()) {
+      if (u.uid === targetUser.uid || (u.email && targetUser.email && u.email.toLowerCase() === targetUser.email.toLowerCase())) {
         return {
           ...u,
           isMaintenance: newIsDisabled,
@@ -240,7 +249,11 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
     });
 
     onUpdateRegisteredUsers(updatedUsers);
-    setSaveSuccessMsg(`Status akun "${targetUser.name}" berhasil diubah menjadi ${newStatus}.`);
+    if (isPending) {
+      setSaveSuccessMsg(`Akun pendaftar baru "${targetUser.name}" berhasil DIVERIFIKASI & DIAKTIFKAN oleh Administrator! Pengguna sekarang dapat masuk ke portal SIMAK.`);
+    } else {
+      setSaveSuccessMsg(`Status akun "${targetUser.name}" berhasil diubah menjadi ${newStatus}.`);
+    }
     setSaveSuccessModal(true);
   };
 
@@ -570,12 +583,19 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             </div>
 
             <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
-              <div className="p-3 bg-rose-50 text-rose-600 rounded-none shrink-0">
-                <UserX className="w-5 h-5" />
+              <div className={`p-3 rounded-none shrink-0 ${pendingCount > 0 ? 'bg-amber-100 text-amber-900 ring-2 ring-amber-400' : 'bg-rose-50 text-rose-600'}`}>
+                {pendingCount > 0 ? <Clock className="w-5 h-5 animate-pulse" /> : <UserX className="w-5 h-5" />}
               </div>
               <div>
-                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Akun Nonaktif</div>
-                <div className="text-xl font-black text-rose-700">{nonActiveCount} <span className="text-xs font-semibold text-rose-600">Dibatasi</span></div>
+                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                  {pendingCount > 0 ? 'Antrean Aktivasi' : 'Akun Nonaktif'}
+                </div>
+                <div className={`text-xl font-black ${pendingCount > 0 ? 'text-amber-900' : 'text-rose-700'}`}>
+                  {pendingCount > 0 ? pendingCount : nonActiveCount}{' '}
+                  <span className={`text-xs font-semibold ${pendingCount > 0 ? 'text-amber-800' : 'text-rose-600'}`}>
+                    {pendingCount > 0 ? 'Menunggu' : 'Dibatasi'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -590,6 +610,42 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             </div>
           </div>
 
+          {/* Alert Banner: Antrean Aktivasi Akun oleh Administrator */}
+          {pendingCount > 0 && (
+            <div className="bg-amber-50/90 border-2 border-amber-300 p-4 rounded-none flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-start sm:items-center gap-3.5">
+                <div className="w-10 h-10 rounded-xl bg-amber-500 text-white flex items-center justify-center shrink-0 shadow-xs">
+                  <Clock className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h4 className="font-extrabold text-xs sm:text-sm text-amber-950">
+                      Terdapat {pendingCount} Pendaftar Baru Menunggu Verifikasi & Aktivasi Akun
+                    </h4>
+                    <span className="px-2 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-black uppercase">
+                      Penting
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-amber-900/80 mt-0.5">
+                    Aktivasi akun pengguna baru dilakukan di Halaman Administrator ini untuk menjaga integritas data pendidik & tenaga kependidikan.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setStatusFilter('Menunggu Aktivasi');
+                  setSelectedCategory('Semua');
+                }}
+                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded-none flex items-center gap-2 cursor-pointer shadow-xs shrink-0 active:scale-95 transition-all"
+              >
+                <UserCheck className="w-4 h-4" />
+                <span>Lihat Antrean Aktivasi ({pendingCount})</span>
+              </button>
+            </div>
+          )}
+
           {/* Filter and Control Toolbar */}
       <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs space-y-3">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
@@ -600,7 +656,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Cari berdasarkan nama, email, NIP, atau sekolah..."
+              placeholder="Cari berdasarkan nama, email, NIP, no hp, atau sekolah..."
               className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-medium focus:outline-none focus:ring-2 focus:ring-cyan-600 focus:bg-white"
             />
             {searchTerm && (
@@ -623,8 +679,9 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
               className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-600 cursor-pointer"
             >
               <option value="Semua">Semua Status</option>
+              <option value="Menunggu Aktivasi">Status: Menunggu Aktivasi ({pendingCount})</option>
               <option value="Aktif">Status: Aktif</option>
-              <option value="Nonaktif">Status: BELUM AKTIF</option>
+              <option value="Nonaktif">Status: BELUM AKTIF / Nonaktif</option>
             </select>
 
             {/* School Filter */}
@@ -787,32 +844,51 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
 
                       {/* Status */}
                       <td className="py-3.5 px-4 text-center">
-                        <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${
-                          isUserDisabled
-                            ? 'bg-rose-50 text-rose-700 border border-rose-200'
-                            : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                        }`}>
-                          <span className={`w-1.5 h-1.5 rounded-full ${isUserDisabled ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse'}`} />
-                          {isUserDisabled ? 'BELUM AKTIF' : 'Aktif'}
-                        </span>
+                        {user.status === 'Menunggu Aktivasi' ? (
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs">
+                            <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse shrink-0" />
+                            <span>MENUNGGU AKTIVASI</span>
+                          </span>
+                        ) : (
+                          <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold ${
+                            isUserDisabled
+                              ? 'bg-rose-50 text-rose-700 border border-rose-200'
+                              : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          }`}>
+                            <span className={`w-1.5 h-1.5 rounded-full ${isUserDisabled ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse'}`} />
+                            {isUserDisabled ? 'BELUM AKTIF' : 'Aktif'}
+                          </span>
+                        )}
                       </td>
 
                       {/* Actions */}
                       <td className="py-3.5 px-4 text-right">
                         <div className="flex items-center justify-end gap-1">
-                          {/* Toggle status button */}
-                          <button
-                            type="button"
-                            onClick={() => handleToggleUserStatus(user)}
-                            className={`p-1.5 rounded-none text-xs font-bold transition-all cursor-pointer ${
-                              isMaster ? 'text-slate-300 cursor-not-allowed' :
-                              isUserDisabled ? 'text-emerald-600 hover:bg-emerald-50' : 'text-rose-600 hover:bg-rose-50'
-                            }`}
-                            title={isMaster ? 'Akun Master Selalu Aktif' : isUserDisabled ? 'Aktifkan Akun' : 'Nonaktifkan Akun'}
-                            disabled={isMaster}
-                          >
-                            {isUserDisabled ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
-                          </button>
+                          {/* Toggle status button / Direct Activation */}
+                          {user.status === 'Menunggu Aktivasi' ? (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleUserStatus(user)}
+                              className="px-2.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-none text-xs font-bold flex items-center gap-1 shadow-2xs transition-all cursor-pointer active:scale-95"
+                              title="Setujui & Aktifkan Akun Pengguna Baru"
+                            >
+                              <UserCheck className="w-3.5 h-3.5" />
+                              <span>Aktifkan Akun</span>
+                            </button>
+                          ) : (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleUserStatus(user)}
+                              className={`p-1.5 rounded-none text-xs font-bold transition-all cursor-pointer ${
+                                isMaster ? 'text-slate-300 cursor-not-allowed' :
+                                isUserDisabled ? 'text-emerald-600 hover:bg-emerald-50' : 'text-rose-600 hover:bg-rose-50'
+                              }`}
+                              title={isMaster ? 'Akun Master Selalu Aktif' : isUserDisabled ? 'Aktifkan Akun' : 'Nonaktifkan Akun'}
+                              disabled={isMaster}
+                            >
+                              {isUserDisabled ? <UserCheck className="w-4 h-4" /> : <UserX className="w-4 h-4" />}
+                            </button>
+                          )}
 
                           {/* Reset Password */}
                           <button
@@ -868,6 +944,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                   <div className="flex items-center gap-3">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm text-white shrink-0 shadow-xs ${
                       isMaster ? 'bg-gradient-to-br from-amber-500 to-amber-700' :
+                      user.status === 'Menunggu Aktivasi' ? 'bg-amber-600' :
                       isUserDisabled ? 'bg-slate-400' : 'bg-[#164e63]'
                     }`}>
                       {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
@@ -880,11 +957,18 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                     </div>
                   </div>
 
-                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
-                    isUserDisabled ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                  }`}>
-                    {isUserDisabled ? 'BELUM AKTIF' : 'Aktif'}
-                  </span>
+                  {user.status === 'Menunggu Aktivasi' ? (
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 shrink-0">
+                      <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
+                      <span>MENUNGGU AKTIVASI</span>
+                    </span>
+                  ) : (
+                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
+                      isUserDisabled ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                    }`}>
+                      {isUserDisabled ? 'BELUM AKTIF' : 'Aktif'}
+                    </span>
+                  )}
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
@@ -900,6 +984,12 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                     <span className="text-slate-400 font-medium">Peran:</span>
                     <span className="font-semibold text-[#164e63]">{user.role || 'Guru Pengampu'}</span>
                   </div>
+                  {user.phone && (
+                    <div className="flex items-center justify-between">
+                      <span className="text-slate-400 font-medium">No. WhatsApp:</span>
+                      <span className="font-mono text-slate-700">{user.phone}</span>
+                    </div>
+                  )}
                 </div>
 
                 {/* Modul Data Actions Bar */}
@@ -990,13 +1080,14 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                     type="button"
                     onClick={() => handleToggleUserStatus(user)}
                     disabled={isMaster}
-                    className={`px-2.5 py-1.5 rounded-none text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                    className={`px-3 py-1.5 rounded-none text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs ${
                       isMaster ? 'bg-slate-100 text-slate-400 cursor-not-allowed' :
+                      user.status === 'Menunggu Aktivasi' ? 'bg-emerald-600 text-white hover:bg-emerald-700' :
                       isUserDisabled ? 'bg-emerald-50 text-emerald-700 hover:bg-emerald-100' : 'bg-rose-50 text-rose-700 hover:bg-rose-100'
                     }`}
                   >
-                    {isUserDisabled ? <UserCheck className="w-3.5 h-3.5" /> : <UserX className="w-3.5 h-3.5" />}
-                    <span>{isUserDisabled ? 'Aktifkan' : 'Nonaktifkan'}</span>
+                    <UserCheck className="w-3.5 h-3.5" />
+                    <span>{user.status === 'Menunggu Aktivasi' ? 'Aktifkan Akun' : isUserDisabled ? 'Aktifkan' : 'Nonaktifkan'}</span>
                   </button>
 
                   <div className="flex items-center gap-1">

@@ -48,12 +48,24 @@ import {
   MessageSquare,
   Phone,
   LifeBuoy,
-  Filter
+  Filter,
+  Wallet,
+  Library,
+  Briefcase,
+  Layers,
+  ClipboardList,
+  Receipt,
+  CreditCard,
+  QrCode,
+  BookmarkCheck,
+  SearchCode,
+  FolderLock
 } from 'lucide-react';
 import { UserAccount, TeacherProfile, TeachingScheduleItem, Student, StudentGrade, Subject, AttendanceRecord, InfoAnnouncement, LoginBackgroundConfig, defaultLoginBackgroundConfig } from '../types';
 import { PRESET_THEMES } from './LoginBackgroundSettings';
 import { TutWuriHandayaniLogo } from './TutWuriHandayaniLogo';
 import { DashboardAnalytics } from './DashboardAnalytics';
+import { SscasnRegisterForm } from './SscasnRegisterForm';
 import { subscribeToEncryptionCode } from '../lib/firebaseService';
 import { 
   allDefaultStudents, 
@@ -150,7 +162,24 @@ export const LoginView: React.FC<LoginViewProps> = ({
     const handleScroll = () => {
       const lightSection = document.getElementById('portal-light-section');
       const lightSectionReached = lightSection ? lightSection.getBoundingClientRect().top <= 65 : false;
-      setIsHeaderLight(window.scrollY > 15 || lightSectionReached);
+      setIsHeaderLight(window.scrollY > 5 || lightSectionReached);
+
+      const helpdeskEl = document.getElementById('helpdesk-section');
+      const faqEl = document.getElementById('faq-section');
+      const aboutEl = document.getElementById('about-section');
+      const analyticsEl = document.getElementById('analytics-section');
+
+      if (helpdeskEl && helpdeskEl.getBoundingClientRect().top <= 140) {
+        setPortalTab('helpdesk');
+      } else if (faqEl && faqEl.getBoundingClientRect().top <= 140) {
+        setPortalTab('faq');
+      } else if (aboutEl && aboutEl.getBoundingClientRect().top <= 140) {
+        setPortalTab('tentang');
+      } else if (analyticsEl && analyticsEl.getBoundingClientRect().top <= 140) {
+        setPortalTab('analitik');
+      } else if (window.scrollY < 300) {
+        setPortalTab('beranda');
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -524,7 +553,15 @@ export const LoginView: React.FC<LoginViewProps> = ({
     return activationData.status === 'Aktif';
   }, [activationData]);
 
+  const [isNavigatingToAktivasi, setIsNavigatingToAktivasi] = useState(false);
+  const [aktivasiCountdown, setAktivasiCountdown] = useState(3);
+  const [isSearchingActivation, setIsSearchingActivation] = useState(false);
+  const [searchScanMessage, setSearchScanMessage] = useState('Menghubungkan ke server SIMAK Merdeka...');
+  const [selectedAlurRole, setSelectedAlurRole] = useState<'guru' | 'siswa' | 'tu' | 'kesiswaan' | 'keuangan' | 'perpustakaan'>('guru');
+
   const handleOpenCekAktivasi = () => {
+    setShowLoginDropdown(false);
+    setIsNavigatingToAktivasi(false);
     setActiveTab('register');
     setIsMasterDataLogin(false);
     setIsStudentLogin(false);
@@ -532,11 +569,11 @@ export const LoginView: React.FC<LoginViewProps> = ({
     setShowActivationStep(true);
     setShowActivationSearch(true);
     setShowLoginModal(true);
-    setShowLoginDropdown(false);
     setCheckEmail(email || '');
     setCheckPassword('');
     setCheckError(null);
     setSuccessNotification(null);
+    window.scrollTo({ top: 0, behavior: 'instant' });
   };
 
   const handleActivationSearchSubmit = (e: React.FormEvent) => {
@@ -546,10 +583,23 @@ export const LoginView: React.FC<LoginViewProps> = ({
       return;
     }
     setCheckLoading(true);
+    setIsSearchingActivation(true);
     setCheckError(null);
+    setSearchScanMessage('Menghubungkan ke pangkalan data SIMAK Merdeka...');
+
+    const msgTimer1 = setTimeout(() => {
+      setSearchScanMessage('Memverifikasi data Email / NIP & kata sandi akun...');
+    }, 1200);
+
+    const msgTimer2 = setTimeout(() => {
+      setSearchScanMessage('Mencocokkan status verifikasi operator sekolah...');
+    }, 2500);
 
     setTimeout(() => {
+      clearTimeout(msgTimer1);
+      clearTimeout(msgTimer2);
       setCheckLoading(false);
+      setIsSearchingActivation(false);
       const cleanCheckInput = checkEmail.trim();
       const cleanCheckEmail = cleanCheckInput.toLowerCase();
       const cleanCheckNip = cleanCheckInput.replace(/\s+/g, '').toLowerCase();
@@ -633,7 +683,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
       }
 
       setCheckError('Data akun dengan Email/NIP dan Kata Sandi tersebut tidak ditemukan dalam sistem. Silakan periksa kembali data Anda.');
-    }, 600);
+    }, 4000);
   };
 
   // Forgot Password Modal States
@@ -989,13 +1039,25 @@ export const LoginView: React.FC<LoginViewProps> = ({
           return;
         }
 
-        let targetTab: string | undefined = undefined;
-        let roleToUse = matchedUser.role;
-
         const isUserMasterAdmin = 
           matchedUser.email?.toLowerCase() === 'shahrurrobby17@gmail.com' ||
           matchedUser.nip?.replace(/\s+/g, '') === '199001012015011001' ||
           Boolean(matchedUser.role && (matchedUser.role.toLowerCase().includes('admin') || matchedUser.role.toLowerCase().includes('master')));
+
+        // Check if user is waiting for activation by administrator
+        if (!isUserMasterAdmin && matchedUser.status === 'Menunggu Aktivasi') {
+          setErrorMessage('Akun Anda masih berstatus "Menunggu Aktivasi". Aktivasi akun hanya dapat dilakukan oleh Administrator Sekolah pada Halaman Administrator. Silakan hubungi Administrator untuk pengesahan akun.');
+          return;
+        }
+
+        // Check if user is deactivated
+        if (!isUserMasterAdmin && (matchedUser.status === 'Nonaktif' || matchedUser.isMaintenance)) {
+          setErrorMessage('Akun Anda saat ini dinonaktifkan oleh Administrator. Silakan hubungi Administrator Sekolah untuk mengaktifkan kembali.');
+          return;
+        }
+
+        let targetTab: string | undefined = undefined;
+        let roleToUse = matchedUser.role;
 
         if (isMasterDataLogin || isMasterAccount) {
           if (ssoSystem === 'Administrator') {
@@ -1476,7 +1538,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
           {/* Logo & Portal Identity */}
           <div className="flex items-center space-x-3 shrink-0">
             <div className="flex items-center justify-center shrink-0">
-              <TutWuriHandayaniLogo className={`h-8 w-8 sm:h-9 sm:w-9 transition-colors duration-300 ${isHeaderLight ? 'text-[#164e63]' : 'text-cyan-200'}`} />
+              <TutWuriHandayaniLogo className={`h-8 w-8 sm:h-9 sm:w-9 transition-colors duration-300 ${isHeaderLight ? 'text-sky-600' : 'text-sky-400'}`} />
             </div>
             <div className="flex flex-col">
               <div className="flex items-center gap-2">
@@ -1491,17 +1553,17 @@ export const LoginView: React.FC<LoginViewProps> = ({
           </div>
 
           {/* Center Navigation Menu Items */}
-          <nav className="hidden md:flex items-center space-x-1 lg:space-x-2">
+          <nav className="hidden md:flex items-center space-x-2 lg:space-x-4">
             <button
               type="button"
               onClick={() => {
                 setPortalTab('beranda');
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
-              className={`px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
-                portalTab === 'beranda' 
-                  ? (isHeaderLight ? 'bg-[#164e63] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
-                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-cyan-50 hover:text-white hover:bg-white/15 font-bold')
+              className={`px-2 py-1 text-xs lg:text-sm transition-colors cursor-pointer ${
+                isHeaderLight
+                  ? (portalTab === 'beranda' ? 'text-sky-500 font-extrabold' : 'text-black/80 hover:text-sky-500 font-semibold')
+                  : (portalTab === 'beranda' ? 'text-white font-extrabold' : 'text-white/85 hover:text-white font-semibold')
               }`}
             >
               Beranda
@@ -1515,10 +1577,10 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   el.scrollIntoView({ behavior: 'smooth' });
                 }
               }}
-              className={`px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
-                portalTab === 'analitik' 
-                  ? (isHeaderLight ? 'bg-[#164e63] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
-                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-cyan-50 hover:text-white hover:bg-white/15 font-bold')
+              className={`px-2 py-1 text-xs lg:text-sm transition-colors cursor-pointer ${
+                isHeaderLight
+                  ? (portalTab === 'analitik' ? 'text-sky-500 font-extrabold' : 'text-black/80 hover:text-sky-500 font-semibold')
+                  : (portalTab === 'analitik' ? 'text-white font-extrabold' : 'text-white/85 hover:text-white font-semibold')
               }`}
             >
               Analitik
@@ -1529,10 +1591,10 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 setPortalTab('aktivasi');
                 handleOpenCekAktivasi();
               }}
-              className={`px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
-                portalTab === 'aktivasi' 
-                  ? (isHeaderLight ? 'bg-[#164e63] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
-                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-cyan-50 hover:text-white hover:bg-white/15 font-bold')
+              className={`px-2 py-1 text-xs lg:text-sm transition-colors cursor-pointer ${
+                isHeaderLight
+                  ? (portalTab === 'aktivasi' ? 'text-sky-500 font-extrabold' : 'text-black/80 hover:text-sky-500 font-semibold')
+                  : (portalTab === 'aktivasi' ? 'text-white font-extrabold' : 'text-white/85 hover:text-white font-semibold')
               }`}
             >
               Cek Aktivasi
@@ -1546,10 +1608,10 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   aboutEl.scrollIntoView({ behavior: 'smooth' });
                 }
               }}
-              className={`px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
-                portalTab === 'tentang' 
-                  ? (isHeaderLight ? 'bg-[#164e63] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
-                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-cyan-50 hover:text-white hover:bg-white/15 font-bold')
+              className={`px-2 py-1 text-xs lg:text-sm transition-colors cursor-pointer ${
+                isHeaderLight
+                  ? (portalTab === 'tentang' ? 'text-sky-500 font-extrabold' : 'text-black/80 hover:text-sky-500 font-semibold')
+                  : (portalTab === 'tentang' ? 'text-white font-extrabold' : 'text-white/85 hover:text-white font-semibold')
               }`}
             >
               Tentang Sistem
@@ -1563,10 +1625,10 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   faqEl.scrollIntoView({ behavior: 'smooth' });
                 }
               }}
-              className={`px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
-                portalTab === 'faq' 
-                  ? (isHeaderLight ? 'bg-[#164e63] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
-                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-cyan-50 hover:text-white hover:bg-white/15 font-bold')
+              className={`px-2 py-1 text-xs lg:text-sm transition-colors cursor-pointer ${
+                isHeaderLight
+                  ? (portalTab === 'faq' ? 'text-sky-500 font-extrabold' : 'text-black/80 hover:text-sky-500 font-semibold')
+                  : (portalTab === 'faq' ? 'text-white font-extrabold' : 'text-white/85 hover:text-white font-semibold')
               }`}
             >
               FAQ
@@ -1580,10 +1642,10 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   helpdeskEl.scrollIntoView({ behavior: 'smooth' });
                 }
               }}
-              className={`px-3.5 py-1.5 rounded-full text-xs lg:text-sm font-bold transition-all cursor-pointer ${
-                portalTab === 'helpdesk' 
-                  ? (isHeaderLight ? 'bg-[#164e63] text-white shadow-xs font-extrabold' : 'bg-white/25 text-white shadow-xs font-extrabold') 
-                  : (isHeaderLight ? 'text-slate-800 hover:text-slate-900 hover:bg-slate-100 font-bold' : 'text-cyan-50 hover:text-white hover:bg-white/15 font-bold')
+              className={`px-2 py-1 text-xs lg:text-sm transition-colors cursor-pointer ${
+                isHeaderLight
+                  ? (portalTab === 'helpdesk' ? 'text-sky-500 font-extrabold' : 'text-black/80 hover:text-sky-500 font-semibold')
+                  : (portalTab === 'helpdesk' ? 'text-white font-extrabold' : 'text-white/85 hover:text-white font-semibold')
               }`}
             >
               Helpdesk
@@ -1598,13 +1660,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
               onClick={() => setShowLoginDropdown(prev => !prev)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
                 isHeaderLight 
-                  ? 'bg-[#164e63] hover:bg-[#003865] text-white' 
-                  : 'bg-white hover:bg-slate-100 text-[#0f457b]'
+                  ? 'bg-sky-500 hover:bg-sky-600 text-white border border-sky-400/50' 
+                  : 'bg-white hover:bg-slate-100 text-sky-700 border border-white/80'
               }`}
             >
-              <LogIn className={`w-4 h-4 stroke-[2.5] ${isHeaderLight ? 'text-white' : 'text-[#164e63]'}`} />
+              <LogIn className={`w-4 h-4 stroke-[2.5] ${isHeaderLight ? 'text-white' : 'text-sky-600'}`} />
               <span>Masuk ke Sistem</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showLoginDropdown ? 'rotate-180' : ''} ${isHeaderLight ? 'text-cyan-200' : 'text-slate-500'}`} />
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showLoginDropdown ? 'rotate-180' : ''} ${isHeaderLight ? 'text-sky-100' : 'text-slate-500'}`} />
             </button>
 
             {showLoginDropdown && (
@@ -1743,7 +1805,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
           <div className="w-full max-w-sm flex flex-col items-center justify-center">
             {/* Logo */}
             <div className="w-20 h-20 bg-white/15 backdrop-blur-md rounded-2xl flex items-center justify-center border-2 border-white/25 shadow-2xl shadow-blue-950/60 mb-6">
-              <TutWuriHandayaniLogo className="w-13 h-13 text-amber-300 drop-shadow-md" />
+              <TutWuriHandayaniLogo className="w-13 h-13 text-sky-400 drop-shadow-md" />
             </div>
 
             {/* Judul Utama */}
@@ -1762,11 +1824,11 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <button
                 type="button"
                 onClick={() => setShowLoginDropdown(prev => !prev)}
-                className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-100 text-[#164e63] px-6 py-3.5 rounded-xl font-bold text-sm shadow-xl active:scale-95 transition-all cursor-pointer border border-white/80"
+                className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-100 text-sky-700 px-6 py-3.5 rounded-xl font-bold text-sm shadow-xl active:scale-95 transition-all cursor-pointer border border-white/80"
               >
-                <LogIn className="w-4 h-4 text-[#164e63] stroke-[2.5]" />
+                <LogIn className="w-4 h-4 text-sky-600 stroke-[2.5]" />
                 <span>Masuk ke Sistem</span>
-                <ChevronDown className={`w-4 h-4 text-[#164e63] transition-transform duration-200 ${showLoginDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${showLoginDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               {showLoginDropdown && (
@@ -1846,7 +1908,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
         </div>
 
         {/* DESKTOP CONTENT AREA (hidden sm:block) */}
-        <div className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full mt-2 sm:mt-3 lg:mt-5 mb-auto py-1 sm:py-1.5">
+        <div className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full mt-2 sm:mt-3 lg:mt-5 mb-auto pt-1 sm:pt-1.5 pb-8 sm:pb-12 lg:pb-16">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 lg:gap-8 items-center">
             
             {/* HERO TEXT AND SYNC CARD ROW */}
@@ -1878,9 +1940,9 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   </div>
 
                   {/* Timestamp info */}
-                  <div className="flex items-center justify-start space-x-2 text-[11px] sm:text-xs text-cyan-100 font-medium pt-0.5">
+                  <div className="flex items-center justify-start space-x-2 text-[11px] sm:text-xs text-white font-medium pt-0.5">
                     <Calendar className="w-3.5 h-3.5 text-white" />
-                    <span>Pembaruan terakhir: Sabtu, 12 September 2026</span>
+                    <span>Pembaruan terakhir: Senin, 14 September 2026</span>
                   </div>
                 </div>
 
@@ -1984,209 +2046,882 @@ export const LoginView: React.FC<LoginViewProps> = ({
           </div>
         </div>
 
-        {/* ALUR GARIS LENGKAP: PENDAFTARAN SAMPAI LOGIN - HIDDEN ON MOBILE */}
-        <div className="hidden sm:block relative z-20 w-full mt-6 sm:mt-8 pt-6 sm:pt-8 pb-4 sm:pb-6 transition-all bg-white rounded-t-[2.5rem] shadow-[0_-8px_30px_rgba(0,0,0,0.12)]">
+        {/* ALUR GARIS LENGKAP: PENDAFTARAN SAMPAI LOGIN - FORMAT RESMI SEPERTI SSCASN (Background #F8FAFC Bersih & Menyatu) */}
+        <div className="hidden sm:block relative z-20 w-full pt-8 sm:pt-10 pb-10 transition-all bg-[#F8FAFC]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            {/* Header Line Tag */}
-            <div className="text-center mb-6 sm:mb-8 mt-4">
-              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                Alur Sistem Pendaftaran & Aktivasi Akun SIMAK
+            {/* Header Line Tag (Style SSCASN: TIMELINE PENDAFTARAN dengan garis biru bawah) */}
+            <div className="text-center mb-6 mt-2">
+              <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-wider uppercase">
+                ALUR SISTEM PENDAFTARAN
               </h2>
-              <div className="flex items-center justify-center gap-1.5 text-[11px] sm:text-xs text-slate-600 mt-2 font-medium">
-                <span>10 Tahap Terintegrasi (Registrasi, Formulir & Akses LMS)</span>
+              {/* Garis Aksen Biru di Bawah Judul seperti SSCASN */}
+              <div className="w-24 h-1 bg-sky-500 rounded-full mx-auto mt-2.5 mb-2" />
+              <p className="text-xs font-semibold text-slate-600">
+                Sistem Informasi Manajemen Akademik & Kepegawaian (SIMAK)
+              </p>
+            </div>
+
+            {/* TAB PILIHAN PERAN (Style Persis SSCASN: Capsule Pill Bar Slim dengan Tombol Kiri-Kanan & Animasi Bergeser) */}
+            <div className="max-w-5xl mx-auto mb-5">
+              <div className="flex items-center justify-center gap-1.5 sm:gap-2">
+                
+                {/* Tombol Panah Kiri */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const roles: Array<'guru' | 'siswa' | 'tu' | 'kesiswaan' | 'keuangan' | 'perpustakaan'> = ['guru', 'siswa', 'tu', 'kesiswaan', 'keuangan', 'perpustakaan'];
+                    const curIdx = roles.indexOf(selectedAlurRole);
+                    const prevIdx = (curIdx - 1 + roles.length) % roles.length;
+                    setSelectedAlurRole(roles[prevIdx]);
+                  }}
+                  className="w-7 h-7 rounded-full border border-sky-200 bg-white text-slate-500 hover:text-sky-600 hover:border-sky-400 hover:bg-sky-50 flex items-center justify-center shadow-2xs transition-all cursor-pointer shrink-0"
+                  title="Peran Sebelumnya"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 stroke-[2.5]" />
+                </button>
+
+                {/* Container Pill Horizontal Scrollable - Slim & Compact dengan Sliding Active Indicator */}
+                <div className="flex items-center gap-1 sm:gap-1.5 p-1 bg-white/95 backdrop-blur-xs rounded-full border border-sky-200 shadow-xs overflow-x-auto scrollbar-none max-w-full relative">
+                  {[
+                    { id: 'guru', label: 'Guru' },
+                    { id: 'siswa', label: 'Siswa' },
+                    { id: 'tu', label: 'Tata Usaha (TU)' },
+                    { id: 'kesiswaan', label: 'Kesiswaan' },
+                    { id: 'keuangan', label: 'Keuangan' },
+                    { id: 'perpustakaan', label: 'Perpustakaan' }
+                  ].map((roleItem) => {
+                    const isSelected = selectedAlurRole === roleItem.id;
+                    return (
+                      <button
+                        key={roleItem.id}
+                        type="button"
+                        onClick={() => setSelectedAlurRole(roleItem.id as any)}
+                        className={`relative px-3.5 sm:px-4 py-1.5 rounded-full font-semibold text-xs sm:text-[13px] tracking-tight whitespace-nowrap transition-colors duration-200 cursor-pointer z-10 select-none ${
+                          isSelected
+                            ? 'text-white'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-sky-50/70'
+                        }`}
+                      >
+                        {isSelected && (
+                          <motion.div
+                            layoutId="activeAlurRoleIndicator"
+                            className="absolute inset-0 bg-[#0284c7] rounded-full shadow-xs -z-10"
+                            transition={{ type: "spring", stiffness: 450, damping: 32 }}
+                          />
+                        )}
+                        <span>{roleItem.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+
+                {/* Tombol Panah Kanan */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const roles: Array<'guru' | 'siswa' | 'tu' | 'kesiswaan' | 'keuangan' | 'perpustakaan'> = ['guru', 'siswa', 'tu', 'kesiswaan', 'keuangan', 'perpustakaan'];
+                    const curIdx = roles.indexOf(selectedAlurRole);
+                    const nextIdx = (curIdx + 1) % roles.length;
+                    setSelectedAlurRole(roles[nextIdx]);
+                  }}
+                  className="w-7 h-7 rounded-full border border-sky-200 bg-white text-slate-500 hover:text-sky-600 hover:border-sky-400 hover:bg-sky-50 flex items-center justify-center shadow-2xs transition-all cursor-pointer shrink-0"
+                  title="Peran Selanjutnya"
+                >
+                  <ChevronRight className="w-3.5 h-3.5 stroke-[2.5]" />
+                </button>
+
               </div>
             </div>
 
-            {/* Stepper Flow Line Container (Serpentine 2-Row Flow) */}
-            <div className="w-full overflow-x-auto scrollbar-none py-2">
-              <div className="min-w-[760px] sm:min-w-full flex flex-col relative px-4 sm:px-6">
-                {/* BARIS 1: Tahap 1 sampai 5 (Kiri ke Kanan) */}
-                <div className="w-full flex items-center justify-between relative">
-                  {/* Continuous Connecting Line Behind Nodes Row 1 */}
-                  <div className="absolute left-12 right-12 top-5 -translate-y-1/2 h-0.5 bg-gradient-to-r from-slate-400 via-slate-600 to-slate-400 opacity-60 z-0"></div>
+            {/* Stepper Flow Box Container (Style SSCASN: Rounded Box with Soft Sky Border & Ice White-Blue Background) */}
+            <div className="max-w-6xl mx-auto rounded-3xl border-2 border-sky-200/90 bg-white/95 backdrop-blur-sm p-6 sm:p-8 shadow-xs">
 
-                  {/* Step 1: Pilih Peran */}
-                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 1: Pilih Peran Pengguna">
-                    <div className="w-10 h-10 rounded-full bg-[#164e63] text-white border-2 border-white shadow-md flex items-center justify-center">
-                      <UserPlus className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="mt-2 text-center">
-                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">1. Pilih Peran</span>
-                      <span className="text-[10px] text-slate-800 font-semibold block">Guru / Siswa</span>
-                    </div>
-                  </div>
-
-                  {/* Arrow Connector 1 */}
-                  <div className="relative z-10 text-slate-700 -mt-5">
-                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-
-                  {/* Step 2: Isi Formulir */}
-                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 2: Pengisian Biodata Akun">
-                    <div className="w-10 h-10 rounded-full bg-cyan-700 text-white border-2 border-white shadow-md flex items-center justify-center">
-                      <FileText className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="mt-2 text-center">
-                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">2. Isi Formulir</span>
-                      <span className="text-[10px] text-slate-800 font-semibold block">Biodata & Sandi</span>
-                    </div>
-                  </div>
-
-                  {/* Arrow Connector 2 */}
-                  <div className="relative z-10 text-slate-700 -mt-5">
-                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-
-                  {/* Step 3: Kirim Pendaftaran */}
-                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 3: Pengiriman Data ke Database">
-                    <div className="w-10 h-10 rounded-full bg-cyan-800 text-white border-2 border-white shadow-md flex items-center justify-center">
-                      <Send className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="mt-2 text-center">
-                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">3. Kirim Data</span>
-                      <span className="text-[10px] text-slate-800 font-semibold block">Tersimpan Sistem</span>
-                    </div>
-                  </div>
-
-                  {/* Arrow Connector 3 */}
-                  <div className="relative z-10 text-slate-700 -mt-5">
-                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-
-                  {/* Step 4: Aktivasi Operator */}
-                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 4: Verifikasi & Aktivasi oleh Operator Sekolah">
-                    <div className="w-10 h-10 rounded-full bg-sky-600 text-white border-2 border-white shadow-md flex items-center justify-center">
-                      <ShieldCheck className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="mt-2 text-center">
-                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">4. Aktivasi Akun</span>
-                      <span className="text-[10px] text-slate-800 font-semibold block">Verifikasi Operator</span>
-                    </div>
-                  </div>
-
-                  {/* Arrow Connector 4 */}
-                  <div className="relative z-10 text-slate-700 -mt-5">
-                    <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-
-                  {/* Step 5: Masuk (Login) */}
-                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 5: Masuk ke SIMAK Merdeka">
-                    <div className="w-10 h-10 rounded-full bg-[#164e63] text-white border-2 border-white shadow-md flex items-center justify-center ring-4 ring-slate-400/40">
-                      <LogIn className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="mt-2 text-center">
-                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">5. Masuk (Login)</span>
-                      <span className="text-[10px] text-black font-bold block">Akses SIMAK</span>
-                    </div>
-                  </div>
+              {/* HEADING PERAN TERPILIH */}
+              <div className="flex flex-wrap items-center justify-between gap-2 px-2 mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse" />
+                  <h3 className="text-sm sm:text-base font-bold text-slate-800">
+                    Alur Pendaftaran:{' '}
+                    <span className="text-sky-600 capitalize">
+                      {selectedAlurRole === 'guru' && 'Guru (Pendidik)'}
+                      {selectedAlurRole === 'siswa' && 'Siswa (Peserta Didik)'}
+                      {selectedAlurRole === 'tu' && 'Tata Usaha (TU)'}
+                      {selectedAlurRole === 'kesiswaan' && 'Kesiswaan & BK'}
+                      {selectedAlurRole === 'keuangan' && 'Keuangan / Bendahara'}
+                      {selectedAlurRole === 'perpustakaan' && 'Perpustakaan'}
+                    </span>
+                  </h3>
                 </div>
-
-                {/* PANAH KEBAWAH: Penghubung dari Tahap 5 ke Tahap 6 (di sisi kanan) */}
-                <div className="flex justify-end pr-0 relative z-10 my-2">
-                  <div className="w-28 sm:w-32 flex flex-col items-center">
-                    <div className="w-0.5 h-3 bg-gradient-to-b from-slate-400 to-[#164e63]"></div>
-                    <div className="p-1 rounded-full bg-cyan-100 border border-cyan-300 text-[#164e63] shadow-xs flex items-center justify-center" title="Lanjut ke pengisian profil">
-                      <ChevronDown className="w-4 h-4 stroke-[2.5]" />
-                    </div>
-                    <div className="w-0.5 h-3 bg-gradient-to-b from-[#164e63] to-slate-400"></div>
-                  </div>
-                </div>
-
-                {/* BARIS 2: Tahap 6 sampai 10 (Kanan ke Kiri dengan Panah Kekiri) */}
-                <div className="w-full flex items-center justify-between relative">
-                  {/* Continuous Connecting Line Behind Nodes Row 2 (Kanan ke Kiri) */}
-                  <div className="absolute left-12 right-12 top-5 -translate-y-1/2 h-0.5 bg-gradient-to-l from-slate-400 via-slate-600 to-slate-400 opacity-60 z-0"></div>
-
-                  {/* Step 10: Siap Digunakan (Paling Kiri, di bawah Step 1) */}
-                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 10: Akun Aktif & Siap Digunakan Penuh">
-                    <div className="w-10 h-10 rounded-full bg-[#164e63] text-white border-2 border-white shadow-md flex items-center justify-center ring-4 ring-slate-400/40">
-                      <CheckCircle2 className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="mt-2 text-center">
-                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">10. Siap Digunakan</span>
-                      <span className="text-[10px] text-black font-bold block">Akses LMS Penuh</span>
-                    </div>
-                  </div>
-
-                  {/* Arrow Connector 8 (Panah ke Kiri dari 9 ke 10) */}
-                  <div className="relative z-10 text-slate-700 -mt-5">
-                    <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-
-                  {/* Step 9: Email & Sandi (di bawah Step 2) */}
-                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 9: Pembuatan Email Resmi & Kata Sandi Akun">
-                    <div className="w-10 h-10 rounded-full bg-blue-700 text-white border-2 border-white shadow-md flex items-center justify-center">
-                      <KeyRound className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="mt-2 text-center">
-                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">9. Email & Sandi</span>
-                      <span className="text-[10px] text-slate-800 font-semibold block">Kredensial Akun</span>
-                    </div>
-                  </div>
-
-                  {/* Arrow Connector 7 (Panah ke Kiri dari 8 ke 9) */}
-                  <div className="relative z-10 text-slate-700 -mt-5">
-                    <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-
-                  {/* Step 8: Hak Akses & NIP (di bawah Step 3) */}
-                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 8: Penentuan Hak Akses Peran & Identitas NIP/NISN">
-                    <div className="w-10 h-10 rounded-full bg-sky-700 text-white border-2 border-white shadow-md flex items-center justify-center">
-                      <ShieldCheck className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="mt-2 text-center">
-                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">8. Hak Akses & NIP</span>
-                      <span className="text-[10px] text-slate-800 font-semibold block">Peran Pengguna</span>
-                    </div>
-                  </div>
-
-                  {/* Arrow Connector 6 (Panah ke Kiri dari 7 ke 8) */}
-                  <div className="relative z-10 text-slate-700 -mt-5">
-                    <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-
-                  {/* Step 7: Isi Nama Instansi (di bawah Step 4) */}
-                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 7: Pengisian Nama Instansi atau Satuan Pendidikan">
-                    <div className="w-10 h-10 rounded-full bg-cyan-700 text-white border-2 border-white shadow-md flex items-center justify-center">
-                      <Building2 className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="mt-2 text-center">
-                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">7. Isi Nama Instansi</span>
-                      <span className="text-[10px] text-slate-800 font-semibold block">Sekolah / Satuan</span>
-                    </div>
-                  </div>
-
-                  {/* Arrow Connector 5 (Panah ke Kiri dari 6 ke 7) */}
-                  <div className="relative z-10 text-slate-700 -mt-5">
-                    <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
-                  </div>
-
-                  {/* Step 6: Isi Biodata (Paling Kanan, tepat di bawah Step 5) */}
-                  <div className="relative z-10 flex flex-col items-center w-28 sm:w-32" title="Tahap 6: Pengisian Biodata Lengkap dan Gelar">
-                    <div className="w-10 h-10 rounded-full bg-teal-700 text-white border-2 border-white shadow-md flex items-center justify-center">
-                      <UserCheck className="w-4 h-4 text-white" />
-                    </div>
-                    <div className="mt-2 text-center">
-                      <span className="text-[11px] sm:text-xs font-black text-black tracking-tight block">6. Isi Biodata</span>
-                      <span className="text-[10px] text-slate-800 font-semibold block">Nama & Gelar</span>
-                    </div>
-                  </div>
-                </div>
+                <span className="text-[11px] font-semibold text-slate-500 bg-white border border-sky-200 px-2.5 py-0.5 rounded-full shadow-2xs">
+                  Tahap 1 - 10 Berurutan
+                </span>
               </div>
+
+              {/* DYNAMIC STEPPER 1 TO 10 BERDASARKAN PERAN */}
+              {(() => {
+                // Definisi 10 langkah alur untuk masing-masing peran
+                const roleFlows: Record<
+                  'guru' | 'siswa' | 'tu' | 'kesiswaan' | 'keuangan' | 'perpustakaan',
+                  Array<{
+                    step: number;
+                    title: string;
+                    subtitle: string;
+                    tooltip: string;
+                    icon: React.ReactNode;
+                    hasSpinner?: boolean;
+                    btnText?: string;
+                    btnAction?: () => void;
+                  }>
+                > = {
+                  guru: [
+                    {
+                      step: 1,
+                      title: '1. Pilih Peran',
+                      subtitle: 'Pilih Guru',
+                      tooltip: 'Tahap 1: Pilih Peran Guru',
+                      icon: <GraduationCap className="w-5 h-5 stroke-[2.2]" />,
+                      btnText: 'Daftar',
+                      btnAction: () => {
+                        setActiveTab('register');
+                        setIsMasterDataLogin(false);
+                        setIsStudentLogin(false);
+                        setPreAuthAccepted(false);
+                        setShowActivationStep(false);
+                        setShowActivationSearch(false);
+                        setShowLoginModal(true);
+                        setShowLoginDropdown(false);
+                        setSuccessNotification(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 2,
+                      title: '2. Isi Formulir',
+                      subtitle: 'Nama & Gelar',
+                      tooltip: 'Tahap 2: Isi Biodata Guru',
+                      icon: <FileText className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 3,
+                      title: '3. Kirim Data',
+                      subtitle: 'Simpan Sistem',
+                      tooltip: 'Tahap 3: Kirim Data Registrasi Guru',
+                      icon: <Send className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 4,
+                      title: '4. Aktivasi Akun',
+                      subtitle: 'Verifikasi Operator',
+                      tooltip: 'Tahap 4: Aktivasi Guru oleh Operator',
+                      icon: <ShieldCheck className="w-5 h-5 stroke-[2.2]" />,
+                      hasSpinner: true,
+                      btnText: 'Cek Status',
+                      btnAction: () => {
+                        setPortalTab('aktivasi');
+                        handleOpenCekAktivasi();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 5,
+                      title: '5. Masuk (Login)',
+                      subtitle: 'Portal Guru',
+                      tooltip: 'Tahap 5: Masuk ke Akun Guru',
+                      icon: <LogIn className="w-5 h-5 stroke-[2.2]" />,
+                      btnText: 'Masuk',
+                      btnAction: () => {
+                        setActiveTab('login');
+                        setIsMasterDataLogin(false);
+                        setIsStudentLogin(false);
+                        setShowActivationStep(false);
+                        setShowActivationSearch(false);
+                        setShowLoginModal(true);
+                        setShowLoginDropdown(false);
+                        setSuccessNotification(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 6,
+                      title: '6. Isi Biodata',
+                      subtitle: 'Profil Pendidik',
+                      tooltip: 'Tahap 6: Lengkapi Data Pendidik',
+                      icon: <UserCheck className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 7,
+                      title: '7. Pilih Sekolah',
+                      subtitle: 'Satuan Pendidikan',
+                      tooltip: 'Tahap 7: Instansi Tempat Mengajar',
+                      icon: <Building2 className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 8,
+                      title: '8. NIP & Mapel',
+                      subtitle: 'Mata Pelajaran',
+                      tooltip: 'Tahap 8: NIP dan Penugasan Mapel',
+                      icon: <BookOpen className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 9,
+                      title: '9. Email & Sandi',
+                      subtitle: 'Kredensial Guru',
+                      tooltip: 'Tahap 9: Akun Resmi & Password',
+                      icon: <KeyRound className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 10,
+                      title: '10. Siap Mengajar',
+                      subtitle: 'Akses LMS & Rapor',
+                      tooltip: 'Tahap 10: Akun Aktif & Siap Mengajar',
+                      icon: <Laptop className="w-5 h-5 stroke-[2.2]" />
+                    }
+                  ],
+                  siswa: [
+                    {
+                      step: 1,
+                      title: '1. Akses Siswa',
+                      subtitle: 'Pilih Menu Siswa',
+                      tooltip: 'Tahap 1: Pilih Portal Siswa',
+                      icon: <UserCheck className="w-5 h-5 stroke-[2.2]" />,
+                      btnText: 'Masuk',
+                      btnAction: () => {
+                        setActiveTab('login');
+                        setIsStudentLogin(true);
+                        setIsMasterDataLogin(false);
+                        setShowActivationStep(false);
+                        setShowActivationSearch(false);
+                        setShowLoginModal(true);
+                        setShowLoginDropdown(false);
+                        setSuccessNotification(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 2,
+                      title: '2. Masukkan NISN',
+                      subtitle: 'Nomor Induk Siswa',
+                      tooltip: 'Tahap 2: Input NISN Valid',
+                      icon: <SearchCode className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 3,
+                      title: '3. Verifikasi Data',
+                      subtitle: 'Cek Database Sekolah',
+                      tooltip: 'Tahap 3: Validasi Nama & Tanggal Lahir',
+                      icon: <ShieldCheck className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 4,
+                      title: '4. Aktivasi Siswa',
+                      subtitle: 'Konfirmasi Wali Kelas',
+                      tooltip: 'Tahap 4: Aktivasi Kelas oleh Wali Kelas / Operator',
+                      icon: <CheckCircle2 className="w-5 h-5 stroke-[2.2]" />,
+                      hasSpinner: true
+                    },
+                    {
+                      step: 5,
+                      title: '5. Buat PIN Sandi',
+                      subtitle: 'Kata Sandi Siswa',
+                      tooltip: 'Tahap 5: Buat Sandi Masuk Mandiri',
+                      icon: <KeyRound className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 6,
+                      title: '6. Pilih Rombel',
+                      subtitle: 'Tingkat & Kelas',
+                      tooltip: 'Tahap 6: Hubungkan Rombongan Belajar',
+                      icon: <Layers className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 7,
+                      title: '7. Data Orang Tua',
+                      subtitle: 'Kontak Wali Siswa',
+                      tooltip: 'Tahap 7: Masukkan Kontak Orang Tua / Wali',
+                      icon: <Users className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 8,
+                      title: '8. Unggah Foto',
+                      subtitle: 'Kartu Pelajar',
+                      tooltip: 'Tahap 8: Pas Foto Siswa',
+                      icon: <UserPlus className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 9,
+                      title: '9. Simpan Profil',
+                      subtitle: 'Tersinkron Dapodik',
+                      tooltip: 'Tahap 9: Sinkronisasi Identitas Siswa',
+                      icon: <Send className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 10,
+                      title: '10. Siap Belajar',
+                      subtitle: 'CBT, Tugas & Nilai',
+                      tooltip: 'Tahap 10: Akses Pembelajaran & Ujian Online',
+                      icon: <Laptop className="w-5 h-5 stroke-[2.2]" />
+                    }
+                  ],
+                  tu: [
+                    {
+                      step: 1,
+                      title: '1. Pilih Peran',
+                      subtitle: 'Pilih Tata Usaha',
+                      tooltip: 'Tahap 1: Pilih Peran TU',
+                      icon: <Briefcase className="w-5 h-5 stroke-[2.2]" />,
+                      btnText: 'Daftar',
+                      btnAction: () => {
+                        setActiveTab('register');
+                        setIsMasterDataLogin(false);
+                        setIsStudentLogin(false);
+                        setPreAuthAccepted(false);
+                        setShowActivationStep(false);
+                        setShowActivationSearch(false);
+                        setShowLoginModal(true);
+                        setShowLoginDropdown(false);
+                        setSuccessNotification(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 2,
+                      title: '2. Isi Formulir',
+                      subtitle: 'Nama & NIP / NIK',
+                      tooltip: 'Tahap 2: Biodata Staf Tata Usaha',
+                      icon: <FileText className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 3,
+                      title: '3. Kirim Berkas',
+                      subtitle: 'SK Penugasan TU',
+                      tooltip: 'Tahap 3: Kirim Data Administrasi',
+                      icon: <Send className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 4,
+                      title: '4. Aktivasi Kepala',
+                      subtitle: 'Persetujuan Kepsek',
+                      tooltip: 'Tahap 4: Verifikasi & Otorisasi Kepala Sekolah',
+                      icon: <ShieldCheck className="w-5 h-5 stroke-[2.2]" />,
+                      hasSpinner: true,
+                      btnText: 'Cek Status',
+                      btnAction: () => {
+                        setPortalTab('aktivasi');
+                        handleOpenCekAktivasi();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 5,
+                      title: '5. Masuk (Login)',
+                      subtitle: 'Portal Tenaga TU',
+                      tooltip: 'Tahap 5: Masuk ke Portal Administrasi TU',
+                      icon: <LogIn className="w-5 h-5 stroke-[2.2]" />,
+                      btnText: 'Masuk',
+                      btnAction: () => {
+                        setActiveTab('login');
+                        setIsMasterDataLogin(false);
+                        setIsStudentLogin(false);
+                        setShowActivationStep(false);
+                        setShowActivationSearch(false);
+                        setShowLoginModal(true);
+                        setShowLoginDropdown(false);
+                        setSuccessNotification(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 6,
+                      title: '6. Unit Kerja',
+                      subtitle: 'Bagian Administrasi',
+                      tooltip: 'Tahap 6: Pengaturan Divisi / Sub-bagian TU',
+                      icon: <Building2 className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 7,
+                      title: '7. Akses Surat',
+                      subtitle: 'Persuratan & Arsip',
+                      tooltip: 'Tahap 7: Konfigurasi Format & Nomor Surat',
+                      icon: <ClipboardList className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 8,
+                      title: '8. Otoritas Master',
+                      subtitle: 'Hak Akses GTK',
+                      tooltip: 'Tahap 8: Pengelolaan Data Guru & Pegawai',
+                      icon: <FolderLock className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 9,
+                      title: '9. Keamanan Akun',
+                      subtitle: '2FA & Sandi Kuat',
+                      tooltip: 'Tahap 9: Perlindungan Data Sekolah',
+                      icon: <KeyRound className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 10,
+                      title: '10. Siap Melayani',
+                      subtitle: 'Layanan Tata Usaha',
+                      tooltip: 'Tahap 10: Sistem Administrasi Siap Penuh',
+                      icon: <Laptop className="w-5 h-5 stroke-[2.2]" />
+                    }
+                  ],
+                  kesiswaan: [
+                    {
+                      step: 1,
+                      title: '1. Pilih Peran',
+                      subtitle: 'Tim Kesiswaan / BK',
+                      tooltip: 'Tahap 1: Pilih Peran Kesiswaan',
+                      icon: <Users className="w-5 h-5 stroke-[2.2]" />,
+                      btnText: 'Daftar',
+                      btnAction: () => {
+                        setActiveTab('register');
+                        setIsMasterDataLogin(false);
+                        setIsStudentLogin(false);
+                        setPreAuthAccepted(false);
+                        setShowActivationStep(false);
+                        setShowActivationSearch(false);
+                        setShowLoginModal(true);
+                        setShowLoginDropdown(false);
+                        setSuccessNotification(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 2,
+                      title: '2. Isi Formulir',
+                      subtitle: 'Nama & Jabatan',
+                      tooltip: 'Tahap 2: Input Biodata Pembina Kesiswaan',
+                      icon: <FileText className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 3,
+                      title: '3. Kirim Data',
+                      subtitle: 'Database Sekolah',
+                      tooltip: 'Tahap 3: Kirim Pendaftaran Kesiswaan',
+                      icon: <Send className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 4,
+                      title: '4. Aktivasi Akun',
+                      subtitle: 'Verifikasi Wakasek',
+                      tooltip: 'Tahap 4: Verifikasi oleh Wakasek Kesiswaan',
+                      icon: <ShieldCheck className="w-5 h-5 stroke-[2.2]" />,
+                      hasSpinner: true,
+                      btnText: 'Cek Status',
+                      btnAction: () => {
+                        setPortalTab('aktivasi');
+                        handleOpenCekAktivasi();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 5,
+                      title: '5. Masuk (Login)',
+                      subtitle: 'Portal Kesiswaan',
+                      tooltip: 'Tahap 5: Masuk ke Dashboard Kesiswaan',
+                      icon: <LogIn className="w-5 h-5 stroke-[2.2]" />,
+                      btnText: 'Masuk',
+                      btnAction: () => {
+                        setActiveTab('login');
+                        setIsMasterDataLogin(false);
+                        setIsStudentLogin(false);
+                        setShowActivationStep(false);
+                        setShowActivationSearch(false);
+                        setShowLoginModal(true);
+                        setShowLoginDropdown(false);
+                        setSuccessNotification(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 6,
+                      title: '6. Data Siswa',
+                      subtitle: 'Daftar Seluruh Siswa',
+                      tooltip: 'Tahap 6: Sinkronisasi Data Siswa Aktif',
+                      icon: <UserCheck className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 7,
+                      title: '7. Atur Presensi',
+                      subtitle: 'Kehadiran & Izin',
+                      tooltip: 'Tahap 7: Konfigurasi Absensi & Dispensasi',
+                      icon: <Calendar className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 8,
+                      title: '8. Rekam Disiplin',
+                      subtitle: 'Poin & Prestasi',
+                      tooltip: 'Tahap 8: Skema Poin Pelanggaran & Penghargaan',
+                      icon: <Sparkles className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 9,
+                      title: '9. Ekstrakurikuler',
+                      subtitle: 'Ekskul & OSIS',
+                      tooltip: 'Tahap 9: Manajemen Pembina & Jadwal Kegiatan',
+                      icon: <BookmarkCheck className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 10,
+                      title: '10. Siap Pantau',
+                      subtitle: 'Monitoring Terpadu',
+                      tooltip: 'Tahap 10: Sistem Disiplin & Karakter Siap',
+                      icon: <Laptop className="w-5 h-5 stroke-[2.2]" />
+                    }
+                  ],
+                  keuangan: [
+                    {
+                      step: 1,
+                      title: '1. Pilih Peran',
+                      subtitle: 'Bendahara Sekolah',
+                      tooltip: 'Tahap 1: Pilih Peran Keuangan / Bendahara',
+                      icon: <Wallet className="w-5 h-5 stroke-[2.2]" />,
+                      btnText: 'Daftar',
+                      btnAction: () => {
+                        setActiveTab('register');
+                        setIsMasterDataLogin(false);
+                        setIsStudentLogin(false);
+                        setPreAuthAccepted(false);
+                        setShowActivationStep(false);
+                        setShowActivationSearch(false);
+                        setShowLoginModal(true);
+                        setShowLoginDropdown(false);
+                        setSuccessNotification(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 2,
+                      title: '2. Isi Formulir',
+                      subtitle: 'Nama & NIK Bendahara',
+                      tooltip: 'Tahap 2: Input Biodata Petugas Keuangan',
+                      icon: <FileText className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 3,
+                      title: '3. Kirim Berkas',
+                      subtitle: 'SK Pengelola Dana',
+                      tooltip: 'Tahap 3: Kirim Data Verifikasi Bendahara',
+                      icon: <Send className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 4,
+                      title: '4. Aktivasi Akun',
+                      subtitle: 'Otorisasi Kepsek',
+                      tooltip: 'Tahap 4: Verifikasi Khusus Kepala Sekolah',
+                      icon: <ShieldCheck className="w-5 h-5 stroke-[2.2]" />,
+                      hasSpinner: true,
+                      btnText: 'Cek Status',
+                      btnAction: () => {
+                        setPortalTab('aktivasi');
+                        handleOpenCekAktivasi();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 5,
+                      title: '5. Masuk (Login)',
+                      subtitle: 'Portal Keuangan',
+                      tooltip: 'Tahap 5: Masuk ke Sistem Pembayaran & SPP',
+                      icon: <LogIn className="w-5 h-5 stroke-[2.2]" />,
+                      btnText: 'Masuk',
+                      btnAction: () => {
+                        setActiveTab('login');
+                        setIsMasterDataLogin(false);
+                        setIsStudentLogin(false);
+                        setShowActivationStep(false);
+                        setShowActivationSearch(false);
+                        setShowLoginModal(true);
+                        setShowLoginDropdown(false);
+                        setSuccessNotification(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 6,
+                      title: '6. Rekening Sekolah',
+                      subtitle: 'Bank & Pembayaran',
+                      tooltip: 'Tahap 6: Konfigurasi No Rekening Resmi',
+                      icon: <Building2 className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 7,
+                      title: '7. Tarif & Tagihan',
+                      subtitle: 'SPP, DSP, Kegiatan',
+                      tooltip: 'Tahap 7: Pengaturan Biaya Bulanan & Semester',
+                      icon: <Receipt className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 8,
+                      title: '8. Kanal Tagihan',
+                      subtitle: 'Virtual Account & QRIS',
+                      tooltip: 'Tahap 8: Pengaturan Integrasi Pembayaran',
+                      icon: <QrCode className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 9,
+                      title: '9. Format Kuitansi',
+                      subtitle: 'Stempel & Nomor',
+                      tooltip: 'Tahap 9: Template Bukti Pembayaran Digital',
+                      icon: <CreditCard className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 10,
+                      title: '10. Siap Beroperasi',
+                      subtitle: 'Laporan Keuangan',
+                      tooltip: 'Tahap 10: Kas & Rekonsiliasi Otomatis Siap',
+                      icon: <Laptop className="w-5 h-5 stroke-[2.2]" />
+                    }
+                  ],
+                  perpustakaan: [
+                    {
+                      step: 1,
+                      title: '1. Pilih Peran',
+                      subtitle: 'Pustakawan Sekolah',
+                      tooltip: 'Tahap 1: Pilih Peran Perpustakaan',
+                      icon: <Library className="w-5 h-5 stroke-[2.2]" />,
+                      btnText: 'Daftar',
+                      btnAction: () => {
+                        setActiveTab('register');
+                        setIsMasterDataLogin(false);
+                        setIsStudentLogin(false);
+                        setPreAuthAccepted(false);
+                        setShowActivationStep(false);
+                        setShowActivationSearch(false);
+                        setShowLoginModal(true);
+                        setShowLoginDropdown(false);
+                        setSuccessNotification(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 2,
+                      title: '2. Isi Formulir',
+                      subtitle: 'Biodata Pengelola',
+                      tooltip: 'Tahap 2: Input Identitas Petugas Perpus',
+                      icon: <FileText className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 3,
+                      title: '3. Kirim Data',
+                      subtitle: 'Registrasi Perpus',
+                      tooltip: 'Tahap 3: Kirim Data Pengelola Perpustakaan',
+                      icon: <Send className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 4,
+                      title: '4. Aktivasi Akun',
+                      subtitle: 'Verifikasi Sekolah',
+                      tooltip: 'Tahap 4: Aktivasi Petugas Perpustakaan',
+                      icon: <ShieldCheck className="w-5 h-5 stroke-[2.2]" />,
+                      hasSpinner: true,
+                      btnText: 'Cek Status',
+                      btnAction: () => {
+                        setPortalTab('aktivasi');
+                        handleOpenCekAktivasi();
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 5,
+                      title: '5. Masuk (Login)',
+                      subtitle: 'Portal Perpus',
+                      tooltip: 'Tahap 5: Masuk ke Sistem Perpustakaan',
+                      icon: <LogIn className="w-5 h-5 stroke-[2.2]" />,
+                      btnText: 'Masuk',
+                      btnAction: () => {
+                        setActiveTab('login');
+                        setIsMasterDataLogin(false);
+                        setIsStudentLogin(false);
+                        setShowActivationStep(false);
+                        setShowActivationSearch(false);
+                        setShowLoginModal(true);
+                        setShowLoginDropdown(false);
+                        setSuccessNotification(null);
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }
+                    },
+                    {
+                      step: 6,
+                      title: '6. Katalog Buku',
+                      subtitle: 'Input ISBN & Judul',
+                      tooltip: 'Tahap 6: Pendataan Koleksi Buku & Modul',
+                      icon: <BookOpen className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 7,
+                      title: '7. Atur Rak & Kode',
+                      subtitle: 'Klasifikasi DDC',
+                      tooltip: 'Tahap 7: Penataan Rak & Lokasi Buku',
+                      icon: <Layers className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 8,
+                      title: '8. Kartu Anggota',
+                      subtitle: 'Barcode Guru & Siswa',
+                      tooltip: 'Tahap 8: Penerbitan Kartu Digital Anggota',
+                      icon: <UserCheck className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 9,
+                      title: '9. Atur Peminjaman',
+                      subtitle: 'Durasi & Denda',
+                      tooltip: 'Tahap 9: Skema Peminjaman & Sirkulasi Buku',
+                      icon: <Calendar className="w-5 h-5 stroke-[2.2]" />
+                    },
+                    {
+                      step: 10,
+                      title: '10. Siap Melayani',
+                      subtitle: 'Sirkulasi & E-Book',
+                      tooltip: 'Tahap 10: Perpustakaan Digital Siap Diakses',
+                      icon: <Laptop className="w-5 h-5 stroke-[2.2]" />
+                    }
+                  ]
+                };
+
+                const currentSteps = roleFlows[selectedAlurRole] || roleFlows.guru;
+                const row1 = currentSteps.slice(0, 5);
+                const row2 = currentSteps.slice(5, 10);
+
+                return (
+                  <div className="w-full overflow-x-auto scrollbar-none py-1 sm:py-2">
+                    <AnimatePresence mode="wait">
+                      <motion.div
+                        key={selectedAlurRole}
+                        initial={{ opacity: 0, x: 24 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -24 }}
+                        transition={{ duration: 0.28, ease: "easeInOut" }}
+                        className="min-w-[700px] sm:min-w-full flex flex-col relative px-2 sm:px-3"
+                      >
+                        
+                        {/* BARIS 1: Tahap 1 sampai 5 (Kiri ke Kanan) */}
+                        <div className="w-full flex items-start justify-between relative">
+                          {row1.map((item, idx) => (
+                            <React.Fragment key={`row1-step-${item.step}`}>
+                              <div className="flex flex-col items-center w-28 sm:w-36 text-center group cursor-pointer">
+                                <div
+                                  className="relative w-14 h-14 sm:w-16 sm:h-16 bg-white rounded-xl sm:rounded-2xl border-2 border-sky-400 flex items-center justify-center shadow-xs select-none transition-all duration-300 ease-out group-hover:scale-125 group-hover:z-30 group-hover:shadow-xl group-hover:shadow-sky-400/40 group-hover:border-sky-500 origin-center"
+                                  title={item.tooltip}
+                                >
+                                  {item.hasSpinner && (
+                                    <div className="absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full bg-amber-400 border border-amber-300 shadow-2xs flex items-center justify-center">
+                                      <span className="w-2.5 h-2.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    </div>
+                                  )}
+                                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-sky-50 flex items-center justify-center text-sky-600 transition-colors group-hover:bg-sky-500 group-hover:text-white">
+                                    {item.icon}
+                                  </div>
+                                </div>
+                                <h4 className="text-xs sm:text-[13px] font-bold text-sky-800 tracking-tight mt-2.5 leading-snug group-hover:text-sky-600 transition-colors">
+                                  {item.title}
+                                </h4>
+                                <p className="text-[10px] sm:text-[11px] text-rose-500 font-semibold mt-0.5">
+                                  {item.subtitle}
+                                </p>
+                                {item.btnText && (
+                                  <button
+                                    type="button"
+                                    onClick={item.btnAction}
+                                    className="mt-1.5 px-3 py-0.5 rounded-full bg-sky-500 hover:bg-sky-600 text-white text-[9px] sm:text-[10px] font-bold inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                                    title={item.title}
+                                  >
+                                    <ExternalLink className="w-2.5 h-2.5" />
+                                    <span>{item.btnText}</span>
+                                  </button>
+                                )}
+                              </div>
+
+                              {idx < row1.length - 1 && (
+                                <div className="flex items-center justify-center text-sky-300 pt-4.5 sm:pt-5.5 shrink-0">
+                                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+                                </div>
+                              )}
+                            </React.Fragment>
+                          ))}
+                        </div>
+
+                        {/* CURVED CONNECTING LINE DARI TAHAP 5 (KANAN) KE TAHAP 6 (KIRI) - FORMAT STANDAR SSCASN */}
+                        <div className="relative mx-12 sm:mx-16 h-8 sm:h-9 my-1 overflow-visible pointer-events-none">
+                          <svg className="w-full h-full overflow-visible" viewBox="0 0 1000 60" fill="none" preserveAspectRatio="none">
+                            <path
+                              d="M 1000 0 L 1000 18 Q 1000 32 980 32 L 20 32 Q 0 32 0 46 L 0 54"
+                              stroke="#38bdf8"
+                              strokeWidth="2.5"
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                            />
+                            <polygon points="0,60 -5,48 5,48" fill="#38bdf8" />
+                          </svg>
+                        </div>
+
+                        {/* BARIS 2: Tahap 6 sampai 10 (Kiri ke Kanan seperti Baris 2 SSCASN) */}
+                        <div className="w-full flex items-start justify-between relative">
+                          {row2.map((item, idx) => (
+                            <React.Fragment key={`row2-step-${item.step}`}>
+                              <div className="flex flex-col items-center w-28 sm:w-36 text-center group cursor-pointer">
+                                <div
+                                  className="relative w-14 h-14 sm:w-16 sm:h-16 bg-white rounded-xl sm:rounded-2xl border-2 border-sky-400 flex items-center justify-center shadow-xs select-none transition-all duration-300 ease-out group-hover:scale-125 group-hover:z-30 group-hover:shadow-xl group-hover:shadow-sky-400/40 group-hover:border-sky-500 origin-center"
+                                  title={item.tooltip}
+                                >
+                                  {item.hasSpinner && (
+                                    <div className="absolute -top-1 -right-1 w-4.5 h-4.5 rounded-full bg-amber-400 border border-amber-300 shadow-2xs flex items-center justify-center">
+                                      <span className="w-2.5 h-2.5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                                    </div>
+                                  )}
+                                  <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-lg sm:rounded-xl bg-sky-50 flex items-center justify-center text-sky-600 transition-colors group-hover:bg-sky-500 group-hover:text-white">
+                                    {item.icon}
+                                  </div>
+                                </div>
+                                <h4 className="text-xs sm:text-[13px] font-bold text-sky-800 tracking-tight mt-2.5 leading-snug group-hover:text-sky-600 transition-colors">
+                                  {item.title}
+                                </h4>
+                                <p className="text-[10px] sm:text-[11px] text-rose-500 font-semibold mt-0.5">
+                                  {item.subtitle}
+                                </p>
+                                {item.btnText && (
+                                  <button
+                                    type="button"
+                                    onClick={item.btnAction}
+                                    className="mt-1.5 px-3 py-0.5 rounded-full bg-sky-500 hover:bg-sky-600 text-white text-[9px] sm:text-[10px] font-bold inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
+                                    title={item.title}
+                                  >
+                                    <ExternalLink className="w-2.5 h-2.5" />
+                                    <span>{item.btnText}</span>
+                                  </button>
+                                )}
+                              </div>
+
+                              {idx < row2.length - 1 && (
+                                <div className="flex items-center justify-center text-sky-300 pt-4.5 sm:pt-5.5 shrink-0">
+                                  <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5 stroke-[2.5]" />
+                                </div>
+                              )}
+                            </React.Fragment>
+                          ))}
+                        </div>
+
+                      </motion.div>
+                    </AnimatePresence>
+                  </div>
+                );
+              })()}
+
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. PORTAL STATISTICS & FAQ WRAPPER SECTION (CLEAN WHITE BACKGROUND) - HIDDEN ON MOBILE */}
-      <div id="portal-light-section" className="hidden sm:block relative w-full bg-white text-slate-800 overflow-hidden">
+      {/* 3. PORTAL STATISTICS & FAQ WRAPPER SECTION (WARNA #F8FAFC BERSIH) - HIDDEN ON MOBILE */}
+      <div id="portal-light-section" className="hidden sm:block relative w-full bg-[#F8FAFC] text-slate-800 overflow-hidden">
         
         {/* ANALYTICS SECTION ON LOGIN PAGE */}
-        <section id="analytics-section" className="relative z-10 pt-8 sm:pt-10 pb-10 sm:pb-12 border-b border-slate-200/70 scroll-mt-16 bg-white">
+        <section id="analytics-section" className="relative z-10 pt-8 sm:pt-10 pb-10 sm:pb-12 scroll-mt-16 bg-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-6 sm:mb-8">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-100/80 border border-cyan-200 text-xs font-bold text-[#164e63] mb-2.5 shadow-2xs">
-                <BarChart3 className="w-4 h-4 text-[#164e63] stroke-[2.5]" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-50 border border-sky-200 text-xs font-bold text-sky-700 mb-2.5 shadow-2xs">
+                <BarChart3 className="w-4 h-4 text-sky-600 stroke-[2.5]" />
                 <span>Analitik & Performa Real-Time SIMAK Guru</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -2201,12 +2936,12 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
               {/* 1. Kelengkapan Modul */}
               <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-indigo-600" />
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-sky-500" />
                 <div className="flex items-start justify-between mb-3">
-                  <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700">
+                  <div className="p-3 rounded-xl bg-sky-50 border border-sky-100 text-sky-600">
                     <FileText className="w-6 h-6 stroke-[2.5]" />
                   </div>
-                  <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">
+                  <span className="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200">
                     Terverifikasi
                   </span>
                 </div>
@@ -2215,7 +2950,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 </div>
                 <div className="text-3xl font-black text-slate-900 mb-2 flex items-baseline gap-2">
                   <span>{classAnalyticsMetrics.modulePercentage}</span>
-                  <span className="text-xs font-bold text-indigo-600">✓ Perangkat Lengkap</span>
+                  <span className="text-xs font-bold text-sky-600">✓ Perangkat Lengkap</span>
                 </div>
                 <p className="text-xs text-slate-600 font-medium mb-4">
                   Capaian Pembelajaran (CP), Tujuan Pembelajaran (TP), Modul Ajar, dan Rubrik KKTP terstruktur rapi.
@@ -2224,24 +2959,24 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 {/* Progress bar */}
                 <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
                   <div 
-                    className="bg-indigo-600 h-2.5 rounded-full transition-all duration-700" 
+                    className="bg-sky-500 h-2.5 rounded-full transition-all duration-700" 
                     style={{ width: classAnalyticsMetrics.modulePercentage }}
                   />
                 </div>
                 <div className="mt-2 text-[11px] text-slate-500 flex justify-between font-semibold">
                   <span>Kurikulum Merdeka 2024/2025</span>
-                  <span className="text-indigo-700 font-bold">{classAnalyticsMetrics.modulePercentage} Siap</span>
+                  <span className="text-sky-700 font-bold">{classAnalyticsMetrics.modulePercentage} Siap</span>
                 </div>
               </div>
 
               {/* 2. Sinkronisasi Data */}
               <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-[#164e63]" />
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-sky-500" />
                 <div className="flex items-start justify-between mb-3">
-                  <div className="p-3 rounded-xl bg-cyan-50 border border-cyan-100 text-[#164e63]">
+                  <div className="p-3 rounded-xl bg-sky-50 border border-sky-100 text-sky-600">
                     <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
                   </div>
-                  <span className="text-xs font-bold text-cyan-700 bg-cyan-50 px-2.5 py-1 rounded-full border border-cyan-200">
+                  <span className="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200">
                     Cloud Active
                   </span>
                 </div>
@@ -2250,7 +2985,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 </div>
                 <div className="text-3xl font-black text-slate-900 mb-2 flex items-baseline gap-2">
                   <span>{classAnalyticsMetrics.syncVal}</span>
-                  <span className="text-xs font-bold text-cyan-600">Terhubung Vercel</span>
+                  <span className="text-xs font-bold text-sky-600">Terhubung Vercel</span>
                 </div>
                 <p className="text-xs text-slate-600 font-medium mb-4">
                   Tingkat konsistensi dan integritas data antara penyimpanan lokal browser dan Vercel Database.
@@ -2259,24 +2994,24 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 {/* Progress bar */}
                 <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
                   <div 
-                    className="bg-[#164e63] h-2.5 rounded-full transition-all duration-700" 
+                    className="bg-sky-500 h-2.5 rounded-full transition-all duration-700" 
                     style={{ width: classAnalyticsMetrics.syncVal }}
                   />
                 </div>
                 <div className="mt-2 text-[11px] text-slate-500 flex justify-between font-semibold">
                   <span>Enkripsi Database AES-256</span>
-                  <span className="text-[#164e63] font-bold">{classAnalyticsMetrics.syncVal} Sync</span>
+                  <span className="text-sky-700 font-bold">{classAnalyticsMetrics.syncVal} Sync</span>
                 </div>
               </div>
 
               {/* 3. Kehadiran Siswa */}
               <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-indigo-600" />
+                <div className="absolute top-0 left-0 right-0 h-1.5 bg-sky-500" />
                 <div className="flex items-start justify-between mb-3">
-                  <div className="p-3 rounded-xl bg-indigo-50 border border-indigo-100 text-indigo-700">
+                  <div className="p-3 rounded-xl bg-sky-50 border border-sky-100 text-sky-600">
                     <UserCheck className="w-6 h-6 stroke-[2.5]" />
                   </div>
-                  <span className="text-xs font-bold text-indigo-700 bg-indigo-50 px-2.5 py-1 rounded-full border border-indigo-200">
+                  <span className="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200">
                     Terverifikasi
                   </span>
                 </div>
@@ -2285,7 +3020,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 </div>
                 <div className="text-3xl font-black text-slate-900 mb-2 flex items-baseline gap-2">
                   <span>{classAnalyticsMetrics.attPercentage}</span>
-                  <span className="text-xs font-bold text-indigo-600">Rata-Rata Presensi</span>
+                  <span className="text-xs font-bold text-sky-600">Rata-Rata Presensi</span>
                 </div>
                 <p className="text-xs text-slate-600 font-medium mb-4">
                   Tingkat keaktifan dan kehadiran harian siswa seluruh kelas.
@@ -2294,13 +3029,13 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 {/* Progress bar */}
                 <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
                   <div 
-                    className="bg-indigo-600 h-2.5 rounded-full transition-all duration-700" 
+                    className="bg-sky-500 h-2.5 rounded-full transition-all duration-700" 
                     style={{ width: classAnalyticsMetrics.attPercentage }}
                   />
                 </div>
                 <div className="mt-2 text-[11px] text-slate-500 flex justify-between font-semibold">
                   <span>Presensi Terverifikasi</span>
-                  <span className="text-indigo-700 font-bold">{classAnalyticsMetrics.attPercentage} Hadir</span>
+                  <span className="text-sky-700 font-bold">{classAnalyticsMetrics.attPercentage} Hadir</span>
                 </div>
               </div>
             </div>
@@ -2308,24 +3043,24 @@ export const LoginView: React.FC<LoginViewProps> = ({
             {/* Sub-Analytics Summary Box */}
             <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-xs">
               <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-[#164e63]" />
+                <CheckCircle2 className="w-4 h-4 text-sky-600" />
                 <span>Rincian Verifikasi Perangkat & Database</span>
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                   <div className="text-slate-500 font-medium">Capaian & Tujuan Pembelajaran</div>
                   <div className="text-sm font-black text-slate-800 mt-1">{classAnalyticsMetrics.modulePercentage} Lengkap</div>
-                  <div className="text-[11px] text-indigo-600 font-bold mt-0.5">{classAnalyticsMetrics.cpTpSubtext}</div>
+                  <div className="text-[11px] text-sky-600 font-bold mt-0.5">{classAnalyticsMetrics.cpTpSubtext}</div>
                 </div>
                 <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                   <div className="text-slate-500 font-medium">Status Vercel</div>
                   <div className="text-sm font-black text-slate-800 mt-1">Tersinkron Otomatis</div>
-                  <div className="text-[11px] text-cyan-600 font-bold mt-0.5">Real-Time Data Mirror</div>
+                  <div className="text-[11px] text-sky-600 font-bold mt-0.5">Real-Time Data Mirror</div>
                 </div>
                 <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
                   <div className="text-slate-500 font-medium">Rekapitulasi Kehadiran</div>
                   <div className="text-sm font-black text-slate-800 mt-1">{classAnalyticsMetrics.attPercentage} Hadir</div>
-                  <div className="text-[11px] text-indigo-600 font-bold mt-0.5">Presensi Terdaftar di Jurnal</div>
+                  <div className="text-[11px] text-sky-600 font-bold mt-0.5">Presensi Terdaftar di Jurnal</div>
                 </div>
               </div>
             </div>
@@ -2336,8 +3071,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
         <section id="about-section" className="relative z-10 pt-6 sm:pt-8 pb-8 sm:pb-10 border-b border-slate-200/70 scroll-mt-16">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-6 sm:mb-8">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-cyan-50 border border-cyan-200 text-xs font-bold text-[#164e63] mb-2.5 shadow-2xs">
-                <Sparkles className="w-4 h-4 text-[#164e63]" />
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-50 border border-sky-200 text-xs font-bold text-sky-700 mb-2.5 shadow-2xs">
+                <Sparkles className="w-4 h-4 text-sky-600" />
                 <span>Tentang SIMAK Guru Merdeka</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
@@ -2353,7 +3088,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
               <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all text-slate-800">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#164e63] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
                     <GraduationCap className="w-4 h-4 text-white" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">Kurikulum Merdeka Ready</h3>
@@ -2365,7 +3100,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
               <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all text-slate-800">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#164e63] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
                     <UserCheck className="w-4 h-4 text-white" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">Presensi & Jurnal Mengajar</h3>
@@ -2377,7 +3112,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
               <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all text-slate-800">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#164e63] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
                     <BarChart3 className="w-4 h-4 text-white" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">Analitik & Grafik Interaktif</h3>
@@ -2389,7 +3124,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
               <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all text-slate-800">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#164e63] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
                     <Sparkles className="w-4 h-4 text-white" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">Asisten AI Guru</h3>
@@ -2401,7 +3136,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
               <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all text-slate-800">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#164e63] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
                     <ShieldCheck className="w-4 h-4 text-white" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">Sinkronisasi Vercel Real-Time</h3>
@@ -2413,7 +3148,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
               <div className="bg-slate-50/80 p-5 rounded-2xl border border-slate-200/90 shadow-2xs hover:shadow-md transition-all text-slate-800">
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#164e63] text-white flex items-center justify-center font-bold shadow-xs shrink-0">
+                  <div className="w-8 h-8 rounded-xl bg-sky-500 text-white flex items-center justify-center font-bold shadow-xs shrink-0">
                     <CheckCircle2 className="w-4 h-4 text-white" />
                   </div>
                   <h3 className="text-sm font-bold text-slate-900 leading-tight">Cetak & Ekspor Rapor Mudah</h3>
@@ -2558,12 +3293,12 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
       </div>
 
-      {/* 5. FOOTER - HIDDEN ON MOBILE */}
-      <footer className="hidden sm:block relative z-10 w-full bg-white text-slate-900 py-6 sm:py-8 pb-[calc(2rem+env(safe-area-inset-bottom))] border-t border-slate-200 mt-auto antialiased">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
+      {/* 5. FOOTER */}
+      <footer className="relative z-10 w-full bg-[#F8FAFC] text-slate-900 border-t border-slate-200 mt-auto antialiased">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-center md:text-left">
           <div className="flex items-center space-x-3.5">
-            <div className="p-2 rounded-xl bg-cyan-50 border border-cyan-100 shadow-2xs shrink-0">
-              <TutWuriHandayaniLogo className="w-8 h-8 text-[#164e63]" />
+            <div className="p-2 rounded-xl bg-white border border-sky-200/80 shadow-2xs shrink-0">
+              <TutWuriHandayaniLogo className="w-8 h-8 text-sky-600" />
             </div>
             <div>
               <div className="text-slate-900 text-sm sm:text-base font-bold tracking-normal leading-snug">SIMAK Guru Merdeka</div>
@@ -2571,29 +3306,112 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <div className="text-xs text-slate-500 font-normal leading-snug mt-0.5">Terpadu - Kurikulum Merdeka - Versi 3.8.1</div>
             </div>
           </div>
-          <div className="text-xs sm:text-sm text-slate-700 font-medium bg-slate-50 px-3.5 py-2 rounded-xl border border-slate-200">
+          <div className="text-xs sm:text-sm text-slate-700 font-medium bg-white/90 px-3.5 py-2 rounded-xl border border-sky-200/70 shadow-2xs">
             © 2026 Hak Cipta Dilindungi Undang-Undang. Versi 3.8.1
+          </div>
+        </div>
+
+        {/* Warna Biru Dibawah Footer */}
+        <div className="w-full bg-sky-600 py-3.5 px-4 text-white text-center border-t border-sky-500">
+          <div className="max-w-7xl mx-auto flex items-center justify-center gap-1.5 text-xs sm:text-sm tracking-wide">
+            <span>2026 © <strong className="font-bold text-white">Sistem Informasi Akademik</strong></span>
           </div>
         </div>
       </footer>
 
+      {/* ANIMASI PENGALIHAN KE HALAMAN CEK AKTIVASI */}
+      {isNavigatingToAktivasi && (
+        <div className="fixed inset-0 z-[100] bg-slate-950/85 backdrop-blur-md flex flex-col items-center justify-center p-6 text-white select-none transition-all duration-300 animate-fadeIn">
+          <div className="relative flex flex-col items-center max-w-sm text-center">
+            {/* Animated Pulsing Scanner Rings & Glowing Shield Icon */}
+            <div className="relative w-28 h-28 flex items-center justify-center mb-6">
+              <div className="absolute inset-0 rounded-full bg-sky-500/20 animate-ping" />
+              <div className="absolute inset-2 rounded-full bg-sky-400/25 animate-pulse" />
+              <div className="absolute inset-0 rounded-full border-2 border-dashed border-sky-400/40 animate-spin" style={{ animationDuration: '6s' }} />
+              <div className="absolute inset-1 rounded-full border-2 border-transparent border-t-sky-400 animate-spin" style={{ animationDuration: '1.2s' }} />
+              <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-tr from-sky-600 via-sky-500 to-cyan-400 flex items-center justify-center shadow-xl shadow-sky-500/30 text-white">
+                <ShieldCheck className="w-8 h-8 stroke-[2.2]" />
+              </div>
+            </div>
+
+            {/* Title */}
+            <h3 className="text-xl sm:text-2xl font-black text-white tracking-tight font-jakarta">
+              Mengarahkan ke Halaman Cek Aktivasi
+            </h3>
+
+            {/* Subtitle */}
+            <p className="text-xs sm:text-sm text-sky-200 mt-2 leading-relaxed">
+              Menyiapkan layanan verifikasi status akun & hak akses SIMAK Merdeka...
+            </p>
+
+            {/* Status Indicator */}
+            <div className="flex items-center justify-center w-64 mt-5 text-xs text-sky-200 font-medium">
+              <span>Memproses verifikasi...</span>
+            </div>
+
+            {/* 3-Second Progress Bar */}
+            <div className="w-64 h-2.5 bg-white/15 rounded-full overflow-hidden mt-2 p-0.5 border border-white/20">
+              <div 
+                className="h-full bg-gradient-to-r from-sky-400 via-sky-300 to-cyan-200 rounded-full transition-all duration-1000 ease-linear shadow-xs"
+                style={{ width: `${Math.min(100, Math.max(25, ((4 - aktivasiCountdown) / 3) * 100))}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 5. MAIN LOGIN & REGISTER PAGE VIEW (FULL SCREEN) */}
       {showLoginModal && (
-        <div className="fixed inset-0 z-50 bg-white flex flex-col h-screen w-screen overflow-hidden animate-fadeIn text-slate-800">
+        activeTab === 'register' && !showActivationStep ? (
+          <div className="fixed inset-0 z-50 overflow-y-auto bg-[#f0f4f8]">
+            <SscasnRegisterForm
+              onClose={() => setShowLoginModal(false)}
+              onSwitchToLogin={(prefilledEmail, prefilledNip) => {
+                setActiveTab('login');
+                setIsMasterDataLogin(false);
+                setIsStudentLogin(false);
+                if (prefilledEmail) {
+                  setEmail(prefilledEmail);
+                } else if (prefilledNip) {
+                  setEmail(prefilledNip);
+                }
+              }}
+              onRegisterSuccess={(newUserAccount, newTeacherProfile) => {
+                if (onRegisterNewAccount) {
+                  onRegisterNewAccount(newUserAccount, newTeacherProfile);
+                }
+                setEmail(newUserAccount.email);
+                setPassword(newUserAccount.password || '');
+                setActivationData({
+                  name: newUserAccount.name,
+                  email: newUserAccount.email,
+                  role: newUserAccount.role,
+                  school: newUserAccount.schoolName,
+                  nip: newUserAccount.nip || '-',
+                  date: new Date().toLocaleString('id-ID', { dateStyle: 'medium', timeStyle: 'short' }),
+                  status: 'Aktif'
+                });
+              }}
+              onOpenHelpdesk={() => {
+                setShowLoginModal(false);
+                setPortalTab('helpdesk');
+              }}
+              registeredUsers={registeredUsers}
+            />
+          </div>
+        ) : (
+        <div className="fixed inset-0 z-50 bg-white flex flex-col min-h-screen w-screen overflow-y-auto animate-fadeIn text-slate-800">
           
-          {/* Top Full-Screen Navigation Bar */}
-          <header className={`w-full text-white py-3 sm:py-3.5 px-4 sm:px-8 flex items-center justify-between border-b shadow-xs shrink-0 z-30 ${
-            isStudentLogin 
-              ? 'bg-gradient-to-r from-[#164e63] to-emerald-800 border-emerald-900/50' 
-              : 'bg-[#164e63] border-cyan-900/50'
-          }`}>
+          {/* Top Full-Screen Navigation Bar (Bright Blue Gradient, Scrolls with Page) */}
+          <header className="w-full bg-gradient-to-r from-[#0284c7] via-[#0ea5e9] to-[#38bdf8] text-white py-3 sm:py-3.5 px-4 sm:px-8 flex items-center justify-between border-b border-sky-400/80 shadow-md shrink-0 z-30">
             <div className="flex items-center space-x-3">
-              <div className="p-1.5 sm:p-2 flex items-center justify-center shrink-0 bg-white/15 rounded-xl border border-white/20">
-                {isStudentLogin ? (
-                  <GraduationCap className="w-6 h-6 text-amber-300" />
+              <div className="p-1.5 sm:p-2 flex items-center justify-center shrink-0 bg-sky-500/20 rounded-xl border border-sky-400/30">
+                {showActivationStep ? (
+                  <ShieldCheck className="w-6 h-6 text-white" />
+                ) : isStudentLogin ? (
+                  <GraduationCap className="w-6 h-6 text-sky-400" />
                 ) : (
-                  <TutWuriHandayaniLogo className="w-6 h-6 text-white" />
+                  <TutWuriHandayaniLogo className="w-6 h-6 text-sky-400" />
                 )}
               </div>
               <div>
@@ -2604,9 +3422,11 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       ? 'bg-amber-400 text-slate-950'
                       : isStudentLogin
                         ? 'bg-emerald-400 text-slate-950'
-                        : activeTab === 'register'
-                          ? 'bg-cyan-300 text-slate-950'
-                          : 'bg-white/20 text-white border border-white/30'
+                        : showActivationStep
+                          ? 'bg-white text-sky-700 font-extrabold shadow-2xs'
+                          : activeTab === 'register'
+                            ? 'bg-cyan-300 text-slate-950'
+                            : 'bg-white/20 text-white border border-white/30'
                   }`}>
                     {isMasterDataLogin 
                       ? 'Administrator SSO' 
@@ -2779,7 +3599,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
           )}
 
           {/* Main Full-Screen Body Container (Unboxed, Pure White Background) */}
-          <main className="flex-1 w-full min-h-0 px-4 sm:px-8 py-6 sm:py-10 flex flex-col items-center bg-white relative z-10 overflow-y-auto">
+          <main className="flex-1 w-full px-4 sm:px-8 py-6 sm:py-10 flex flex-col items-center bg-white relative z-10">
             <div className={`w-full flex flex-col transition-all duration-300 ${
               (activeTab === 'register' && !preAuthAccepted) || isMasterDataLogin
                 ? 'max-w-5xl lg:max-w-6xl'
@@ -2797,7 +3617,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       : isStudentLogin 
                         ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white' 
                         : showActivationStep
-                          ? isAccountActive ? 'bg-emerald-600 text-white' : 'bg-[#164e63] text-white'
+                          ? isAccountActive ? 'bg-emerald-600 text-white' : 'bg-sky-600 text-white shadow-md shadow-sky-500/25'
                           : 'bg-[#164e63] text-white'
                   }`}>
                     {isMasterDataLogin ? (
@@ -3174,7 +3994,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       type="submit"
                       disabled={isLoading}
                       className={`w-full py-4 text-white font-bold text-sm sm:text-base rounded-xl shadow-md hover:shadow-lg flex items-center justify-center space-x-2 transition-all active:scale-[0.99] cursor-pointer disabled:opacity-50 mt-4 ${
-                        isStudentLogin ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-[#164e63] hover:bg-[#003d6d]'
+                        isStudentLogin ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-blue-600 hover:bg-blue-700 shadow-blue-600/25'
                       }`}
                     >
                       {isLoading ? (
@@ -3195,6 +4015,23 @@ export const LoginView: React.FC<LoginViewProps> = ({
                         </>
                       )}
                     </button>
+                    {!isStudentLogin && !isMasterDataLogin && (
+                      <div className="text-center mt-3 pt-3 border-t border-slate-100">
+                        <p className="text-xs text-slate-500 font-medium">
+                          Belum memiliki akun?{' '}
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActiveTab('register');
+                              setShowActivationStep(false);
+                            }}
+                            className="font-bold text-[#164e63] hover:underline cursor-pointer"
+                          >
+                            Daftar Akun Baru SIMAK
+                          </button>
+                        </p>
+                      </div>
+                    )}
                   </form>
                     </div>
                   </div>
@@ -3205,19 +4042,45 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     showActivationSearch ? (
                       /* FORMULIR CEK STATUS AKTIVASI AKUN (EMAIL & KATA SANDI) */
                       <div className="w-full max-w-xl mx-auto space-y-6 animate-fadeIn">
-                        <div className="bg-white border-2 border-slate-200 rounded-3xl p-6 sm:p-8 shadow-xl text-slate-800 relative overflow-hidden">
+                        <div className="bg-white border-2 border-sky-200/80 rounded-3xl p-6 sm:p-8 shadow-xl text-slate-800 relative overflow-hidden">
+                          {/* Top Blue Accent Strip */}
+                          <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-sky-500 via-sky-600 to-blue-600" />
+
                           {/* Card Header */}
-                          <div className="text-center mb-6">
-                            <div className="w-14 h-14 bg-slate-100 border border-slate-200 text-slate-600 rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-2xs">
-                              <ShieldCheck className="w-7 h-7 stroke-[2.2]" />
+                          <div className="text-center mb-6 pt-1">
+                            <div className="w-16 h-16 bg-sky-600 border-2 border-sky-400 text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-lg shadow-sky-500/30">
+                              <ShieldCheck className="w-8 h-8 stroke-[2.2] text-white animate-pulse" />
                             </div>
-                            <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
+                            <h3 className="text-xl sm:text-2xl font-black text-sky-950 tracking-tight">
                               Cek Status Aktivasi Akun
                             </h3>
                             <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1 max-w-md mx-auto leading-relaxed">
                               Masukkan Email atau NIP terdaftar serta Kata Sandi akun Anda untuk mengecek status aktivasi terkini dari Operator Sekolah.
                             </p>
                           </div>
+
+                          {/* Dedicated Search Scanning Animation Overlay */}
+                          {isSearchingActivation && (
+                            <div className="absolute inset-0 z-30 bg-white/95 backdrop-blur-xs rounded-3xl flex flex-col items-center justify-center p-6 text-center animate-fadeIn select-none">
+                              <div className="relative w-20 h-20 flex items-center justify-center mb-4">
+                                <div className="absolute inset-0 rounded-full bg-sky-500/20 animate-ping" />
+                                <div className="absolute inset-1 rounded-full border-2 border-dashed border-sky-400/60 animate-spin" style={{ animationDuration: '4s' }} />
+                                <div className="absolute inset-3 rounded-full border-2 border-transparent border-t-sky-500 animate-spin" style={{ animationDuration: '1s' }} />
+                                <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-sky-600 to-cyan-500 text-white flex items-center justify-center shadow-lg shadow-sky-500/30">
+                                  <Search className="w-6 h-6 text-white animate-pulse" />
+                                </div>
+                              </div>
+                              <h4 className="font-extrabold text-base sm:text-lg text-slate-900 tracking-tight">
+                                Memeriksa Status Aktivasi Akun
+                              </h4>
+                              <p className="text-xs sm:text-sm text-sky-700 font-semibold mt-1.5 max-w-xs transition-all duration-300">
+                                {searchScanMessage}
+                              </p>
+                              <div className="w-56 h-2 bg-slate-100 rounded-full overflow-hidden mt-5 p-0.5 border border-slate-200">
+                                <div className="h-full bg-gradient-to-r from-sky-500 via-sky-400 to-cyan-400 rounded-full animate-pulse w-full" />
+                              </div>
+                            </div>
+                          )}
 
                           {checkError && (
                             <div className="mb-5 p-4 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-xs sm:text-sm font-semibold flex items-start gap-3 animate-fadeIn">
@@ -3233,14 +4096,14 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                 Email / NIP Terdaftar *
                               </label>
                               <div className="relative">
-                                <Mail className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
+                                <Mail className="w-5 h-5 text-sky-600 absolute left-4 top-3.5" />
                                 <input
                                   type="text"
                                   required
                                   value={checkEmail}
                                   onChange={(e) => setCheckEmail(e.target.value)}
                                   placeholder="Contoh: guru@simakmerdeka.ai.studio atau NIP"
-                                  className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] transition-all"
+                                  className="w-full pl-12 pr-4 py-3 bg-sky-50/30 border border-sky-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-600 transition-all"
                                 />
                               </div>
                             </div>
@@ -3251,22 +4114,22 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                 Kata Sandi (Password) *
                               </label>
                               <div className="relative">
-                                <Lock className="w-5 h-5 text-slate-400 absolute left-4 top-3.5" />
+                                <Lock className="w-5 h-5 text-sky-600 absolute left-4 top-3.5" />
                                 <input
                                   type={showCheckPassword ? 'text' : 'password'}
                                   required
                                   value={checkPassword}
                                   onChange={(e) => setCheckPassword(e.target.value)}
                                   placeholder="Masukkan kata sandi akun Anda"
-                                  className="w-full pl-12 pr-12 py-3 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] transition-all"
+                                  className="w-full pl-12 pr-12 py-3 bg-sky-50/30 border border-sky-200 rounded-xl text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-sky-600 transition-all"
                                 />
                                 <button
                                   type="button"
                                   onClick={() => setShowCheckPassword(!showCheckPassword)}
-                                  className="absolute right-4 top-3.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                                  className="absolute right-4 top-3.5 text-sky-600 hover:text-sky-800 cursor-pointer"
                                   title={showCheckPassword ? "Sembunyikan Kata Sandi" : "Tampilkan Kata Sandi"}
                                 >
-                                  {showCheckPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                                  {showCheckPassword ? <EyeOff className="w-5 h-5 text-sky-600" /> : <Eye className="w-5 h-5 text-sky-600" />}
                                 </button>
                               </div>
                             </div>
@@ -3274,11 +4137,14 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             {/* Submit Button */}
                             <button
                               type="submit"
-                              disabled={checkLoading}
-                              className="w-full mt-2 py-3.5 px-4 bg-[#164e63] hover:bg-[#003d6d] text-white font-bold text-sm rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
+                              disabled={checkLoading || isSearchingActivation}
+                              className="w-full mt-2 py-3.5 px-4 bg-sky-600 hover:bg-sky-700 text-white font-bold text-sm rounded-xl transition-all shadow-md shadow-sky-600/25 hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95 disabled:opacity-50"
                             >
-                              {checkLoading ? (
-                                <span className="inline-block animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></span>
+                              {checkLoading || isSearchingActivation ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="inline-block animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></span>
+                                  <span>Sedang Memeriksa Status...</span>
+                                </div>
                               ) : (
                                 <>
                                   <Search className="w-4 h-4 text-white" />
@@ -3295,7 +4161,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                 setActiveTab('login');
                                 setShowActivationStep(false);
                               }}
-                              className="text-[#164e63] hover:underline font-bold cursor-pointer"
+                              className="text-sky-600 hover:text-sky-800 hover:underline font-bold cursor-pointer"
                             >
                               Form Masuk (Login)
                             </button>
@@ -3403,34 +4269,34 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     ) : (
                       /* STEP 2: STATUS AKTIVASI AKUN (WARNA BIRU PROFESIONAL & ALUR PENDAFTARAN) */
                       <div className="w-full max-w-xl mx-auto space-y-6 animate-fadeIn">
-                        <div className="bg-cyan-50/95 border-2 border-cyan-300/90 rounded-3xl p-6 sm:p-8 shadow-xl text-cyan-950 relative overflow-hidden">
+                        <div className="bg-sky-50/95 border-2 border-sky-300/90 rounded-3xl p-6 sm:p-8 shadow-xl text-sky-950 relative overflow-hidden">
                           {/* Background Accents */}
-                          <div className="absolute -right-12 -top-12 w-48 h-48 bg-cyan-200/50 rounded-full blur-2xl pointer-events-none"></div>
-                          <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-sky-200/40 rounded-full blur-2xl pointer-events-none"></div>
+                          <div className="absolute -right-12 -top-12 w-48 h-48 bg-sky-200/50 rounded-full blur-2xl pointer-events-none"></div>
+                          <div className="absolute -left-12 -bottom-12 w-48 h-48 bg-blue-200/40 rounded-full blur-2xl pointer-events-none"></div>
 
                           <div className="flex flex-col items-center text-center space-y-5 relative z-10">
                             
                             <div>
-                              <div className="w-14 h-14 bg-[#164e63] text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md">
-                                <ShieldCheck className="w-7 h-7 stroke-[2.2]" />
+                              <div className="w-16 h-16 bg-sky-600 text-white rounded-2xl flex items-center justify-center mx-auto mb-3 shadow-md shadow-sky-600/25">
+                                <ShieldCheck className="w-8 h-8 stroke-[2.2] text-white" />
                               </div>
-                              <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-[#164e63] tracking-tight">
+                              <h3 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-sky-950 tracking-tight">
                                 Aktivasi Akun Pengguna SIMAK
                               </h3>
-                              <p className="text-xs sm:text-sm text-cyan-900/80 font-semibold mt-1.5 max-w-lg mx-auto leading-relaxed">
+                              <p className="text-xs sm:text-sm text-sky-900/80 font-semibold mt-1.5 max-w-lg mx-auto leading-relaxed">
                                 Pendaftaran akun berhasil dikirim. Akun Anda saat ini dalam status <span className="underline font-bold">Menunggu Aktivasi</span> oleh Operator / Administrator Sekolah.
                               </p>
                             </div>
 
                             {/* Account Details Box */}
-                            <div className="w-full bg-white/95 backdrop-blur-xs border border-cyan-200/90 rounded-2xl p-4 sm:p-6 text-left text-slate-800 space-y-4 shadow-xs">
-                              <div className="text-xs font-black text-[#164e63] uppercase tracking-wider border-b border-cyan-100 pb-2.5 flex items-center justify-between">
+                            <div className="w-full bg-white/95 backdrop-blur-xs border border-sky-200/90 rounded-2xl p-4 sm:p-6 text-left text-slate-800 space-y-4 shadow-xs">
+                              <div className="text-xs font-black text-sky-800 uppercase tracking-wider border-b border-sky-100 pb-2.5 flex items-center justify-between">
                                 <span className="flex items-center gap-1.5">
-                                  <ShieldCheck className="w-4 h-4 text-[#164e63]" />
+                                  <ShieldCheck className="w-4 h-4 text-sky-600" />
                                   <span>Rincian Akun Terdaftar</span>
                                 </span>
-                                <span className="text-[11px] font-extrabold text-[#164e63] font-mono bg-cyan-100/80 px-2.5 py-0.5 rounded-full border border-cyan-300 flex items-center gap-1.5">
-                                  <ShieldCheck className="w-3.5 h-3.5 text-[#164e63]" />
+                                <span className="text-[11px] font-extrabold text-sky-700 font-mono bg-sky-100/80 px-2.5 py-0.5 rounded-full border border-sky-300 flex items-center gap-1.5">
+                                  <ShieldCheck className="w-3.5 h-3.5 text-sky-600" />
                                   STATUS: MENUNGGU AKTIVASI
                                 </span>
                               </div>
@@ -3442,7 +4308,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                 </div>
                                 <div>
                                   <span className="text-slate-500 font-semibold block text-[11px]">Hak Akses / Peran:</span>
-                                  <span className="font-bold text-[#164e63] bg-cyan-50 px-2.5 py-0.5 rounded-lg border border-cyan-200 inline-block mt-0.5 text-xs">
+                                  <span className="font-bold text-sky-700 bg-sky-50 px-2.5 py-0.5 rounded-lg border border-sky-200 inline-block mt-0.5 text-xs">
                                     {activationData?.role || regRole}
                                   </span>
                                 </div>
@@ -3468,8 +4334,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             </div>
 
                             {/* Verification Notice */}
-                            <div className="w-full bg-cyan-100/90 border border-cyan-300 rounded-xl p-3 text-left text-xs text-cyan-950 flex items-start gap-2.5">
-                              <Info className="w-4 h-4 text-[#164e63] shrink-0 mt-0.5" />
+                            <div className="w-full bg-sky-100/90 border border-sky-300 rounded-xl p-3 text-left text-xs text-sky-950 flex items-start gap-2.5">
+                              <Info className="w-4 h-4 text-sky-700 shrink-0 mt-0.5" />
                               <p className="leading-relaxed">
                                 <span className="font-bold">Informasi Aktivasi:</span> Proses verifikasi data pendaftaran memerlukan persetujuan Administrator IT / Operator Sekolah. Silakan hubungi Operator atau klik <b>Lanjut ke Form Masuk</b> untuk mulai masuk menggunakan akun Anda.
                               </p>
@@ -3487,7 +4353,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                   setPreAuthAccepted(true);
                                   setSuccessNotification(`Pendaftaran Berhasil! Akun "${targetEmail}" telah siap. Masukkan kata sandi Anda untuk masuk ke sistem.`);
                                 }}
-                                className="w-full sm:flex-1 py-3.5 px-4 bg-[#164e63] hover:bg-[#003d6d] text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95"
+                                className="w-full sm:flex-1 py-3.5 px-4 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2 cursor-pointer active:scale-95"
                               >
                                 <span>Lanjut ke Form Masuk (Login)</span>
                                 <ArrowRight className="w-4 h-4 text-white" />
@@ -3702,6 +4568,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
             </div>
           </footer>
         </div>
+        )
       )}
 
 

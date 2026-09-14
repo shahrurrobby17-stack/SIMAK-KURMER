@@ -337,14 +337,22 @@ export const AdministrationSystemView: React.FC<AdministrationSystemViewProps> =
   const [showEditUserModalInternal, setShowEditUserModalInternal] = useState<boolean>(false);
   const [showDeleteUserModalInternal, setShowDeleteUserModalInternal] = useState<boolean>(false);
   const [selectedUserInternal, setSelectedUserInternal] = useState<UserAccount | null>(null);
-  const [userFormData, setUserFormData] = useState({
+  const [userFormData, setUserFormData] = useState<{
+    name: string;
+    email: string;
+    password: string;
+    nip: string;
+    role: string;
+    schoolName: string;
+    status: 'Aktif' | 'Nonaktif' | 'Maintenance' | 'Menunggu Aktivasi';
+  }>({
     name: '',
     email: '',
     password: '',
     nip: '',
     role: 'Tata Usaha (TU)',
     schoolName: teacher?.schoolName || 'SD Negeri 1 SIMAK',
-    status: 'Aktif' as 'Aktif' | 'Nonaktif' | 'Maintenance'
+    status: 'Aktif'
   });
 
   const handleAddUserClick = () => {
