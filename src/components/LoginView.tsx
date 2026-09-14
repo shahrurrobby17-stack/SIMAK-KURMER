@@ -2800,7 +2800,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                         <div className="w-full flex items-start justify-between relative">
                           {row1.map((item, idx) => (
                             <React.Fragment key={`row1-step-${item.step}`}>
-                              <div className="flex flex-col items-center w-28 sm:w-36 text-center group cursor-pointer">
+                              <div className="flex flex-col items-center w-28 sm:w-36 text-center group cursor-default select-none">
                                 <div
                                   className="relative w-14 h-14 sm:w-16 sm:h-16 bg-white rounded-xl sm:rounded-2xl border-2 border-sky-400 flex items-center justify-center shadow-xs select-none transition-all duration-300 ease-out group-hover:scale-125 group-hover:z-30 group-hover:shadow-xl group-hover:shadow-sky-400/40 group-hover:border-sky-500 origin-center"
                                   title={item.tooltip}
@@ -2820,17 +2820,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                 <p className="text-[10px] sm:text-[11px] text-rose-500 font-semibold mt-0.5">
                                   {item.subtitle}
                                 </p>
-                                {item.btnText && (
-                                  <button
-                                    type="button"
-                                    onClick={item.btnAction}
-                                    className="mt-1.5 px-3 py-0.5 rounded-full bg-sky-500 hover:bg-sky-600 text-white text-[9px] sm:text-[10px] font-bold inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
-                                    title={item.title}
-                                  >
-                                    <ExternalLink className="w-2.5 h-2.5" />
-                                    <span>{item.btnText}</span>
-                                  </button>
-                                )}
                               </div>
 
                               {idx < row1.length - 1 && (
@@ -2860,7 +2849,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                         <div className="w-full flex items-start justify-between relative">
                           {row2.map((item, idx) => (
                             <React.Fragment key={`row2-step-${item.step}`}>
-                              <div className="flex flex-col items-center w-28 sm:w-36 text-center group cursor-pointer">
+                              <div className="flex flex-col items-center w-28 sm:w-36 text-center group cursor-default select-none">
                                 <div
                                   className="relative w-14 h-14 sm:w-16 sm:h-16 bg-white rounded-xl sm:rounded-2xl border-2 border-sky-400 flex items-center justify-center shadow-xs select-none transition-all duration-300 ease-out group-hover:scale-125 group-hover:z-30 group-hover:shadow-xl group-hover:shadow-sky-400/40 group-hover:border-sky-500 origin-center"
                                   title={item.tooltip}
@@ -2880,17 +2869,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
                                 <p className="text-[10px] sm:text-[11px] text-rose-500 font-semibold mt-0.5">
                                   {item.subtitle}
                                 </p>
-                                {item.btnText && (
-                                  <button
-                                    type="button"
-                                    onClick={item.btnAction}
-                                    className="mt-1.5 px-3 py-0.5 rounded-full bg-sky-500 hover:bg-sky-600 text-white text-[9px] sm:text-[10px] font-bold inline-flex items-center gap-1 shadow-2xs transition-colors cursor-pointer"
-                                    title={item.title}
-                                  >
-                                    <ExternalLink className="w-2.5 h-2.5" />
-                                    <span>{item.btnText}</span>
-                                  </button>
-                                )}
                               </div>
 
                               {idx < row2.length - 1 && (

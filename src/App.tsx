@@ -1626,11 +1626,6 @@ export default function App() {
           }
 
           setTeacher(matchedProf);
-
-          const dontShowPrompt = null === 'true';
-          if (!dontShowPrompt) {
-            setShowProfilePromptModal(true);
-          }
         }}
       />
         );

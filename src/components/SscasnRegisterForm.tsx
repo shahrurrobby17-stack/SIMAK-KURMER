@@ -66,7 +66,7 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
   const [fullName, setFullName] = useState<string>('');
   const [gender, setGender] = useState<'Laki-laki' | 'Perempuan' | ''>('');
   const [birthPlace, setBirthPlace] = useState<string>('');
-  const [birthDate, setBirthDate] = useState<string>('1992-05-15');
+  const [birthDate, setBirthDate] = useState<string>('');
   const [phone, setPhone] = useState<string>('');
   const [email, setEmail] = useState<string>('');
   const [captchaInput, setCaptchaInput] = useState<string>('');
@@ -358,7 +358,7 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
             </div>
           </div>
 
-          {/* STEPPER BAR (6 LANGKAH PENDAFTARAN - LANGKAH 1-5 DAPAT DIKLIK) */}
+          {/* STEPPER BAR (6 LANGKAH PENDAFTARAN - NON-KLIK, MENGIKUTI PROSES BERURUTAN) */}
           <div className="bg-gradient-to-r from-sky-50/50 via-white to-sky-50/50 border-b border-slate-200 px-4 sm:px-8 py-3 sm:py-3.5">
             <div className="w-full max-w-4xl mx-auto flex items-center justify-between">
               {stepsList.map((st, idx) => {
@@ -366,14 +366,8 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
                 const isCompleted = step > st.num;
                 return (
                   <React.Fragment key={st.num}>
-                    <button 
-                      type="button"
-                      onClick={() => {
-                        setErrorMsg(null);
-                        setStep(st.num as 1 | 2 | 3 | 4 | 5 | 6);
-                      }}
-                      title={`Buka Langkah ${st.num}: ${st.label}`}
-                      className={`flex items-center gap-1.5 sm:gap-2 select-none transition-all cursor-pointer group text-left p-1 rounded-lg hover:bg-sky-50 focus:outline-none active:scale-95 ${
+                    <div 
+                      className={`flex items-center gap-1.5 sm:gap-2 select-none cursor-default text-left p-1 rounded-lg ${
                         isActive ? 'bg-sky-50/90 ring-1 ring-sky-200' : ''
                       }`}
                     >
@@ -382,8 +376,8 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
                         isActive
                           ? 'bg-[#1888c8] text-white shadow-sm shadow-[#1888c8]/30 ring-3 ring-sky-100 scale-105'
                           : isCompleted
-                            ? 'bg-[#1888c8] text-white group-hover:bg-[#1478b0]'
-                            : 'border border-slate-300 text-slate-500 bg-white group-hover:border-[#1888c8] group-hover:text-[#1888c8]'
+                            ? 'bg-[#1888c8] text-white'
+                            : 'border border-slate-300 text-slate-500 bg-white'
                       }`}>
                         {isCompleted ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : st.num}
                       </div>
@@ -391,17 +385,17 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
                       {/* Step Text */}
                       <div className="text-left hidden md:block">
                         <span className={`block text-[9px] font-black tracking-wider uppercase transition-colors ${
-                          isActive ? 'text-[#1888c8]' : isCompleted ? 'text-slate-600 group-hover:text-[#1888c8]' : 'text-slate-400 group-hover:text-[#1888c8]'
+                          isActive ? 'text-[#1888c8]' : isCompleted ? 'text-slate-600' : 'text-slate-400'
                         }`}>
                           LANGKAH {st.num}
                         </span>
                         <span className={`text-[11px] font-bold leading-tight transition-colors ${
-                          isActive ? 'text-slate-900 font-extrabold' : isCompleted ? 'text-slate-700 group-hover:text-slate-900' : 'text-slate-500 group-hover:text-slate-800'
+                          isActive ? 'text-slate-900 font-extrabold' : isCompleted ? 'text-slate-700' : 'text-slate-500'
                         }`}>
                           {st.label}
                         </span>
                       </div>
-                    </button>
+                    </div>
 
                     {/* Horizontal Connector Line */}
                     {idx < stepsList.length - 1 && (
