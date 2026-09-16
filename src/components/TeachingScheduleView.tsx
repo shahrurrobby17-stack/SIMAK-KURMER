@@ -17,6 +17,7 @@ import {
   FileSpreadsheet
 } from 'lucide-react';
 import { saveTeachingSchedulesToFirebase, subscribeToSchedules } from '../lib/firebaseService';
+import { auth } from '../lib/firebase';
 import { generatePdfReport } from '../utils/pdfExport';
 
 interface TeachingScheduleViewProps {
@@ -93,25 +94,68 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
   });
 
   useEffect(() => {
-    const unsub = subscribeToSchedules((remoteSchedules) => {
-      if (remoteSchedules && Array.isArray(remoteSchedules)) {
-        setSchedules(remoteSchedules);
-        ((k: string, v: string) => void 0)(storageKey, JSON.stringify(remoteSchedules));
-        if (isMaster) {
-          ((k: string, v: string) => void 0)('simak_schedules', JSON.stringify(remoteSchedules));
+    const fetchSchedules = async () => {
+      try {
+        const user = auth.currentUser;
+        if (!user) return;
+        const token = await user.getIdToken();
+        const res = await fetch('/api/teaching-schedules', {
+          headers: {
+            'Authorization': `Bearer ${token}`
+          }
+        });
+        if (res.ok) {
+          const remoteSchedules = await res.json();
+          if (Array.isArray(remoteSchedules)) {
+            setSchedules(remoteSchedules);
+            ((k: string, v: string) => void 0)(storageKey, JSON.stringify(remoteSchedules));
+            if (isMaster) {
+              ((k: string, v: string) => void 0)('simak_schedules', JSON.stringify(remoteSchedules));
+            }
+          }
         }
+      } catch (err) {
+        console.error('Failed to fetch schedules from postgres', err);
+      }
+    };
+    
+    // Also use the real-time firebase subscription if necessary or just fetch on load
+    fetchSchedules();
+
+    // Still keep subscription if it's there, but we are migrating to vercel postgres.
+    const unsub = subscribeToSchedules((remoteSchedules) => {
+      if (remoteSchedules && Array.isArray(remoteSchedules) && remoteSchedules.length > 0) {
+        // Migration: If firebase has data but PG doesn't, maybe we keep it. 
+        // For now, let's just let PG be the source of truth if we use it.
       }
     }, settingsScope);
     return () => unsub();
   }, [teacher?.id, isMaster, storageKey, settingsScope]);
 
-  const handleSaveSchedules = (newSchedules: TeachingScheduleItem[]) => {
+  const handleSaveSchedules = async (newSchedules: TeachingScheduleItem[]) => {
     setSchedules(newSchedules);
     ((k: string, v: string) => void 0)(storageKey, JSON.stringify(newSchedules));
     if (isMaster) {
       ((k: string, v: string) => void 0)('simak_schedules', JSON.stringify(newSchedules));
     }
     saveTeachingSchedulesToFirebase(newSchedules, settingsScope);
+
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const token = await user.getIdToken();
+        await fetch('/api/teaching-schedules', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(newSchedules)
+        });
+      }
+    } catch (err) {
+      console.error('Failed to save to postgres', err);
+    }
   };
 
   // Today's day name in Indonesian
