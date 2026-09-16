@@ -56,6 +56,7 @@ import {
   saveWeeklySchedulesToFirebase,
   subscribeToWeeklySchedules
 } from '../../lib/firebaseService';
+import { auth } from '../../lib/firebase';
 import { SaveSuccessModal } from '../SaveSuccessModal';
 
 interface JJMItem {
@@ -279,7 +280,9 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
   // Weekly Subject Schedule (1-Week Schedule) State
   const [weeklySchedules, setWeeklySchedules] = useState<WeeklyClassScheduleItem[]>(() => {
     try {
-      const saved = ((k: string) => null as any)('simak_weekly_class_schedules');
+      const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_weekly_class_schedules_cleared') === 'true';
+      if (isCleared) return [];
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('simak_weekly_class_schedules') : null;
       if (saved) {
         return JSON.parse(saved);
       }
@@ -311,10 +314,38 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
 
   // Sync weekly schedules with Firebase & local storage
   useEffect(() => {
+    const fetchSchedules = async () => {
+      try {
+        const user = auth.currentUser;
+        if (user) {
+          const token = await user.getIdToken();
+          const res = await fetch('/api/teaching-schedules', {
+            headers: { 'Authorization': `Bearer ${token}` }
+          });
+          if (res.ok) {
+            const remoteSchedules = await res.json();
+            if (Array.isArray(remoteSchedules)) {
+              const isCleared = localStorage.getItem('simak_weekly_class_schedules_cleared') === 'true';
+              if (remoteSchedules.length > 0 || isCleared) {
+                setWeeklySchedules(remoteSchedules);
+                try {
+                  localStorage.setItem('simak_weekly_class_schedules', JSON.stringify(remoteSchedules));
+                } catch (e) {
+                  // ignore
+                }
+              }
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Failed to fetch schedules from postgres', err);
+      }
+    };
+    fetchSchedules();
+
     const unsub = subscribeToWeeklySchedules((items) => {
       if (items && Array.isArray(items)) {
-        setWeeklySchedules(items);
-        ((k: string, v: string) => void 0)('simak_weekly_class_schedules', JSON.stringify(items));
+        // Fallback or secondary sync
       }
     });
 
@@ -570,11 +601,33 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
   const [activeModuleTab, setActiveModuleTab] = useState<'jadwal' | 'sinkronisasi' | 'siswa' | 'presensi' | 'presensiEkstra' | 'kelolaNilai' | 'jurnal'>('jadwal');
 
   // Update & Sync Weekly Schedule helper
-  const updateWeeklySchedules = (updated: WeeklyClassScheduleItem[], msg: string = 'Jadwal mata pelajaran 1 minggu berhasil diperbarui!') => {
+  const updateWeeklySchedules = async (updated: WeeklyClassScheduleItem[], msg: string = 'Jadwal mata pelajaran 1 minggu berhasil diperbarui!') => {
     setWeeklySchedules(updated);
-    ((k: string, v: string) => void 0)('simak_weekly_class_schedules', JSON.stringify(updated));
+    try {
+      localStorage.setItem('simak_weekly_class_schedules', JSON.stringify(updated));
+    } catch (e) {
+      console.warn('LocalStorage error:', e);
+    }
     window.dispatchEvent(new Event('storage'));
     saveWeeklySchedulesToFirebase(updated).catch(err => console.warn('Firebase saveWeeklySchedules warning:', err));
+    
+    try {
+      const user = auth.currentUser;
+      if (user) {
+        const token = await user.getIdToken();
+        await fetch('/api/teaching-schedules', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(updated)
+        });
+      }
+    } catch (err) {
+      console.error('Failed to save to postgres', err);
+    }
+
     setSaveSuccessMsg(msg);
     setSaveSuccessModal(true);
     showToast(msg, 'success');
@@ -654,8 +707,23 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
     setScheduleToDelete(null);
   };
 
-  const handleResetWeeklyScheduleConfirm = () => {
-    updateWeeklySchedules(initialWeeklyClassSchedules, 'Jadwal 1 minggu berhasil direset ke standar kurikulum!');
+  const handleResetWeeklyScheduleConfirm = async () => {
+    try {
+      localStorage.removeItem('simak_weekly_class_schedules_cleared');
+    } catch (e) {
+      // ignore
+    }
+    await updateWeeklySchedules(initialWeeklyClassSchedules, 'Jadwal 1 minggu berhasil direset ke standar kurikulum!');
+    setShowResetScheduleModal(false);
+  };
+
+  const handleClearAllWeeklyScheduleConfirm = async () => {
+    try {
+      localStorage.setItem('simak_weekly_class_schedules_cleared', 'true');
+    } catch (e) {
+      // ignore
+    }
+    await updateWeeklySchedules([], 'Seluruh data jadwal berhasil direset dan dihapus dari sistem!');
     setShowResetScheduleModal(false);
   };
 
@@ -1345,10 +1413,11 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
               <button
                 type="button"
                 onClick={() => setShowResetScheduleModal(true)}
-                className="px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-none border border-rose-200 flex items-center gap-1.5 transition-all cursor-pointer"
+                className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold text-xs rounded-none border border-rose-200 flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                title="Reset dan hapus semua data jadwal pelajaran pada menu kurikulum"
               >
-                <RefreshCw className="w-3.5 h-3.5 text-rose-600" />
-                <span>Reset Standar</span>
+                <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                <span>Reset Jadwal</span>
               </button>
             </div>
           </div>
@@ -3721,32 +3790,56 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
       {showResetScheduleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-200">
           <div className="bg-white rounded-none shadow-2xl border border-slate-200 w-full max-w-md overflow-hidden animate-in zoom-in-95 duration-200 p-6 space-y-4">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-amber-100 text-amber-700 rounded-none flex items-center justify-center shrink-0">
-                <RefreshCw className="w-5 h-5" />
+            <div className="flex items-start gap-3">
+              <div className="w-10 h-10 bg-rose-100 text-rose-700 rounded-none flex items-center justify-center shrink-0">
+                <Trash2 className="w-5 h-5" />
               </div>
-              <div>
-                <h4 className="font-bold text-sm text-slate-900">Reset ke Jadwal Standar?</h4>
-                <p className="text-xs text-slate-500">Semua perubahan jadwal kustom akan dikembalikan ke susunan jadwal baku 1 minggu.</p>
+              <div className="space-y-1">
+                <h4 className="font-bold text-sm text-slate-900">Reset Data Jadwal Pelajaran</h4>
+                <p className="text-xs text-slate-500">
+                  Konfirmasi penghapusan data jadwal pelajaran ({weeklySchedules.length} sesi terdaftar).
+                </p>
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            <div className="bg-rose-50 border border-rose-200 p-3 rounded-none text-xs text-rose-800 space-y-1">
+              <div className="font-bold flex items-center gap-1.5">
+                <AlertTriangle className="w-4 h-4 text-rose-600 shrink-0" />
+                <span>Peringatan Penghapusan</span>
+              </div>
+              <p className="text-[11px] text-rose-700 leading-relaxed">
+                Tindakan <strong>Hapus Semua Jadwal</strong> akan menghapus seluruh data jadwal pelajaran pada menu kurikulum, portal siswa, dan jadwal mengajar guru secara permanen.
+              </p>
+            </div>
+
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-2 pt-3 border-t border-slate-100">
               <button
                 type="button"
                 onClick={() => setShowResetScheduleModal(false)}
-                className="px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-none cursor-pointer"
+                className="w-full sm:w-auto px-4 py-2 text-xs font-bold text-slate-600 hover:bg-slate-100 rounded-none cursor-pointer text-center"
               >
                 Batal
               </button>
-              <button
-                type="button"
-                onClick={handleResetWeeklyScheduleConfirm}
-                className="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-none shadow-xs flex items-center gap-1.5 cursor-pointer"
-              >
-                <RefreshCw className="w-4 h-4" />
-                <span>Reset Jadwal Baku</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto justify-end">
+                <button
+                  type="button"
+                  onClick={handleResetWeeklyScheduleConfirm}
+                  className="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-none border border-slate-300 flex items-center gap-1.5 cursor-pointer"
+                  title="Kembalikan susunan jadwal ke standar awal kurikulum"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-slate-600" />
+                  <span>Isi Standar Baku</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleClearAllWeeklyScheduleConfirm}
+                  className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-none shadow-xs flex items-center gap-1.5 cursor-pointer"
+                  title="Hapus seluruh data jadwal pada menu kurikulum"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  <span>Hapus Semua Jadwal</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>

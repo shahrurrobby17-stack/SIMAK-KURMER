@@ -24,7 +24,6 @@ async function startServer() {
       }
       
       const schedules = await db.query.teachingSchedules.findMany({
-        where: (schedules, { eq }) => eq(schedules.uid, req.user!.uid),
         orderBy: (schedules, { desc }) => [desc(schedules.createdAt)],
       });
       
@@ -46,20 +45,22 @@ async function startServer() {
         return res.status(400).json({ error: "Expected an array of schedules" });
       }
 
-      // We do a simple replace all for this user's schedules (sync)
-      const { eq } = await import('drizzle-orm');
+      // We do a simple replace all for this demo app's global schedules
       const { teachingSchedules } = await import('./src/db/schema.ts');
 
-      await db.delete(teachingSchedules).where(eq(teachingSchedules.uid, req.user.uid));
+      await db.delete(teachingSchedules);
       
       if (schedulesData.length > 0) {
         const insertData = schedulesData.map((s: any) => ({
           id: s.id,
-          uid: req.user!.uid,
+          uid: req.user!.uid, // Still tracking who uploaded it
           day: s.day,
           time: s.time,
           className: s.className,
-          sub: s.sub,
+          subject: s.subject || s.sub || '',
+          teacher: s.teacher || '',
+          room: s.room || '',
+          notes: s.notes || null,
           schoolName: s.schoolName || null,
         }));
         await db.insert(teachingSchedules).values(insertData);
