@@ -220,6 +220,9 @@ const initialDefaultModules: TeacherModuleDocument[] = [
 interface CurriculumSystemViewProps {
   registeredUsers: UserAccount[];
   teacher?: TeacherProfile;
+  classList?: string[];
+  allRegisteredClasses?: string[];
+  inactiveClasses?: string[];
   onNavigateTab?: (tab: string) => void;
   onUpdateRegisteredUsers?: (users: UserAccount[]) => void;
   onOpenAddUserModal?: (defaultRole: string) => void;
@@ -263,6 +266,9 @@ const initialRpeList = [
 export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
   registeredUsers,
   teacher,
+  classList = [],
+  allRegisteredClasses = [],
+  inactiveClasses = [],
   onNavigateTab,
   onUpdateRegisteredUsers,
   onOpenAddUserModal,
@@ -301,7 +307,10 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
   const [editingScheduleItem, setEditingScheduleItem] = useState<WeeklyClassScheduleItem | null>(null);
   const [schDay, setSchDay] = useState<string>('Senin');
   const [schTime, setSchTime] = useState<string>('07.00 - 08.30');
-  const [schClassName, setSchClassName] = useState<string>('X-IPA 1');
+  const [schClassName, setSchClassName] = useState<string>(() => {
+    const activeFromProps = (classList || []).filter(c => Boolean(c) && c !== 'Semua Kelas' && c !== 'SEMUA');
+    return activeFromProps[0] || 'X-IPA 1';
+  });
   const [schSubject, setSchSubject] = useState<string>('Biologi - Struktur & Fungsi Sel');
   const [schTeacher, setSchTeacher] = useState<string>(teacher?.name || 'Shahrur Robby, S.Pd.');
   const [schRoom, setSchRoom] = useState<string>('Lab Biologi');
@@ -608,6 +617,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
     } catch (e) {
       console.warn('LocalStorage error:', e);
     }
+    window.dispatchEvent(new CustomEvent('simak_schedules_updated', { detail: updated }));
     window.dispatchEvent(new Event('storage'));
     saveWeeklySchedulesToFirebase(updated).catch(err => console.warn('Firebase saveWeeklySchedules warning:', err));
     
@@ -637,10 +647,15 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
     setEditingScheduleItem(null);
     setSchDay(prefillDay || (filterScheduleDay !== 'Semua Hari' ? filterScheduleDay : 'Senin'));
     setSchTime('07.00 - 08.30');
-    setSchClassName(prefillClass || (filterScheduleClass !== 'Semua Kelas' ? filterScheduleClass : 'X-IPA 1'));
+    // Prioritaskan prefillClass, filterScheduleClass jika aktif di pengaturan, atau kelas pertama dari pengaturan
+    const defaultCls = prefillClass || 
+      (filterScheduleClass !== 'Semua Kelas' && scheduleAvailableClasses.includes(filterScheduleClass) 
+        ? filterScheduleClass 
+        : (scheduleAvailableClasses[0] || 'X-IPA 1'));
+    setSchClassName(defaultCls);
     setSchSubject('');
     setSchTeacher(teacher?.name || 'Shahrur Robby, S.Pd.');
-    setSchRoom('Lab Biologi');
+    setSchRoom(`R. ${defaultCls}`);
     setSchNotes('');
     setShowWeeklyScheduleModal(true);
   };
@@ -730,11 +745,59 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
   // Schedule Filter Calculations
   const scheduleDaysList = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
   
+  // Ambil data kelas/rombel dari Menu Pengaturan > Tahun Ajaran & Kelas
   const scheduleAvailableClasses = useMemo(() => {
-    const defaultClasses = ['X-IPA 1', 'X-IPA 2', 'XI-IPA 1', 'XI-IPA 2', 'XII-IPA 1'];
+    // 1. Ambil dari props classList (hanya kelas aktif tanpa 'Semua Kelas' dan 'SEMUA')
+    const activeFromProps = (classList || [])
+      .filter(c => Boolean(c) && c !== 'Semua Kelas' && c !== 'SEMUA');
+
+    // 2. Ambil dari allRegisteredClasses jika ada, saring yang aktif
+    const activeFromRegistered = (allRegisteredClasses || [])
+      .filter(c => Boolean(c) && c !== 'Semua Kelas' && c !== 'SEMUA' && !inactiveClasses?.includes(c));
+
+    // 3. Fallback ke localStorage jika props sedang dimuat atau kosong
+    let activeFromStorage: string[] = [];
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('simak_active_classes') || localStorage.getItem('simak_all_registered_classes');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            activeFromStorage = parsed.filter(c => Boolean(c) && c !== 'Semua Kelas' && c !== 'SEMUA');
+          }
+        }
+      } catch (e) {
+        // ignore
+      }
+    }
+
+    // Gabungkan rombel dari Pengaturan (Tahun Ajaran & Kelas)
+    const settingsClasses = Array.from(new Set([
+      ...activeFromProps,
+      ...activeFromRegistered,
+      ...activeFromStorage
+    ]));
+
+    // Pertahankan kelas yang sudah ada di jadwal tersimpan agar tidak hilang dari filter
     const fromSchedules = weeklySchedules.map(s => s.className).filter(Boolean);
-    return Array.from(new Set([...defaultClasses, ...fromSchedules]));
-  }, [weeklySchedules]);
+
+    // Default cadangan jika belum ada kelas terdaftar sama sekali
+    const fallback = ['X-IPA 1', 'X-IPA 2', 'XI-IPA 1', 'XI-IPA 2', 'XII-IPA 1'];
+
+    const result = Array.from(new Set([
+      ...(settingsClasses.length > 0 ? settingsClasses : fallback),
+      ...fromSchedules
+    ]));
+
+    return result.length > 0 ? result : fallback;
+  }, [classList, allRegisteredClasses, inactiveClasses, weeklySchedules]);
+
+  // Sinkronisasi pilihan rombel saat daftar kelas terbarui
+  useEffect(() => {
+    if (scheduleAvailableClasses.length > 0 && (!schClassName || !scheduleAvailableClasses.includes(schClassName))) {
+      setSchClassName(scheduleAvailableClasses[0]);
+    }
+  }, [scheduleAvailableClasses, schClassName]);
 
   const filteredWeeklySchedules = useMemo(() => {
     return weeklySchedules.filter(item => {
@@ -3600,19 +3663,45 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
 
                 {/* Kelas / Rombel */}
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Kelas / Rombel <span className="text-rose-600">*</span>
-                  </label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-bold text-slate-700">
+                      Kelas / Rombel <span className="text-rose-600">*</span>
+                    </label>
+                    {onNavigateTab && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowWeeklyScheduleModal(false);
+                          onNavigateTab('settings');
+                        }}
+                        className="text-[10px] text-cyan-700 hover:text-cyan-900 font-semibold flex items-center gap-1 hover:underline cursor-pointer"
+                        title="Buka Menu Pengaturan > Tahun Ajaran & Kelas untuk menambah/mengubah rombel"
+                      >
+                        <Settings className="w-3 h-3" />
+                        <span>Pengaturan Rombel</span>
+                      </button>
+                    )}
+                  </div>
                   <select
                     value={schClassName}
-                    onChange={(e) => setSchClassName(e.target.value)}
+                    onChange={(e) => {
+                      const newCls = e.target.value;
+                      setSchClassName(newCls);
+                      if (!schRoom || schRoom.startsWith('R. ') || schRoom === 'Lab Biologi') {
+                        setSchRoom(`R. ${newCls}`);
+                      }
+                    }}
                     required
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white"
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-none text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-600 focus:bg-white cursor-pointer"
                   >
                     {scheduleAvailableClasses.map(cls => (
                       <option key={cls} value={cls}>{cls}</option>
                     ))}
                   </select>
+                  <p className="text-[10px] text-slate-500 mt-1 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block shrink-0"></span>
+                    <span>Diambil dari rombel aktif <strong>Pengaturan &gt; Tahun Ajaran &amp; Kelas</strong> ({scheduleAvailableClasses.length} kelas).</span>
+                  </p>
                 </div>
               </div>
 
@@ -3882,10 +3971,10 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                   SISTEM INFORMASI MANAJEMEN AKADEMIK KURIKULUM (SIMAK)
                 </h2>
                 <h3 className="text-sm font-bold text-slate-700 uppercase">
-                  JADWAL PELAJARAN MINGGUAN TAHUN AJARAN 2026/2027
+                  JADWAL PELAJARAN MINGGUAN TAHUN AJARAN {teacher?.academicYear || '2026/2027'}
                 </h3>
                 <p className="text-[11px] text-slate-500">
-                  Kurikulum Merdeka • Berlaku Efektif Semester Ganjil • {filterScheduleClass !== 'Semua Kelas' ? `Rombel: ${filterScheduleClass}` : 'Semua Rombel'}
+                  Kurikulum Merdeka • Berlaku Efektif Semester {teacher?.semester || 'Ganjil'} • {filterScheduleClass !== 'Semua Kelas' ? `Rombel: ${filterScheduleClass}` : 'Semua Rombel'}
                 </p>
               </div>
 

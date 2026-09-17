@@ -1939,11 +1939,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     <span className="whitespace-nowrap"><span className="font-bold text-white">Catatan:</span> Buka Website SIMAK Merdeka pada Laptop/PC windows 10 keatas untuk performa lebih optimal.</span>
                   </div>
 
-                  {/* Timestamp info */}
-                  <div className="flex items-center justify-start space-x-2 text-[11px] sm:text-xs text-white font-medium pt-0.5">
-                    <Calendar className="w-3.5 h-3.5 text-white" />
-                    <span>Pembaruan terakhir: Senin, 14 September 2026</span>
-                  </div>
+
                 </div>
 
                 {/* Right: Tingkat Sinkronisasi Data Card with Navigation Buttons */}

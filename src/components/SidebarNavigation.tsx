@@ -51,8 +51,8 @@ export type NavTab =
   | 'maintenance' 
   | 'settings';
 
-import { UserAccount, TeacherProfile, TeachingScheduleItem } from '../types';
-import { subscribeToSchedules } from '../lib/firebaseService';
+import { UserAccount, TeacherProfile } from '../types';
+import { useTeachingSchedules } from '../lib/teachingScheduleService';
 
 interface SidebarNavigationProps {
   activeTab: NavTab;
@@ -87,44 +87,15 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   const mobileNavContainerRef = React.useRef<HTMLDivElement>(null);
 
   
-  const [schedules, setSchedules] = React.useState<TeachingScheduleItem[]>([]);
-  const settingsScope = teacher?.id && !isMasterUser ? `_${teacher.id}` : '';
-
-  React.useEffect(() => {
-    const savedKey = ((k: string) => null as any)(teacher?.id ? `simak_schedules_${teacher.id}` : 'simak_schedules');
-    if (savedKey) {
-      try {
-        const parsed = JSON.parse(savedKey);
-        if (Array.isArray(parsed)) setSchedules(parsed);
-      } catch (e) {}
-    } else if (isMasterUser) {
-      const savedGen = ((k: string) => null as any)('simak_schedules');
-      if (savedGen) {
-        try {
-          const parsed = JSON.parse(savedGen);
-          if (Array.isArray(parsed) && parsed.length > 0) setSchedules(parsed);
-        } catch (e) {}
-      }
-    }
-  }, [teacher?.id, isMasterUser]);
-
-  React.useEffect(() => {
-    const unsub = subscribeToSchedules((remoteSchedules) => {
-      if (remoteSchedules && Array.isArray(remoteSchedules)) {
-        setSchedules(remoteSchedules);
-      }
-    }, settingsScope);
-    return () => unsub();
-  }, [teacher?.id, isMasterUser, settingsScope]);
-
-  const dayIndex = new Date().getDay();
-  const dayName = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][dayIndex];
-  
-  const activeClasses = Array.from(new Set(
-    schedules.filter(sch => sch.day === dayName).map(sch => sch.className)
-  ));
-  
-  const activeClassText = activeClasses.length > 0 ? activeClasses.join(', ') : 'Tidak ada jadwal hari ini';
+  // Live active teaching schedule data from Teaching Schedule menu
+  const {
+    activeClasses,
+    activeClassText
+  } = useTeachingSchedules({
+    teacher,
+    currentUser,
+    isMasterUser
+  });
 
   const isAdministrator = isAdmin || isMasterUser || Boolean(
     currentUser && (

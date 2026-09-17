@@ -442,6 +442,7 @@ export default function App() {
             subjects={subjects}
             isDemoAdmin={isDemoAdmin}
             isMasterUser={true}
+            currentUser={currentUser}
             
           />
         );
@@ -577,6 +578,16 @@ export default function App() {
   const classList = useMemo(() => {
     return ['Semua Kelas', ...validRegisteredClasses];
   }, [validRegisteredClasses]);
+
+  // Sync active classes to localStorage for system views
+  useEffect(() => {
+    try {
+      localStorage.setItem('simak_active_classes', JSON.stringify(validRegisteredClasses));
+      localStorage.setItem('simak_all_registered_classes', JSON.stringify(allRegisteredClasses));
+    } catch (e) {
+      // ignore
+    }
+  }, [validRegisteredClasses, allRegisteredClasses]);
 
   // Auto-switch selectedClass if current selection becomes inactive
   useEffect(() => {
@@ -1812,6 +1823,10 @@ export default function App() {
                   {activeTab === 'system-kurikulum' && (
                     <CurriculumSystemView 
                       registeredUsers={registeredUsers}
+                      teacher={teacher}
+                      classList={classList}
+                      allRegisteredClasses={allRegisteredClasses}
+                      inactiveClasses={inactiveClasses}
                       onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
                       onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
                     />
@@ -1922,6 +1937,7 @@ export default function App() {
                   subjects={subjects}
                   isDemoAdmin={isDemoAdmin}
                   isMasterUser={isMasterUser}
+                  currentUser={currentUser}
                 />
               )}
 

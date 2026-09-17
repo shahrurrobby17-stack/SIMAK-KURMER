@@ -358,7 +358,10 @@ export const initialWeeklyClassSchedules: WeeklyClassScheduleItem[] = [
   { id: 'WSCH-24', day: 'Senin', time: '09.15 - 10.45', className: 'XI-IPA 1', subject: 'Biologi - Transpor Membran Sel', teacher: 'Shahrur Robby, S.Pd.', room: 'Lab Biologi' },
   { id: 'WSCH-25', day: 'Selasa', time: '08.00 - 09.30', className: 'XI-IPA 1', subject: 'Biologi - Sistem Pencernaan Manusia', teacher: 'Shahrur Robby, S.Pd.', room: 'Lab Biologi' },
   { id: 'WSCH-26', day: 'Rabu', time: '07.00 - 08.30', className: 'XI-IPA 1', subject: 'Matematika Tingkat Lanjut', teacher: 'Dra. Endang Sulistyowati', room: 'R. XI-IPA 1' },
+  // Kelas XI-IPA 1 & XI-IPA 2 (Jadwal Lanjutan)
   { id: 'WSCH-27', day: 'Kamis', time: '07.30 - 09.00', className: 'XI-IPA 1', subject: 'Fisika - Gelombang Mekanik', teacher: 'Ir. Hendra Gunawan', room: 'Lab Fisika' },
-  { id: 'WSCH-28', day: 'Jumat', time: '08.15 - 09.45', className: 'XI-IPA 1', subject: 'Pendidikan Agama & Budi Pekerti', teacher: 'Ust. H. Syahrul Munir, S.Ag.', room: 'Masjid Sekolah' },
+  { id: 'WSCH-28', day: 'Kamis', time: '10.15 - 11.45', className: 'XI-IPA 1', subject: 'Biologi - Sistem Pernapasan Manusia', teacher: 'Shahrur Robby, S.Pd.', room: 'Lab Biologi' },
+  { id: 'WSCH-29', day: 'Kamis', time: '07.30 - 09.00', className: 'XI-IPA 2', subject: 'Biologi - Praktikum Uji Makanan', teacher: 'Shahrur Robby, S.Pd.', room: 'Lab Biologi' },
+  { id: 'WSCH-30', day: 'Jumat', time: '08.15 - 09.45', className: 'XI-IPA 1', subject: 'Pendidikan Agama & Budi Pekerti', teacher: 'Ust. H. Syahrul Munir, S.Ag.', room: 'Masjid Sekolah' },
 ];
 

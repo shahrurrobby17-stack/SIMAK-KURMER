@@ -31,8 +31,8 @@ import {
   Library,
   Layers
 } from 'lucide-react';
-import { TeacherProfile, UserAccount, TeachingScheduleItem } from '../types';
-import { subscribeToSchedules } from '../lib/firebaseService';
+import { TeacherProfile, UserAccount } from '../types';
+import { useTeachingSchedules } from '../lib/teachingScheduleService';
 import { TutWuriHandayaniLogo } from './TutWuriHandayaniLogo';
 import { NavTab } from './SidebarNavigation';
 
@@ -340,52 +340,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   const isMaster = isMasterUser || teacher?.id === 'PROF-ADMIN';
-  const storageKey = teacher?.id ? `simak_schedules_${teacher.id}` : 'simak_schedules';
-  const settingsScope = teacher?.id && !isMaster ? `_${teacher.id}` : '';
 
-  const getInitialSchedules = () => {
-    const savedKey = ((k: string) => null as any)(storageKey);
-    if (savedKey) {
-      try {
-        const parsed = JSON.parse(savedKey);
-        if (Array.isArray(parsed)) return parsed;
-      } catch (e) {}
-    }
-    if (isMaster) {
-      const savedGen = ((k: string) => null as any)('simak_schedules');
-      if (savedGen) {
-        try {
-          const parsed = JSON.parse(savedGen);
-          if (Array.isArray(parsed) && parsed.length > 0) return parsed;
-        } catch (e) {}
-      }
-    }
-    return [];
-  };
-
-  const [schedules, setSchedules] = useState<TeachingScheduleItem[]>(getInitialSchedules);
-
-  useEffect(() => {
-    setSchedules(getInitialSchedules());
-  }, [teacher?.id, currentUser?.uid, isMaster]);
-
-  useEffect(() => {
-    const unsub = subscribeToSchedules((remoteSchedules) => {
-      if (remoteSchedules && Array.isArray(remoteSchedules)) {
-        setSchedules(remoteSchedules);
-      }
-    }, settingsScope);
-    return () => unsub();
-  }, [teacher?.id, isMaster, settingsScope]);
-
-  const dayIndex = new Date().getDay();
-  const dayName = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][dayIndex];
-  
-  const activeClasses = Array.from(new Set(
-    schedules.filter(sch => sch.day === dayName).map(sch => sch.className)
-  ));
-  
-  const activeClassText = activeClasses.length > 0 ? activeClasses.join(', ') : 'Tidak ada jadwal hari ini';
+  // Live active teaching schedule data from Teaching Schedule menu
+  const {
+    activeClasses,
+    activeClassText
+  } = useTeachingSchedules({
+    teacher,
+    currentUser,
+    isMasterUser
+  });
 
   useEffect(() => {
     const updateTime = () => {
@@ -712,8 +676,8 @@ export const Navbar: React.FC<NavbarProps> = ({
                 {currentUser?.role || teacher?.subjectRole || 'Guru Pengampu'}
               </p>
               {!isKurikulumPage && !isTuPage && !isStudentPage && (
-                <div className="flex items-center md:hidden gap-1.5 mt-0.5">
-                  <div className={`w-1.5 h-1.5 rounded-full ${activeClasses.length > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-cyan-600'}`}></div>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${activeClasses.length > 0 ? 'bg-emerald-400 animate-pulse' : 'bg-cyan-600'}`}></div>
                   <p className="text-[9px] md:text-[10px] font-bold truncate text-white">
                     Status: Kelas Aktif ({activeClassText})
                   </p>

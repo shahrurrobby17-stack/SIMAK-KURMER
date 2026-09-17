@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { WeeklyClassScheduleItem, TeacherProfile, Subject } from '../types';
+import React, { useState } from 'react';
+import { WeeklyClassScheduleItem, TeacherProfile, Subject, UserAccount } from '../types';
 import { 
   Calendar, 
   Clock, 
@@ -9,8 +9,7 @@ import {
   AlertCircle,
   Filter,
 } from 'lucide-react';
-import { subscribeToWeeklySchedules } from '../lib/firebaseService';
-import { auth } from '../lib/firebase';
+import { useTeachingSchedules } from '../lib/teachingScheduleService';
 import { generatePdfReport } from '../utils/pdfExport';
 
 interface TeachingScheduleViewProps {
@@ -20,6 +19,7 @@ interface TeachingScheduleViewProps {
   subjects: Subject[];
   isDemoAdmin?: boolean;
   isMasterUser?: boolean;
+  currentUser?: UserAccount | null;
 }
 
 const DAYS_OF_WEEK = ['Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -30,59 +30,32 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
   classList,
   subjects,
   isDemoAdmin = true,
-  isMasterUser = false
+  isMasterUser = false,
+  currentUser
 }) => {
-  const isMaster = isMasterUser || teacher?.id === 'PROF-ADMIN';
-  const [schedules, setSchedules] = useState<WeeklyClassScheduleItem[]>([]);
   const [filterDay, setFilterDay] = useState<string>('SEMUA');
 
-  useEffect(() => {
-    const fetchSchedules = async () => {
-      try {
-        const user = auth.currentUser;
-        if (!user) return;
-        const token = await user.getIdToken();
-        const res = await fetch('/api/teaching-schedules', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (res.ok) {
-          const remoteSchedules = await res.json();
-          if (Array.isArray(remoteSchedules)) {
-            setSchedules(remoteSchedules);
-          }
-        }
-      } catch (err) {
-        console.error('Failed to fetch schedules from postgres', err);
-      }
-    };
-    
-    fetchSchedules();
-
-    const unsub = subscribeToWeeklySchedules((remoteSchedules) => {
-      if (remoteSchedules && Array.isArray(remoteSchedules)) {
-        // We rely on PostgreSQL mostly, but we can sync fallback here if needed.
-        // The curriculum saves to both. We'll use PG as primary in this fetch.
-      }
-    }, '');
-    return () => unsub();
-  }, [teacher?.id]);
-
-  // Today's day name in Indonesian
-  const todayDayIndex = new Date().getDay(); // 0 is Sunday
-  const todayDayName = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'][todayDayIndex];
-
-  // Filtered schedules for current teacher
-  const mySchedules = schedules.filter(s => 
-    s.teacher === teacher?.name || s.teacher === teacher?.id || isMaster
-  );
+  const {
+    schedules,
+    mySchedules,
+    todaySchedules,
+    activeClasses,
+    activeClassText,
+    todayDayName,
+    refreshSchedules
+  } = useTeachingSchedules({
+    teacher,
+    currentUser,
+    isMasterUser
+  });
 
   const filteredSchedules = mySchedules.filter(item => {
-    const matchDay = filterDay === 'SEMUA' || item.day === filterDay;
+    const matchDay = filterDay === 'SEMUA' || (item.day || '').trim().toLowerCase() === filterDay.toLowerCase();
     return matchDay;
   });
 
   const getSchedulesForDay = (dayStr: string) => {
-    return mySchedules.filter(s => s.day === dayStr);
+    return mySchedules.filter(s => (s.day || '').trim().toLowerCase() === dayStr.toLowerCase());
   };
 
   const handlePrintSchedule = () => {
@@ -150,12 +123,12 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
           <div className="text-[10px] text-slate-400">Lintas Tingkat</div>
         </div>
         <div className="bg-white p-3.5 rounded-none border border-slate-200 shadow-2xs">
-          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Sesi Hari Ini ({todayDayName})</div>
-          <div className="text-xl font-black text-emerald-600 mt-0.5">
-            {getSchedulesForDay(todayDayName).length} Sesi
+          <div className="text-[10px] text-slate-500 font-bold uppercase tracking-wider">Status: Kelas Aktif ({todayDayName})</div>
+          <div className="text-sm font-black text-emerald-700 mt-1 truncate" title={activeClassText}>
+            {activeClasses.length > 0 ? activeClasses.join(', ') : 'Tidak ada jadwal'}
           </div>
-          <div className="text-[10px] text-emerald-600 font-medium">
-            {getSchedulesForDay(todayDayName).length > 0 ? 'Ada Jadwal Mengajar' : 'Tidak Ada Jadwal'}
+          <div className="text-[10px] text-emerald-600 font-medium mt-0.5">
+            {todaySchedules.length > 0 ? `${todaySchedules.length} Sesi Terjadwal Hari Ini` : 'Tidak Ada Jadwal'}
           </div>
         </div>
         <div className="bg-white p-3.5 rounded-none border border-slate-200 shadow-2xs">
@@ -171,6 +144,10 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
       {/* Toolbar */}
       <div className="bg-white p-4 rounded-none border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="flex flex-wrap items-center gap-2">
+          <div className="px-3 py-1.5 bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-2xs">
+            <span className={`w-2 h-2 rounded-full shrink-0 ${activeClasses.length > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></span>
+            <span>Status: Kelas Aktif ({activeClassText})</span>
+          </div>
           <div className="px-3 py-1.5 bg-cyan-50 border border-cyan-200 text-cyan-800 text-xs font-bold flex items-center gap-2">
             <AlertCircle className="w-4 h-4 text-cyan-600" />
             Jadwal Hanya Bisa Diedit di Menu Manajemen Kurikulum
