@@ -2021,6 +2021,7 @@ export default function App() {
                   teacher={teacher}
                   teacherProfiles={teacherProfiles}
                   registeredUsers={registeredUsers}
+                  subjects={subjects}
                   onNavigateTab={handleTabChange}
                 />
               )}
