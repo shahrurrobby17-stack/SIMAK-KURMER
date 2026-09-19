@@ -334,27 +334,63 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
                   const attStats = getStudentAttendanceStats(student.id);
                   const avgScore = getStudentAverageScore(student.id);
 
+                  // Validate student data
+                  const isNisnValid = Boolean(student.nisn && student.nisn.trim().length >= 10 && !student.nisn.startsWith('0000'));
+                  const hasName = Boolean(student.name && student.name.trim());
+                  const hasClass = Boolean(student.className && student.className.trim());
+                  
+                  let studentErrorReason = '';
+                  if (!hasName) studentErrorReason = 'Nama siswa kosong';
+                  else if (!hasClass) studentErrorReason = 'Kelas belum ditentukan';
+                  else if (!student.nisn || !student.nisn.trim()) studentErrorReason = 'NISN belum diisi';
+                  else if (student.nisn.trim().length < 10) studentErrorReason = `NISN < 10 digit (${student.nisn.trim().length} digit)`;
+                  else if (student.nisn.startsWith('0000')) studentErrorReason = 'NISN format contoh (0000)';
+
+                  const isInvalid = Boolean(studentErrorReason);
+
                   return (
                     <tr 
                       key={student.id} 
-                      className="hover:bg-slate-50/70 transition-colors bg-white group"
+                      className={`transition-colors group ${
+                        isInvalid 
+                          ? 'bg-rose-50/60 hover:bg-rose-100/60 border-l-4 border-l-rose-600' 
+                          : 'hover:bg-slate-50/70 bg-white'
+                      }`}
                     >
                       <td className="py-3 px-4 text-center font-medium text-slate-500">
                         {idx + 1}
                       </td>
                       <td className="py-3 px-4">
                         <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center font-bold text-xs shrink-0">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
+                            isInvalid ? 'bg-rose-200 text-rose-800' : 'bg-slate-100 text-slate-600'
+                          }`}>
                             {student.name.charAt(0)}
                           </div>
                           <div>
-                            <span 
-                              className="font-bold text-slate-800 text-xs block hover:text-cyan-600 cursor-pointer transition-colors" 
-                              onClick={() => setSelectedStudentDetail(student)}
-                            >
-                              {student.name}
-                            </span>
-                            <span className="text-[10px] text-slate-400 font-mono">ID: {student.id}</span>
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <span 
+                                className={`font-bold text-xs block cursor-pointer transition-colors ${
+                                  isInvalid ? 'text-rose-900 hover:text-rose-700' : 'text-slate-800 hover:text-cyan-600'
+                                }`} 
+                                onClick={() => setSelectedStudentDetail(student)}
+                              >
+                                {student.name}
+                              </span>
+                              {isInvalid && (
+                                <span 
+                                  title={studentErrorReason}
+                                  className="px-1.5 py-0.5 text-[9px] font-bold bg-rose-200 text-rose-900 border border-rose-300"
+                                >
+                                  Error: {studentErrorReason}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-2 text-[10px] text-slate-400 font-mono">
+                              <span>NISN: {student.nisn || '-'}</span>
+                              <span>•</span>
+                              <span>ID: {student.id}</span>
+                            </div>
                           </div>
                         </div>
                       </td>
@@ -384,9 +420,17 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
                         </div>
                       </td>
                       <td className="py-3 px-4 text-center">
-                        <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium bg-emerald-50 text-emerald-700 rounded-none">
-                          {student.status || 'Aktif'}
-                        </span>
+                        {isInvalid ? (
+                          <div className="flex flex-col items-center">
+                            <span className="inline-flex items-center px-1.5 py-0.5 text-[9px] font-black uppercase tracking-wider bg-rose-100 text-rose-800 border border-rose-300">
+                              Error
+                            </span>
+                          </div>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 text-[10px] font-medium bg-emerald-50 text-emerald-700 rounded-none">
+                            {student.status || 'Aktif'}
+                          </span>
+                        )}
                       </td>
                       <td className="py-3 px-4 text-center">
                         <div className="flex items-center justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">

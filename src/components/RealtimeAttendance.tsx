@@ -650,11 +650,33 @@ export const RealtimeAttendance: React.FC<RealtimeAttendanceProps> = ({
                   const currentStatus: AttendanceStatus = record?.status || 'HADIR';
                   const currentNote = record?.note || '';
                   const currentMeeting = selectedMeetingNo;
+
+                  // Check attendance errors
+                  const studentTotalAlpa = attendanceRecords.filter(r => r.studentId === student.id && r.status === 'ALPA').length;
+                  const isAlpaExceeded = studentTotalAlpa > 3;
+
                   return (
-                    <tr key={student.id} className="hover:bg-slate-50/80 transition-colors">
+                    <tr 
+                      key={student.id} 
+                      className={`transition-colors ${
+                        isAlpaExceeded 
+                          ? 'bg-rose-50/60 hover:bg-rose-100/60 border-l-4 border-l-rose-600' 
+                          : 'hover:bg-slate-50/80'
+                      }`}
+                    >
                       <td className="p-3.5 text-center font-bold text-slate-500">{index + 1}</td>
                       <td className="p-3.5">
-                        <div className="font-bold text-[#164e63] text-xs">{student.name}</div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`font-bold text-xs ${isAlpaExceeded ? 'text-rose-900' : 'text-[#164e63]'}`}>{student.name}</span>
+                          {isAlpaExceeded && (
+                            <span 
+                              title={`Akumulasi Alpa telah mencapai ${studentTotalAlpa} pertemuan (melebihi batas maksimal 3)`}
+                              className="px-1.5 py-0.5 text-[9px] font-bold bg-rose-200 text-rose-900 border border-rose-300"
+                            >
+                              Error: Alpa {studentTotalAlpa}x (&gt; 3x)
+                            </span>
+                          )}
+                        </div>
                       </td>
                       <td className="p-3.5 text-center">
                         <span className={`px-2 py-0.5 rounded-none text-[10px] font-bold ${

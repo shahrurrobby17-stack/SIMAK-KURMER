@@ -461,11 +461,36 @@ export const GradeManagement: React.FC<GradeManagementProps> = ({
                   const isTuntas = gr.finalScore >= selectedSubject.kktp;
                   const isLoadingThis = loadingAiStudentId === student.id;
 
+                  // Grade validation
+                  const isScoreOutOfRange = gr.finalScore < 0 || gr.finalScore > 100;
+                  const isTpEmpty = (gr.tp1 === 0 && gr.tp2 === 0);
+                  const isGradeInvalid = isScoreOutOfRange || isTpEmpty;
+                  let gradeErrorReason = '';
+                  if (isScoreOutOfRange) gradeErrorReason = `Nilai akhir ${gr.finalScore} di luar rentang 0 - 100`;
+                  else if (isTpEmpty) gradeErrorReason = 'TP 1 & TP 2 belum dinilai (masih 0)';
+
                   return (
-                    <tr key={student.id} className="hover:bg-slate-50 transition-colors">
+                    <tr 
+                      key={student.id} 
+                      className={`transition-colors ${
+                        isGradeInvalid 
+                          ? 'bg-rose-50/60 hover:bg-rose-100/60 border-l-4 border-l-rose-600' 
+                          : 'hover:bg-slate-50'
+                      }`}
+                    >
                       <td className="p-3 text-center font-bold text-slate-500">{index + 1}</td>
                       <td className="p-3">
-                        <div className="font-bold text-[#164e63]">{student.name}</div>
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span className={`font-bold ${isGradeInvalid ? 'text-rose-900' : 'text-[#164e63]'}`}>{student.name}</span>
+                          {isGradeInvalid && (
+                            <span 
+                              title={gradeErrorReason}
+                              className="px-1.5 py-0.5 text-[9px] font-bold bg-rose-200 text-rose-900 border border-rose-300"
+                            >
+                              Error: {gradeErrorReason}
+                            </span>
+                          )}
+                        </div>
                         <div className="text-[10px] text-slate-400">NISN: {student.nisn}</div>
                       </td>
 

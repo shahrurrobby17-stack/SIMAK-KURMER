@@ -230,7 +230,7 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
             {/* Badge Label: INFO */}
             <div className="flex items-center gap-1 shrink-0 border-r border-white/20 pr-1.5">
               <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider bg-white text-[#164e63] shadow-xs">
-                <Radio className="w-2.5 h-2.5 shrink-0 text-cyan-600 animate-pulse" />
+                <Radio className="w-2.5 h-2.5 shrink-0 text-cyan-600" />
                 <span>INFO</span>
               </span>
             </div>
@@ -307,7 +307,7 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
             {/* Badge Label: INFO TERKINI */}
             <div className="flex items-center gap-2 shrink-0 border-r border-white/20 pr-2.5 sm:pr-3">
               <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[10px] sm:text-xs font-black uppercase tracking-wider bg-white text-[#164e63] border border-white/80 shadow-xs">
-                <Radio className="w-3.5 h-3.5 shrink-0 text-cyan-600 animate-pulse" />
+                <Radio className="w-3.5 h-3.5 shrink-0 text-cyan-600" />
                 <span>INFO TERKINI</span>
               </span>
             </div>
@@ -555,7 +555,7 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
                   <div className="flex flex-wrap gap-1.5">
                     <button
                       type="button"
-                      onClick={() => applyTemplate('Selamat Datang di SIMAK GURU! Harap lengkapi jurnal harian dan presensi siswa tepat waktu setiap hari.', 'Informasi')}
+                      onClick={() => applyTemplate('Selamat Datang di SIMAK MERDEKA! Harap lengkapi jurnal harian dan presensi siswa tepat waktu setiap hari.', 'Informasi')}
                       className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold rounded-lg transition-colors cursor-pointer"
                     >
                       + Selamat Datang

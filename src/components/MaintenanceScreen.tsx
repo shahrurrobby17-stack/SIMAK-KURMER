@@ -55,7 +55,7 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
         
         {/* Animated Icon Badge */}
         <div className="relative inline-block">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-none bg-amber-500/20 border-2 border-amber-400/50 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/10 animate-pulse">
+          <div className="w-20 h-20 sm:w-24 sm:h-24 mx-auto rounded-none bg-amber-500/20 border-2 border-amber-400/50 flex items-center justify-center text-amber-400 shadow-lg shadow-amber-500/10">
             <Wrench className="w-10 h-10 sm:w-12 sm:h-12 text-amber-300" />
           </div>
           <div className="absolute -bottom-1 -right-1 bg-rose-600 text-white p-1.5 rounded-full border-2 border-slate-800 shadow-md">
@@ -81,7 +81,7 @@ export const MaintenanceScreen: React.FC<MaintenanceScreenProps> = ({
         <div className="bg-[#164e63]/80 rounded-none p-4 border border-slate-700/80 text-left space-y-2.5">
           <div className="text-[11px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-800 pb-1 flex justify-between items-center">
             <span>Detail Akun Terdampak</span>
-            <span className="text-rose-300 bg-rose-500/20 px-2.5 py-0.5 rounded font-black border border-rose-500/30 text-[10px] animate-pulse">
+            <span className="text-rose-300 bg-rose-500/20 px-2.5 py-0.5 rounded font-black border border-rose-500/30 text-[10px]">
               STATUS: BELUM AKTIF
             </span>
           </div>

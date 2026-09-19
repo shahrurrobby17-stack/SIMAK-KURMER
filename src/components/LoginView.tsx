@@ -61,7 +61,7 @@ import {
   SearchCode,
   FolderLock
 } from 'lucide-react';
-import { UserAccount, TeacherProfile, TeachingScheduleItem, Student, StudentGrade, Subject, AttendanceRecord, InfoAnnouncement, LoginBackgroundConfig, defaultLoginBackgroundConfig } from '../types';
+import { UserAccount, TeacherProfile, TeachingScheduleItem, Student, StudentGrade, Subject, AttendanceRecord, TeachingLog, InfoAnnouncement, LoginBackgroundConfig, defaultLoginBackgroundConfig } from '../types';
 import { PRESET_THEMES } from './LoginBackgroundSettings';
 import { TutWuriHandayaniLogo } from './TutWuriHandayaniLogo';
 import { DashboardAnalytics } from './DashboardAnalytics';
@@ -71,10 +71,12 @@ import {
   allDefaultStudents, 
   initialSubjects, 
   initialAttendanceRecords, 
+  initialTeachingLogs,
   initialTeacherProfile 
 } from '../data/initialData';
 import { signInWithPopup } from 'firebase/auth';
-import { auth, googleAuthProvider } from '../lib/firebase';
+import { auth, googleAuthProvider, db } from '../lib/firebase';
+import { collection, onSnapshot, getDocs } from 'firebase/firestore';
 
 // Single Sign-On (SSO) Cloud with Key Logo Component matching official SSO vector mark
 export const SSOCloudKeyLogo: React.FC<{ 
@@ -125,6 +127,7 @@ interface LoginViewProps {
   grades?: StudentGrade[];
   subjects?: Subject[];
   attendanceRecords?: AttendanceRecord[];
+  teachingLogs?: TeachingLog[];
   classList?: string[];
   infoAnnouncement?: InfoAnnouncement;
   onUpdateInfoAnnouncement?: (updated: InfoAnnouncement) => void;
@@ -142,6 +145,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   grades,
   subjects,
   attendanceRecords,
+  teachingLogs,
   classList,
   infoAnnouncement,
   onUpdateInfoAnnouncement,
@@ -285,18 +289,152 @@ export const LoginView: React.FC<LoginViewProps> = ({
     };
   }, []);
 
+  // Real-time Firestore state on Login Page
+  const [liveStudents, setLiveStudents] = useState<Student[]>(() => (students && students.length > 0) ? students : allDefaultStudents);
+  const [liveGrades, setLiveGrades] = useState<StudentGrade[]>(() => (grades && grades.length > 0) ? grades : []);
+  const [liveAttendance, setLiveAttendance] = useState<AttendanceRecord[]>(() => (attendanceRecords && attendanceRecords.length > 0) ? attendanceRecords : initialAttendanceRecords);
+  const [liveTeachingLogs, setLiveTeachingLogs] = useState<TeachingLog[]>(() => (teachingLogs && teachingLogs.length > 0) ? teachingLogs : initialTeachingLogs);
+  const [isRealtimeActive, setIsRealtimeActive] = useState<boolean>(true);
+  const [lastSyncTime, setLastSyncTime] = useState<string>('Baru saja');
+  const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+
+  // Sync with incoming props if they update from parent App.tsx
+  useEffect(() => {
+    if (students && students.length > 0) setLiveStudents(students);
+  }, [students]);
+
+  useEffect(() => {
+    if (grades && grades.length > 0) setLiveGrades(grades);
+  }, [grades]);
+
+  useEffect(() => {
+    if (attendanceRecords && attendanceRecords.length > 0) setLiveAttendance(attendanceRecords);
+  }, [attendanceRecords]);
+
+  useEffect(() => {
+    if (teachingLogs && teachingLogs.length > 0) setLiveTeachingLogs(teachingLogs);
+  }, [teachingLogs]);
+
+  // Direct Firestore real-time onSnapshot listeners for Login page
+  useEffect(() => {
+    try {
+      const unsubStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
+        const list: Student[] = [];
+        snapshot.forEach(doc => {
+          const d = doc.data() as Student;
+          if (d && d.name) list.push(d);
+        });
+        if (list.length > 0) {
+          setLiveStudents(list.sort((a, b) => a.name.localeCompare(b.name)));
+          setLastSyncTime(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB');
+          setIsRealtimeActive(true);
+        }
+      }, (err) => {
+        console.warn('Realtime students listener in LoginView:', err);
+      });
+
+      const unsubGrades = onSnapshot(collection(db, 'grades'), (snapshot) => {
+        const list: StudentGrade[] = [];
+        snapshot.forEach(doc => {
+          const d = doc.data() as StudentGrade;
+          if (d && d.studentId) list.push(d);
+        });
+        if (list.length > 0) {
+          setLiveGrades(list);
+          setLastSyncTime(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB');
+          setIsRealtimeActive(true);
+        }
+      }, (err) => {
+        console.warn('Realtime grades listener in LoginView:', err);
+      });
+
+      const unsubAttendance = onSnapshot(collection(db, 'attendance'), (snapshot) => {
+        const list: AttendanceRecord[] = [];
+        snapshot.forEach(doc => {
+          const d = doc.data() as AttendanceRecord;
+          if (d && d.studentId) list.push(d);
+        });
+        if (list.length > 0) {
+          setLiveAttendance(list);
+          setLastSyncTime(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB');
+          setIsRealtimeActive(true);
+        }
+      }, (err) => {
+        console.warn('Realtime attendance listener in LoginView:', err);
+      });
+
+      const unsubLogs = onSnapshot(collection(db, 'teachingLogs'), (snapshot) => {
+        const list: TeachingLog[] = [];
+        snapshot.forEach(doc => {
+          const d = doc.data() as TeachingLog;
+          if (d && d.id) list.push(d);
+        });
+        if (list.length > 0) {
+          setLiveTeachingLogs(list);
+          setLastSyncTime(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB');
+          setIsRealtimeActive(true);
+        }
+      }, (err) => {
+        console.warn('Realtime teachingLogs listener in LoginView:', err);
+      });
+
+      return () => {
+        unsubStudents();
+        unsubGrades();
+        unsubAttendance();
+        unsubLogs();
+      };
+    } catch (e) {
+      console.warn('Could not initialize LoginView realtime listeners:', e);
+    }
+  }, []);
+
+  const handleManualRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      const [sSnap, gSnap, aSnap, lSnap] = await Promise.all([
+        getDocs(collection(db, 'students')),
+        getDocs(collection(db, 'grades')),
+        getDocs(collection(db, 'attendance')),
+        getDocs(collection(db, 'teachingLogs'))
+      ]);
+      const sList: Student[] = [];
+      sSnap.forEach(d => { const item = d.data() as Student; if (item?.name) sList.push(item); });
+      if (sList.length > 0) setLiveStudents(sList.sort((a, b) => a.name.localeCompare(b.name)));
+
+      const gList: StudentGrade[] = [];
+      gSnap.forEach(d => { const item = d.data() as StudentGrade; if (item?.studentId) gList.push(item); });
+      if (gList.length > 0) setLiveGrades(gList);
+
+      const aList: AttendanceRecord[] = [];
+      aSnap.forEach(d => { const item = d.data() as AttendanceRecord; if (item?.studentId) aList.push(item); });
+      if (aList.length > 0) setLiveAttendance(aList);
+
+      const lList: TeachingLog[] = [];
+      lSnap.forEach(d => { const item = d.data() as TeachingLog; if (item?.id) lList.push(item); });
+      if (lList.length > 0) setLiveTeachingLogs(lList);
+
+      setLastSyncTime(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit' }) + ' WIB');
+      setIsRealtimeActive(true);
+    } catch (err) {
+      console.error('Error refreshing realtime data:', err);
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 500);
+    }
+  };
+
   // Effective data for analytics view
   const effectiveStudents = useMemo(() => {
-    return (students && students.length > 0) ? students : allDefaultStudents;
-  }, [students]);
+    return (liveStudents && liveStudents.length > 0) ? liveStudents : allDefaultStudents;
+  }, [liveStudents]);
 
   const effectiveSubjects = useMemo(() => {
     return (subjects && subjects.length > 0) ? subjects : initialSubjects;
   }, [subjects]);
 
   const effectiveAttendance = useMemo(() => {
-    return (attendanceRecords && attendanceRecords.length > 0) ? attendanceRecords : initialAttendanceRecords;
-  }, [attendanceRecords]);
+    return (liveAttendance && liveAttendance.length > 0) ? liveAttendance : initialAttendanceRecords;
+  }, [liveAttendance]);
 
   const defaultGeneratedGrades = useMemo(() => {
     return effectiveStudents.map((std, idx) => {
@@ -326,8 +464,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
   }, [effectiveStudents, effectiveSubjects]);
 
   const effectiveGrades = useMemo(() => {
-    return (grades && grades.length > 0) ? grades : defaultGeneratedGrades;
-  }, [grades, defaultGeneratedGrades]);
+    return (liveGrades && liveGrades.length > 0) ? liveGrades : defaultGeneratedGrades;
+  }, [liveGrades, defaultGeneratedGrades]);
 
   const realTimeSyncPercentage = useMemo(() => {
     if (!effectiveStudents || effectiveStudents.length === 0) return '100%';
@@ -366,17 +504,29 @@ export const LoginView: React.FC<LoginViewProps> = ({
     const filteredAttendance = effectiveAttendance.filter(a => studentIds.has(a.studentId));
     const totalAtt = filteredAttendance.length;
     const presentCount = filteredAttendance.filter(a => a.status === 'HADIR').length;
+    const sickCount = filteredAttendance.filter(a => a.status === 'SAKIT').length;
+    const permittedCount = filteredAttendance.filter(a => a.status === 'IZIN').length;
+    const alphaCount = filteredAttendance.filter(a => a.status === 'ALPA').length;
     const attPercentage = totalAtt > 0 ? ((presentCount / totalAtt) * 100).toFixed(1) + '%' : '98.6%';
+    const attNumeric = totalAtt > 0 ? Number(((presentCount / totalAtt) * 100).toFixed(1)) : 98.6;
     
     const filteredGrades = effectiveGrades.filter(g => studentIds.has(g.studentId));
     const totalGradeRecords = filteredGrades.length;
 
+    // Filtered teaching logs
+    const filteredLogs = selectedAnalyticsClass === 'Semua Kelas'
+      ? liveTeachingLogs
+      : liveTeachingLogs.filter(l => l.className === selectedAnalyticsClass);
+    const totalTeachingLogs = filteredLogs.length;
+
     let modulePercentage = '100%';
+    let moduleNumeric = 100;
     let cpTpSubtext = 'Tersusun Sesuai CP Terbaru';
+    let completedTpSlots = 0;
+    let totalTpSlots = 0;
 
     if (totalGradeRecords > 0) {
-      const totalTpSlots = totalGradeRecords * 4;
-      let completedTpSlots = 0;
+      totalTpSlots = totalGradeRecords * 4;
       filteredGrades.forEach(g => {
         if (g.tp1 > 0) completedTpSlots++;
         if (g.tp2 > 0) completedTpSlots++;
@@ -384,25 +534,40 @@ export const LoginView: React.FC<LoginViewProps> = ({
         if (g.tp4 > 0) completedTpSlots++;
       });
       const ratio = totalTpSlots > 0 ? (completedTpSlots / totalTpSlots) * 100 : 100;
+      moduleNumeric = Number(ratio.toFixed(1));
       modulePercentage = ratio === 100 ? '100%' : `${ratio.toFixed(1)}%`;
-      cpTpSubtext = ratio === 100 ? 'Tersusun Sesuai CP Terbaru' : `Terpetakan ${completedTpSlots}/${totalTpSlots} TP`;
+      cpTpSubtext = ratio === 100 
+        ? 'Tersusun Sesuai CP Terbaru' 
+        : `Terpetakan ${completedTpSlots}/${totalTpSlots} Alur TP`;
     } else {
       modulePercentage = '100%';
+      moduleNumeric = 100;
       cpTpSubtext = 'Tersusun Sesuai CP Terbaru';
     }
     
     const syncVal = realTimeSyncPercentage;
+    const syncNumeric = parseFloat(syncVal) || 100;
     
     return {
       totalStudents,
       attPercentage,
+      attNumeric,
+      presentCount,
+      sickCount,
+      permittedCount,
+      alphaCount,
+      totalAtt,
       modulePercentage,
+      moduleNumeric,
+      completedTpSlots,
+      totalTpSlots,
+      totalTeachingLogs,
       cpTpSubtext,
       syncVal,
-      presentCount,
-      totalAtt
+      syncNumeric,
+      totalGradeRecords
     };
-  }, [selectedAnalyticsClass, effectiveStudents, effectiveAttendance, effectiveGrades, realTimeSyncPercentage]);
+  }, [selectedAnalyticsClass, effectiveStudents, effectiveAttendance, effectiveGrades, liveTeachingLogs, realTimeSyncPercentage]);
   
   // Search Bar State
   const [searchQuery, setSearchQuery] = useState<string>('');
@@ -415,24 +580,24 @@ export const LoginView: React.FC<LoginViewProps> = ({
       id: 'sync',
       label: 'Persentase Sinkronisasi',
       value: realTimeSyncPercentage,
-      subtitle: 'Tingkat Sinkronisasi Data Realtime Sistem',
+      subtitle: 'Tingkat Sinkronisasi Cloud Firestore Realtime',
       icon: BarChart3
     },
     {
       id: 'presensi',
       label: 'Kehadiran Siswa',
-      value: '98.6%',
-      subtitle: 'Tingkat Presensi & Keaktifan Harian Guru & Siswa',
+      value: classAnalyticsMetrics.attPercentage,
+      subtitle: 'Tingkat Presensi & Keaktifan Harian Siswa',
       icon: UserCheck
     },
     {
       id: 'modul',
       label: 'Kelengkapan Modul',
-      value: '99.2%',
+      value: classAnalyticsMetrics.modulePercentage,
       subtitle: 'Perangkat Pembelajaran & Modul Ajar Terverifikasi',
       icon: FileText
     }
-  ], [realTimeSyncPercentage]);
+  ], [realTimeSyncPercentage, classAnalyticsMetrics.attPercentage, classAnalyticsMetrics.modulePercentage]);
 
   // Otomatis berganti kartu persentase setiap 3 detik
   useEffect(() => {
@@ -1939,6 +2104,12 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     <span className="whitespace-nowrap"><span className="font-bold text-white">Catatan:</span> Buka Website SIMAK Merdeka pada Laptop/PC windows 10 keatas untuk performa lebih optimal.</span>
                   </div>
 
+                  {/* Last Update Date */}
+                  <div className="flex items-center space-x-2 text-xs lg:text-sm text-white/95 font-semibold whitespace-nowrap">
+                    <Calendar className="w-4 h-4 text-white shrink-0" />
+                    <span className="whitespace-nowrap">Pembaruan Terakhir : Sabtu, 19 September 2026</span>
+                  </div>
+
 
                 </div>
 
@@ -2135,7 +2306,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               {/* HEADING PERAN TERPILIH */}
               <div className="flex flex-wrap items-center justify-between gap-2 px-2 mb-6">
                 <div className="flex items-center gap-2">
-                  <div className="w-2.5 h-2.5 rounded-full bg-sky-500 animate-pulse" />
+                  <div className="w-2.5 h-2.5 rounded-full bg-sky-500" />
                   <h3 className="text-sm sm:text-base font-bold text-slate-800">
                     Alur Pendaftaran:{' '}
                     <span className="text-sky-600 capitalize">
@@ -2887,23 +3058,47 @@ export const LoginView: React.FC<LoginViewProps> = ({
         </div>
       </section>
 
-      {/* 3. PORTAL STATISTICS & FAQ WRAPPER SECTION (WARNA #F8FAFC BERSIH) - HIDDEN ON MOBILE */}
-      <div id="portal-light-section" className="hidden sm:block relative w-full bg-[#F8FAFC] text-slate-800 overflow-hidden">
+      {/* 3. PORTAL STATISTICS & FAQ WRAPPER SECTION (WARNA #F8FAFC BERSIH) */}
+      <div id="portal-light-section" className="block relative w-full bg-[#F8FAFC] text-slate-800 overflow-hidden">
         
         {/* ANALYTICS SECTION ON LOGIN PAGE */}
         <section id="analytics-section" className="relative z-10 pt-8 sm:pt-10 pb-10 sm:pb-12 scroll-mt-16 bg-transparent">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="text-center mb-6 sm:mb-8">
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sky-50 border border-sky-200 text-xs font-bold text-sky-700 mb-2.5 shadow-2xs">
-                <BarChart3 className="w-4 h-4 text-sky-600 stroke-[2.5]" />
-                <span>Analitik & Performa Real-Time SIMAK Guru</span>
+              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-xs font-bold text-emerald-800 mb-2.5 shadow-2xs">
+                <span className="relative flex h-2 w-2">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span>Live Real-Time Sinkronisasi Cloud Firestore</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                 Ringkasan Indikator Utama SIMAK
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-2xl mx-auto font-medium leading-relaxed">
-                Pantau persentase kelengkapan modul ajar, status sinkronisasi cloud real-time, serta statistik tingkat kehadiran siswa secara langsung.
+                Pantau persentase kelengkapan modul ajar, status sinkronisasi cloud real-time, serta statistik tingkat kehadiran siswa secara langsung dari database Firestore.
               </p>
+
+              {/* Status bar with Last Sync timestamp and manual refresh */}
+              <div className="flex flex-wrap items-center justify-center gap-2 mt-3 text-xs text-slate-600 font-medium">
+                <span className="flex items-center gap-1.5 text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
+                  Status: <strong className="text-emerald-700">Firestore Real-Time</strong>
+                </span>
+                <span className="flex items-center gap-1.5 text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
+                  Pembaruan: <strong className="text-sky-700">{lastSyncTime}</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={handleManualRefresh}
+                  disabled={isRefreshing}
+                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white hover:bg-slate-50 text-slate-700 font-semibold border border-slate-200 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
+                  title="Segarkan data secara real-time dari cloud"
+                >
+                  <RefreshCw className={`w-3 h-3 text-sky-600 ${isRefreshing ? 'animate-spin' : ''}`} />
+                  <span>Segarkan Data</span>
+                </button>
+              </div>
             </div>
 
             {/* 3 Main Metric Highlight Cards */}
@@ -2915,8 +3110,9 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   <div className="p-3 rounded-xl bg-sky-50 border border-sky-100 text-sky-600">
                     <FileText className="w-6 h-6 stroke-[2.5]" />
                   </div>
-                  <span className="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200">
-                    Terverifikasi
+                  <span className="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>Real-Time Live</span>
                   </span>
                 </div>
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
@@ -2926,9 +3122,15 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   <span>{classAnalyticsMetrics.modulePercentage}</span>
                   <span className="text-xs font-bold text-sky-600">✓ Perangkat Lengkap</span>
                 </div>
-                <p className="text-xs text-slate-600 font-medium mb-4">
+                <p className="text-xs text-slate-600 font-medium mb-3">
                   Capaian Pembelajaran (CP), Tujuan Pembelajaran (TP), Modul Ajar, dan Rubrik KKTP terstruktur rapi.
                 </p>
+
+                {/* Live stats counts */}
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-[11px] font-semibold text-slate-600 mb-3 flex items-center justify-between">
+                  <span>Alur TP: <strong className="text-slate-900">{classAnalyticsMetrics.completedTpSlots > 0 ? `${classAnalyticsMetrics.completedTpSlots}/${classAnalyticsMetrics.totalTpSlots}` : '100% Lengkap'}</strong></span>
+                  <span>Jurnal KBM: <strong className="text-sky-700">{classAnalyticsMetrics.totalTeachingLogs} Sesi</strong></span>
+                </div>
                 
                 {/* Progress bar */}
                 <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
@@ -2950,8 +3152,9 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   <div className="p-3 rounded-xl bg-sky-50 border border-sky-100 text-sky-600">
                     <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
                   </div>
-                  <span className="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200">
-                    Cloud Active
+                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>Cloud Active</span>
                   </span>
                 </div>
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
@@ -2959,22 +3162,29 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 </div>
                 <div className="text-3xl font-black text-slate-900 mb-2 flex items-baseline gap-2">
                   <span>{classAnalyticsMetrics.syncVal}</span>
-                  <span className="text-xs font-bold text-sky-600">Terhubung Vercel</span>
+                  <span className="text-xs font-bold text-emerald-600">Terhubung Firestore</span>
                 </div>
-                <p className="text-xs text-slate-600 font-medium mb-4">
-                  Tingkat konsistensi dan integritas data antara penyimpanan lokal browser dan Vercel Database.
+                <p className="text-xs text-slate-600 font-medium mb-3">
+                  Tingkat konsistensi dan integritas data antara sistem SIMAK dan Google Cloud Firestore Database.
                 </p>
+
+                {/* Live stats counts */}
+                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-[11px] font-semibold text-slate-600 mb-3 flex items-center justify-between">
+                  <span>Siswa: <strong className="text-slate-900">{classAnalyticsMetrics.totalStudents}</strong></span>
+                  <span>Nilai: <strong className="text-slate-900">{classAnalyticsMetrics.totalGradeRecords}</strong></span>
+                  <span>Presensi: <strong className="text-sky-700">{classAnalyticsMetrics.totalAtt}</strong></span>
+                </div>
                 
                 {/* Progress bar */}
                 <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
                   <div 
-                    className="bg-sky-500 h-2.5 rounded-full transition-all duration-700" 
+                    className="bg-emerald-500 h-2.5 rounded-full transition-all duration-700" 
                     style={{ width: classAnalyticsMetrics.syncVal }}
                   />
                 </div>
                 <div className="mt-2 text-[11px] text-slate-500 flex justify-between font-semibold">
-                  <span>Enkripsi Database AES-256</span>
-                  <span className="text-sky-700 font-bold">{classAnalyticsMetrics.syncVal} Sync</span>
+                  <span>Google Cloud Firestore • Enkripsi AES-256</span>
+                  <span className="text-emerald-700 font-bold">{classAnalyticsMetrics.syncVal} Sync</span>
                 </div>
               </div>
 
@@ -2985,8 +3195,9 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   <div className="p-3 rounded-xl bg-sky-50 border border-sky-100 text-sky-600">
                     <UserCheck className="w-6 h-6 stroke-[2.5]" />
                   </div>
-                  <span className="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200">
-                    Terverifikasi
+                  <span className="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200 flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                    <span>Presensi Live</span>
                   </span>
                 </div>
                 <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
@@ -2996,9 +3207,17 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   <span>{classAnalyticsMetrics.attPercentage}</span>
                   <span className="text-xs font-bold text-sky-600">Rata-Rata Presensi</span>
                 </div>
-                <p className="text-xs text-slate-600 font-medium mb-4">
-                  Tingkat keaktifan dan kehadiran harian siswa seluruh kelas.
+                <p className="text-xs text-slate-600 font-medium mb-3">
+                  Tingkat keaktifan dan kehadiran harian siswa seluruh kelas terverifikasi real-time.
                 </p>
+
+                {/* Live attendance breakdown badges */}
+                <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 text-[11px] font-bold mb-3 grid grid-cols-4 gap-1 text-center">
+                  <span className="text-emerald-700 bg-emerald-50/80 py-1 rounded">{classAnalyticsMetrics.presentCount} Hadir</span>
+                  <span className="text-amber-700 bg-amber-50/80 py-1 rounded">{classAnalyticsMetrics.sickCount} Sakit</span>
+                  <span className="text-sky-700 bg-sky-50/80 py-1 rounded">{classAnalyticsMetrics.permittedCount} Izin</span>
+                  <span className="text-rose-700 bg-rose-50/80 py-1 rounded">{classAnalyticsMetrics.alphaCount} Alpa</span>
+                </div>
                 
                 {/* Progress bar */}
                 <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
@@ -3009,7 +3228,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 </div>
                 <div className="mt-2 text-[11px] text-slate-500 flex justify-between font-semibold">
                   <span>Presensi Terverifikasi</span>
-                  <span className="text-sky-700 font-bold">{classAnalyticsMetrics.attPercentage} Hadir</span>
+                  <span className="text-sky-700 font-bold">{classAnalyticsMetrics.attPercentage} Hadir ({classAnalyticsMetrics.presentCount}/{classAnalyticsMetrics.totalAtt})</span>
                 </div>
               </div>
             </div>
@@ -3018,23 +3237,23 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-xs">
               <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-sky-600" />
-                <span>Rincian Verifikasi Perangkat & Database</span>
+                <span>Rincian Verifikasi Perangkat & Database Real-Time</span>
               </h3>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
                 <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                  <div className="text-slate-500 font-medium">Capaian & Tujuan Pembelajaran</div>
+                  <div className="text-slate-500 font-medium">Capaian & Alur Tujuan Pembelajaran (TP)</div>
                   <div className="text-sm font-black text-slate-800 mt-1">{classAnalyticsMetrics.modulePercentage} Lengkap</div>
-                  <div className="text-[11px] text-sky-600 font-bold mt-0.5">{classAnalyticsMetrics.cpTpSubtext}</div>
+                  <div className="text-[11px] text-sky-600 font-bold mt-0.5">{classAnalyticsMetrics.cpTpSubtext} • {classAnalyticsMetrics.totalTeachingLogs} Jurnal KBM</div>
                 </div>
                 <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                  <div className="text-slate-500 font-medium">Status Vercel</div>
-                  <div className="text-sm font-black text-slate-800 mt-1">Tersinkron Otomatis</div>
-                  <div className="text-[11px] text-sky-600 font-bold mt-0.5">Real-Time Data Mirror</div>
+                  <div className="text-slate-500 font-medium">Status Cloud Firestore</div>
+                  <div className="text-sm font-black text-slate-800 mt-1">Tersinkron Otomatis (Live)</div>
+                  <div className="text-[11px] text-emerald-600 font-bold mt-0.5">Google Cloud Firestore • Real-Time Data Mirror</div>
                 </div>
                 <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                  <div className="text-slate-500 font-medium">Rekapitulasi Kehadiran</div>
+                  <div className="text-slate-500 font-medium">Rekapitulasi Kehadiran Siswa</div>
                   <div className="text-sm font-black text-slate-800 mt-1">{classAnalyticsMetrics.attPercentage} Hadir</div>
-                  <div className="text-[11px] text-sky-600 font-bold mt-0.5">Presensi Terdaftar di Jurnal</div>
+                  <div className="text-[11px] text-sky-600 font-bold mt-0.5">{classAnalyticsMetrics.presentCount} dari {classAnalyticsMetrics.totalAtt} sesi kehadiran tersimpan di cloud</div>
                 </div>
               </div>
             </div>

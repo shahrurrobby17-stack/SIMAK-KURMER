@@ -552,7 +552,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                           ✓ Valid
                         </span>
                       ) : item.modulReviewing ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200 animate-pulse">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200">
                           ⏳ Meninjau
                         </span>
                       ) : item.modul ? (
@@ -571,7 +571,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                           ✓ Valid
                         </span>
                       ) : item.atpReviewing ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200 animate-pulse">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200">
                           ⏳ Meninjau
                         </span>
                       ) : item.atp ? (
@@ -590,7 +590,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                           ✓ Valid
                         </span>
                       ) : item.kktpReviewing ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200 animate-pulse">
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200">
                           ⏳ Meninjau
                         </span>
                       ) : item.kktp ? (

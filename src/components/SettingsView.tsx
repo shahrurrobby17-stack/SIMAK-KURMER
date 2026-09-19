@@ -125,7 +125,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     return [
       {
         id: 'ann-' + Date.now(),
-        text: infoAnnouncement?.text || 'Selamat Datang di SIMAK GURU - Sistem Informasi Manajemen Akademik & Kehadiran.',
+        text: infoAnnouncement?.text || 'Selamat Datang di SIMAK MERDEKA - Sistem Informasi Manajemen Akademik & Kehadiran.',
         category: infoAnnouncement?.category || 'Informasi',
         isActive: true
       }
@@ -1641,7 +1641,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
               <div className="bg-gradient-to-r from-slate-900 via-[#00284a] to-[#003865] rounded-none p-4 text-white shadow-sm border border-cyan-400/20 space-y-2.5">
                 <div className="flex items-center justify-between text-xs text-cyan-100 font-bold border-b border-white/10 pb-2">
                   <span className="flex items-center gap-1.5 text-amber-300 uppercase tracking-wider text-[10px] font-black">
-                    <Radio className="w-3 h-3 animate-pulse" />
+                    <Radio className="w-3 h-3" />
                     <span>Pratinjau Langsung Running Text ({announcementItems.filter(i => i.isActive && i.text.trim()).length} Pengumuman Aktif)</span>
                   </span>
                   <span className={`px-2 py-0.5 rounded-none text-[9px] font-mono font-bold ${announcementIsActive ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-400/30' : 'bg-rose-500/20 text-rose-300 border border-rose-400/30'}`}>
@@ -1770,7 +1770,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <div className="flex flex-wrap gap-2">
                     <button
                       type="button"
-                      onClick={() => applyAnnouncementTemplate('Selamat Datang di SIMAK GURU! Harap lengkapi jurnal harian dan presensi siswa tepat waktu setiap hari.', 'Informasi')}
+                      onClick={() => applyAnnouncementTemplate('Selamat Datang di SIMAK MERDEKA! Harap lengkapi jurnal harian dan presensi siswa tepat waktu setiap hari.', 'Informasi')}
                       className="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 text-[10px] font-bold rounded-none transition-colors cursor-pointer border border-slate-300"
                     >
                       + Selamat Datang

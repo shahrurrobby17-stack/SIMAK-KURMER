@@ -584,7 +584,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
 
             <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
               <div className={`p-3 rounded-none shrink-0 ${pendingCount > 0 ? 'bg-amber-100 text-amber-900 ring-2 ring-amber-400' : 'bg-rose-50 text-rose-600'}`}>
-                {pendingCount > 0 ? <Clock className="w-5 h-5 animate-pulse" /> : <UserX className="w-5 h-5" />}
+                {pendingCount > 0 ? <Clock className="w-5 h-5" /> : <UserX className="w-5 h-5" />}
               </div>
               <div>
                 <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -846,7 +846,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                       <td className="py-3.5 px-4 text-center">
                         {user.status === 'Menunggu Aktivasi' ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs">
-                            <Clock className="w-3.5 h-3.5 text-amber-600 animate-pulse shrink-0" />
+                            <Clock className="w-3.5 h-3.5 text-amber-600 shrink-0" />
                             <span>MENUNGGU AKTIVASI</span>
                           </span>
                         ) : (
@@ -855,7 +855,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                               ? 'bg-rose-50 text-rose-700 border border-rose-200'
                               : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
                           }`}>
-                            <span className={`w-1.5 h-1.5 rounded-full ${isUserDisabled ? 'bg-rose-500' : 'bg-emerald-500 animate-pulse'}`} />
+                            <span className={`w-1.5 h-1.5 rounded-full ${isUserDisabled ? 'bg-rose-500' : 'bg-emerald-500'}`} />
                             {isUserDisabled ? 'BELUM AKTIF' : 'Aktif'}
                           </span>
                         )}
@@ -959,7 +959,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
 
                   {user.status === 'Menunggu Aktivasi' ? (
                     <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 shrink-0">
-                      <Clock className="w-3 h-3 text-amber-600 animate-pulse" />
+                      <Clock className="w-3 h-3 text-amber-600" />
                       <span>MENUNGGU AKTIVASI</span>
                     </span>
                   ) : (

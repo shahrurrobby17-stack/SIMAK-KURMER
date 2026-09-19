@@ -145,7 +145,7 @@ export const TeachingScheduleView: React.FC<TeachingScheduleViewProps> = ({
       <div className="bg-white p-4 rounded-none border border-slate-200 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
         <div className="flex flex-wrap items-center gap-2">
           <div className="px-3 py-1.5 bg-emerald-50 border border-emerald-300 text-emerald-900 text-xs font-bold flex items-center gap-2 shadow-2xs">
-            <span className={`w-2 h-2 rounded-full shrink-0 ${activeClasses.length > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`}></span>
+            <span className={`w-2 h-2 rounded-full shrink-0 ${activeClasses.length > 0 ? 'bg-emerald-500' : 'bg-slate-400'}`}></span>
             <span>Status: Kelas Aktif ({activeClassText})</span>
           </div>
           <div className="px-3 py-1.5 bg-cyan-50 border border-cyan-200 text-cyan-800 text-xs font-bold flex items-center gap-2">

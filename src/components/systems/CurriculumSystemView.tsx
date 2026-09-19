@@ -1245,7 +1245,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
           <FolderUp className="w-4 h-4 text-amber-600" />
           <span>Validasi Modul/ATP Guru</span>
           {teacherModules.filter(m => m.status === 'Meninjau').length > 0 ? (
-            <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-black rounded-full animate-pulse">
+            <span className="px-1.5 py-0.5 bg-amber-500 text-white text-[10px] font-black rounded-full">
               {teacherModules.filter(m => m.status === 'Meninjau').length} Menunggu
             </span>
           ) : (
@@ -2004,7 +2004,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                             doc.status === 'Disetujui'
                               ? 'bg-emerald-100 text-emerald-800 border border-emerald-200'
                               : doc.status === 'Meninjau'
-                              ? 'bg-amber-100 text-amber-900 border border-amber-300 animate-pulse'
+                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
                               : 'bg-rose-100 text-rose-800 border border-rose-200'
                           }`}>
                             {doc.status === 'Disetujui' && <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />}
@@ -2229,7 +2229,7 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
                 <h4 className="text-xs font-black text-slate-800 flex items-center gap-2">
                   <span>Modul & ATP Terunggah dari Guru Pengampu</span>
                   {teacherModules.filter(m => m.status === 'Meninjau').length > 0 && (
-                    <span className="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full animate-pulse">
+                    <span className="px-2 py-0.5 bg-amber-500 text-white text-[10px] font-bold rounded-full">
                       {teacherModules.filter(m => m.status === 'Meninjau').length} Menunggu Validasi
                     </span>
                   )}

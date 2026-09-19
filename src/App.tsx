@@ -78,9 +78,11 @@ import { SarprasSystemView } from './components/systems/SarprasSystemView';
 import { FinanceSystemView } from './components/systems/FinanceSystemView';
 import { StudentSystemView } from './components/systems/StudentSystemView';
 import { LibrarySystemView } from './components/systems/LibrarySystemView';
+import { ValidationSystemView } from './components/systems/ValidationSystemView';
 import { StudentLMSView } from './components/StudentLMSView';
 import { TeachingScheduleView } from './components/TeachingScheduleView';
 import { ExtracurricularAttendanceView } from './components/ExtracurricularAttendanceView';
+import { ResiduDataView } from './components/ResiduDataView';
 import { GeminiAssistantView } from './components/GeminiAssistantView';
 import { SettingsView } from './components/SettingsView';
 import { MaintenanceManagerView } from './components/MaintenanceManagerView';
@@ -91,6 +93,8 @@ import { LogoutConfirmModal } from './components/LogoutConfirmModal';
 import { FooterHelpModals, HelpModalType } from './components/FooterHelpModals';
 import { RestrictedAccessModal } from './components/RestrictedAccessModal';
 import { InfoBannerCard } from './components/InfoBannerCard';
+import { MenuErrorDiagnosticBanner } from './components/MenuErrorDiagnosticBanner';
+import { computeMenuHealthMap } from './lib/menuHealthService';
 import { syncToGoogleSheets } from './lib/googleSheetsService';
 import { Lock } from 'lucide-react';
 
@@ -395,13 +399,13 @@ export default function App() {
       }
     }
     return {
-      text: 'Selamat Datang di SIMAK GURU - Sistem Informasi Manajemen Akademik & Kehadiran.',
+      text: 'Selamat Datang di SIMAK MERDEKA - Sistem Informasi Manajemen Akademik & Kehadiran.',
       category: 'Informasi',
       isActive: true,
       items: [
         {
           id: 'ann-1',
-          text: 'Selamat Datang di SIMAK GURU - Sistem Informasi Manajemen Akademik & Kehadiran. Pastikan selalu memperbarui data presensi dan nilai siswa secara berkala.',
+          text: 'Selamat Datang di SIMAK MERDEKA - Sistem Informasi Manajemen Akademik & Kehadiran. Pastikan selalu memperbarui data presensi dan nilai siswa secara berkala.',
           category: 'Informasi',
           isActive: true
         },
@@ -1534,10 +1538,10 @@ export default function App() {
         );
   useEffect(() => {
     const isMasterTab = activeTab === 'master-data';
-    if (isMasterTab && !isMasterUser) {
+    if (isMasterTab && !isMasterUser && !isAdminSystem) {
       setActiveTab('dashboard');
     }
-  }, [activeTab, isMasterUser]);
+  }, [activeTab, isMasterUser, isAdminSystem]);
 
   useEffect(() => {
     const RESTRICTED_TABS: NavTab[] = ['sync', 'schedule', 'journal', 'upload-modul', 'students', 'attendance', 'extracurricular', 'grades'];
@@ -1556,6 +1560,20 @@ export default function App() {
     setActiveTab(tab);
   };
 
+  const menuHealthMap = useMemo(() => {
+    return computeMenuHealthMap({
+      students: allStudents && allStudents.length > 0 ? allStudents : students,
+      grades: allGrades && allGrades.length > 0 ? allGrades : grades,
+      attendanceRecords: allAttendanceRecords && allAttendanceRecords.length > 0 ? allAttendanceRecords : attendanceRecords,
+      teacher,
+      currentUser,
+      registeredUsers,
+      studentTasks: allStudentTasks && allStudentTasks.length > 0 ? allStudentTasks : studentTasks
+    });
+  }, [allStudents, students, allGrades, grades, allAttendanceRecords, attendanceRecords, teacher, currentUser, registeredUsers, allStudentTasks, studentTasks]);
+
+  const activeMenuHealth = menuHealthMap[activeTab];
+
   if (showLoginScreen || !currentUser) {
     return (
       <LoginView
@@ -1567,6 +1585,8 @@ export default function App() {
         grades={allGrades.length > 0 ? allGrades : grades}
         subjects={subjects}
         attendanceRecords={allAttendanceRecords.length > 0 ? allAttendanceRecords : attendanceRecords}
+        teachingLogs={allTeachingLogs.length > 0 ? allTeachingLogs : teachingLogs}
+        classList={classList}
         
         infoAnnouncement={infoAnnouncement}
         onUpdateInfoAnnouncement={handleUpdateInfoAnnouncement}
@@ -1663,6 +1683,7 @@ export default function App() {
         showClassSelector={false}
         currentUser={currentUser}
         isMasterUser={isMasterUser}
+        isAdmin={isAdminSystem}
         onLogout={() => setShowLogoutConfirmModal(true)}
         onOpenLogin={() => setShowLoginScreen(true)}
         onOpenProfilePrompt={() => setShowProfilePromptModal(true)}
@@ -1685,10 +1706,23 @@ export default function App() {
           isAccountDisabled={isCurrentAccountDisabled}
           onLogout={() => setShowLogoutConfirmModal(true)}
           currentUser={currentUser}
+          students={allStudents && allStudents.length > 0 ? allStudents : students}
+          grades={allGrades && allGrades.length > 0 ? allGrades : grades}
+          attendanceRecords={allAttendanceRecords && allAttendanceRecords.length > 0 ? allAttendanceRecords : attendanceRecords}
+          registeredUsers={registeredUsers}
+          studentTasks={allStudentTasks && allStudentTasks.length > 0 ? allStudentTasks : studentTasks}
         />
 
         {/* Content Pane */}
         <main className="flex-1 w-full p-3 md:p-4 lg:p-5 overflow-y-auto h-full pb-24 md:pb-10">
+          {/* Diagnostic Banner showing what data is wrong whenever active menu has errors (hidden on validation page) */}
+          {activeTab !== 'validasi' && !activeTab.startsWith('validasi') && (
+            <MenuErrorDiagnosticBanner 
+              activeTab={activeTab}
+              healthInfo={activeMenuHealth}
+              onNavigateTab={handleTabChange}
+            />
+          )}
           {/* STUDENT ROLE DEDICATED LMS VIEWS (Persistent without animation on header/menu switch) */}
           {currentUser?.role?.toLowerCase().includes('siswa') ? (
             <div className="w-full h-full">
@@ -1891,7 +1925,7 @@ export default function App() {
                     />
                   )}
 
-              {activeTab === 'master-data' && isMasterUser && (
+              {activeTab === 'master-data' && (isMasterUser || isAdminSystem) && (
                 <MasterDataView 
                   registeredUsers={registeredUsers}
                   onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
@@ -1913,6 +1947,33 @@ export default function App() {
                     else if (cat === 'Siswa') handleTabChange('system-kesiswaan');
                     else handleTabChange('master-data');
                   }}
+                />
+              )}
+
+              {(activeTab === 'validasi' || activeTab.startsWith('validasi')) && (
+                <ValidationSystemView 
+                  students={allStudents && allStudents.length > 0 ? allStudents : students}
+                  studentGrades={allGrades && allGrades.length > 0 ? allGrades : grades}
+                  attendanceRecords={allAttendanceRecords && allAttendanceRecords.length > 0 ? allAttendanceRecords : attendanceRecords}
+                  subjects={subjects}
+                  classList={classList}
+                  selectedClass={selectedClass}
+                  teacher={teacher}
+                  currentUser={currentUser}
+                  registeredUsers={registeredUsers}
+                  studentTasks={allStudentTasks && allStudentTasks.length > 0 ? allStudentTasks : studentTasks}
+                  teacherProfiles={teacherProfiles}
+                  activeSubTab={
+                    activeTab === 'validasi-overview' ? 'overview' :
+                    activeTab === 'validasi-students' ? 'students' :
+                    activeTab === 'validasi-grades' ? 'grades' :
+                    activeTab === 'validasi-attendance' ? 'attendance' :
+                    activeTab === 'validasi-modules' ? 'modules' :
+                    activeTab === 'validasi-report' ? 'report' :
+                    'dapodik'
+                  }
+                  onSubTabChange={(st) => handleTabChange(`validasi-${st}` as NavTab)}
+                  onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
                 />
               )}
 
@@ -1948,6 +2009,19 @@ export default function App() {
             classList={classList}
                   isDemoAdmin={isDemoAdmin}
             
+                />
+              )}
+
+              {activeTab === 'residu' && (
+                <ResiduDataView
+                  students={students}
+                  onUpdateStudents={setStudents}
+                  classList={classList}
+                  selectedClass={selectedClass}
+                  teacher={teacher}
+                  teacherProfiles={teacherProfiles}
+                  registeredUsers={registeredUsers}
+                  onNavigateTab={handleTabChange}
                 />
               )}
 

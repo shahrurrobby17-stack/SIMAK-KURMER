@@ -108,5 +108,27 @@
       },
       "required": ["id", "title", "category", "className"]
     }
+  },
+  "firestore": {
+    "/students/{studentId}": {
+      "schema": "Student",
+      "description": "Koleksi data peserta didik per sekolah"
+    },
+    "/grades/{gradeId}": {
+      "schema": "StudentGrade",
+      "description": "Koleksi nilai capaian pembelajaran dan TP siswa"
+    },
+    "/attendance/{attendanceId}": {
+      "schema": "AttendanceRecord",
+      "description": "Koleksi presensi harian siswa"
+    },
+    "/teachingLogs/{logId}": {
+      "schema": "TeachingLog",
+      "description": "Koleksi jurnal agenda mengajar harian"
+    },
+    "/studentTasks/{taskId}": {
+      "schema": "StudentTask",
+      "description": "Koleksi penugasan dan evaluasi siswa"
+    }
   }
 }
