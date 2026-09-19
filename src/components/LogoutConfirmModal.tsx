@@ -77,10 +77,10 @@ export const LogoutConfirmModal: React.FC<LogoutConfirmModalProps> = ({
           <button
             type="button"
             onClick={onConfirm}
-            className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold rounded-none shadow-md text-xs flex items-center gap-2 cursor-pointer transition-all hover:scale-[1.01]"
+            className="px-4 py-2 bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold rounded-none shadow-md text-xs flex items-center gap-2 cursor-pointer transition-all hover:scale-[1.01]"
           >
-            <LogOut className="w-4 h-4" />
-            <span>Ya, Keluar Akun</span>
+            <LogOut className="w-4 h-4 text-white" />
+            <span className="text-white font-bold">Ya, Keluar Akun</span>
           </button>
         </div>
       </div>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
+import { motion } from 'motion/react';
 import { 
   GraduationCap, 
   LogOut, 
@@ -32,7 +33,8 @@ import {
   FileText,
   Calendar,
   FileCheck,
-  AlertOctagon
+  AlertOctagon,
+  Menu
 } from 'lucide-react';
 import { TeacherProfile, UserAccount } from '../types';
 import { useTeachingSchedules } from '../lib/teachingScheduleService';
@@ -327,6 +329,8 @@ interface NavbarProps {
   onTabChange?: (tab: any) => void;
   isMasterUser?: boolean;
   isAdmin?: boolean;
+  onToggleSidebar?: () => void;
+  isSidebarOpen?: boolean;
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ 
@@ -342,7 +346,9 @@ export const Navbar: React.FC<NavbarProps> = ({
   activeTab = 'dashboard',
   onTabChange,
   isMasterUser = false,
-  isAdmin = false
+  isAdmin = false,
+  onToggleSidebar,
+  isSidebarOpen = true
 }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -358,8 +364,16 @@ export const Navbar: React.FC<NavbarProps> = ({
     isMaster || 
     (currentUser?.role && (
       currentUser.role.toLowerCase().includes('admin') ||
-      currentUser.role.toLowerCase().includes('kepala')
-    ))
+      currentUser.role.toLowerCase().includes('kepala') ||
+      currentUser.role.toLowerCase().includes('master')
+    )) ||
+    (currentUser?.email && (
+      currentUser.email.toLowerCase().includes('admin') ||
+      currentUser.email.toLowerCase().includes('master')
+    )) ||
+    activeTab === 'master-data' ||
+    activeTab === 'maintenance' ||
+    activeTab === 'system-validation'
   );
 
   // Live active teaching schedule data from Teaching Schedule menu
@@ -421,6 +435,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   // Global Ctrl+K / Cmd+K shortcut
   useEffect(() => {
+    if (isAdministrator) return;
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -430,7 +445,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, []);
+  }, [isAdministrator]);
 
   // Keyboard navigation within search results
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -466,58 +481,88 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="bg-gradient-to-r from-[#0369a1] via-[#0284c7] to-[#0ea5e9] border-b border-sky-300/40 sticky top-0 z-30 shadow-md pt-[env(safe-area-inset-top,0px)]">
-      {/* Main Header Content */}
-      <div className="px-3 md:px-6 py-2 md:py-2.5 w-full flex flex-col md:flex-row justify-between items-stretch md:items-center gap-2 md:gap-4">
+    <header className="bg-gradient-to-r from-[#3e4854] via-[#35526e] to-[#2f618e] border-b border-[#234d72] sticky top-0 z-30 shadow-sm pt-[env(safe-area-inset-top,0px)]">
+      {/* Main Header Content - Compact slim height */}
+      <div className="px-3 md:px-5 py-1 md:py-1.5 w-full flex items-center justify-between gap-2 md:gap-3">
         
-        {/* Top Row: Emblem Title + User Profile Badge */}
-        <div className="flex items-center justify-between gap-3 min-w-0 shrink-0">
-          {/* School Emblem Title */}
-          <div className="flex items-center space-x-2.5 md:space-x-3 min-w-0">
-            <div className="w-11 h-11 sm:w-12 sm:h-12 md:w-13 md:h-13 bg-white rounded-none shadow-sm shrink-0 flex items-center justify-center p-1 md:p-1.5 border border-sky-300/60">
+        {/* Left & Center: Emblem Title + School Info */}
+        <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
+          {/* School Emblem Title & App Brand */}
+          <div className="flex items-center space-x-2 md:space-x-2.5 shrink-0">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white rounded-none shadow-xs shrink-0 flex items-center justify-center p-0.5 sm:p-1 border border-white/25">
               <TutWuriHandayaniLogo className="w-full h-full" />
             </div>
-            <div className="min-w-0 flex flex-col justify-center space-y-0.5">
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-sm sm:text-base md:text-lg lg:text-xl font-black text-white uppercase tracking-wider leading-tight truncate">
-                  {isStudentUser ? 'Learning Management System' : isTuPage ? 'ADMINISTRASI TATA USAHA' : isSarprasPage ? 'SARANA & PRASARANA' : isPerpustakaanPage ? 'PERPUSTAKAAN SEKOLAH' : isKurikulumPage ? 'KURIKULUM' : 'SIMAK MERDEKA'}
-                </h1>
-                {!isStudentUser && !isTuPage && !isKurikulumPage && !isSarprasPage && !isPerpustakaanPage && (
-                  <span className="bg-amber-400 text-sky-950 font-black text-[10px] sm:text-[11px] md:text-xs px-1.5 py-0.5 rounded-none shadow-xs shrink-0 tracking-wider">
+            <div className="flex flex-col justify-center min-w-0">
+              <h1 className="text-xs sm:text-sm md:text-base font-black text-white uppercase tracking-wider leading-none">
+                {isStudentUser ? 'Learning Management System' : isTuPage ? 'ADMINISTRASI TATA USAHA' : isSarprasPage ? 'SARANA & PRASARANA' : isPerpustakaanPage ? 'PERPUSTAKAAN SEKOLAH' : isKurikulumPage ? 'KURIKULUM' : 'SIMAK MERDEKA'}
+              </h1>
+              {!isStudentUser && !isTuPage && !isKurikulumPage && !isSarprasPage && !isPerpustakaanPage && (
+                <div className="flex items-center gap-1 mt-0.5">
+                  <span className="bg-amber-400 text-slate-950 font-black text-[8.5px] sm:text-[9.5px] px-1 py-0.2 rounded-none shadow-xs shrink-0 tracking-wider leading-none">
                     V.3.8.1
                   </span>
-                )}
-              </div>
-              <p className="text-[11px] sm:text-xs md:text-sm text-white font-bold tracking-tight truncate">
-                {teacher?.schoolName || currentUser?.schoolName || 'SMA ISLAM DIPONEGORO WAGIR'} {!isStudentPage && <span className="inline text-sky-100 font-semibold">• NPSN: {teacher?.npsn || '20517834'}</span>}
-              </p>
+                </div>
+              )}
             </div>
           </div>
 
-          {/* Mobile Action Buttons (Logout on HP) */}
-          <div className="md:hidden flex items-center gap-1.5 shrink-0">
-            {onLogout && (
-              <button
-                type="button"
-                onClick={onLogout}
-                className="flex items-center space-x-1.5 bg-rose-500/20 hover:bg-rose-500/30 text-rose-200 border border-rose-400/40 px-2.5 py-1.5 rounded-none text-xs font-bold transition-all shrink-0 cursor-pointer shadow-2xs"
-                title="Keluar dari Aplikasi"
+          {/* Tombol Garis 3 (Menu Hamburger) & School Name */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 min-w-0 ml-1 sm:ml-2 md:ml-3">
+            <motion.button
+              type="button"
+              onClick={onToggleSidebar}
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.92 }}
+              className={`p-1 sm:p-1.5 text-white/90 hover:text-white ${
+                isSidebarOpen 
+                  ? 'bg-white/20 text-white border-white/40 shadow-inner' 
+                  : 'bg-white/10 hover:bg-white/20 active:bg-white/30 border-white/25'
+              } rounded-none transition-colors shrink-0 flex items-center justify-center border shadow-2xs cursor-pointer`}
+              title={isSidebarOpen ? "Tutup Menu Navigasi (Garis 3)" : "Buka Menu Navigasi (Garis 3)"}
+              aria-label="Menu Navigasi"
+            >
+              <motion.div
+                animate={{ rotate: isSidebarOpen ? 90 : 0 }}
+                transition={{ duration: 0.22, ease: "easeInOut" }}
+                className="flex items-center justify-center"
               >
-                <LogOut className="w-3.5 h-3.5 text-rose-300" />
-                <span>Keluar</span>
-              </button>
-            )}
+                <Menu className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
+              </motion.div>
+            </motion.button>
+            <p className="text-[11px] sm:text-xs md:text-sm text-white font-bold tracking-tight truncate leading-tight">
+              {teacher?.schoolName || currentUser?.schoolName || 'SMA ISLAM DIPONEGORO WAGIR'}
+              {!isStudentPage && (
+                <span className="inline text-slate-200 font-semibold">
+                  {' - '}NPSN: {teacher?.npsn || '20517834'} - Semester {teacher?.semester || 'Ganjil'} {teacher?.academicYear || '2026/2027'}
+                </span>
+              )}
+            </p>
           </div>
         </div>
 
-        {/* Right Side: Pojok Kanan Atas (Filter Kelas & Kolom Cari Menu) */}
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-end gap-2 md:gap-3 shrink-0 md:ml-auto w-full md:w-auto">
+        {/* Mobile Action Buttons (Logout on HP) */}
+        <div className="md:hidden flex items-center gap-1.5 shrink-0">
+          {onLogout && (
+            <button
+              type="button"
+              onClick={onLogout}
+              className="flex items-center space-x-1 bg-[#d9534f] hover:bg-[#c9302c] active:bg-[#ac2925] text-white border border-[#c9302c] px-2 py-1 rounded-none text-[11px] font-bold transition-all shrink-0 cursor-pointer shadow-xs"
+              title="Keluar dari Aplikasi"
+            >
+              <LogOut className="w-3 h-3 text-white" />
+              <span className="text-white font-bold">Keluar</span>
+            </button>
+          )}
+        </div>
+
+        {/* Right Side: Filter Kelas & Kolom Cari Menu */}
+        <div className="flex items-center justify-end gap-2 md:gap-2.5 shrink-0 ml-auto">
           {/* Status Kelas Aktif - Hanya untuk guru non-admin dan hanya jika ada jadwal aktif */}
           {!isAdministrator && !isKurikulumPage && !isTuPage && !isStudentPage && activeClasses.length > 0 && (
-            <div className="hidden lg:flex items-center gap-1.5 shrink-0 bg-[#075985]/60 border border-sky-300/40 px-2 py-1">
+            <div className="hidden xl:flex items-center gap-1.5 shrink-0 bg-[#1d3c58]/85 border border-[#376189] px-2 py-0.5">
               <div className="w-1.5 h-1.5 rounded-full shrink-0 bg-emerald-400"></div>
               <p className="text-[10px] font-bold truncate text-white">
-                Kelas Aktif: {activeClassText}
+                Kelas: {activeClassText}
               </p>
             </div>
           )}
@@ -525,11 +570,11 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Filter Kelas on Laptop/Desktop */}
           {showClassSelector && (
             <div className="hidden sm:flex items-center justify-end gap-1.5 shrink-0">
-              <span className="text-sky-100 font-bold text-[10px] whitespace-nowrap">Filter Kelas:</span>
+              <span className="text-slate-200 font-bold text-[10px] whitespace-nowrap">Filter Kelas:</span>
               <select 
                 value={selectedClass} 
                 onChange={(e) => onSelectClass(e.target.value)}
-                className="bg-[#075985] text-white font-extrabold px-2 py-1 rounded-none border border-sky-300/60 focus:outline-none focus:border-sky-200 cursor-pointer shadow-2xs text-xs"
+                className="bg-[#1d3c58] text-white font-extrabold px-2 py-0.5 rounded-none border border-[#376189] focus:outline-none focus:border-white cursor-pointer shadow-2xs text-xs"
               >
                 {classList.map((cls) => (
                   <option key={cls} value={cls}>{cls}</option>
@@ -538,140 +583,142 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
-          {/* Kolom Cari Menu di Pojok Kanan Atas */}
-          <div ref={searchContainerRef} className="relative w-full sm:w-64 md:w-64 lg:w-80 xl:w-96 shrink-0 z-40">
-            <div className="relative flex items-center">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-sky-200">
-                <Search className="w-4 h-4" />
-              </div>
-              <input
-                ref={searchInputRef}
-                type="text"
-                value={searchQuery}
-                onChange={(e) => {
-                  setSearchQuery(e.target.value);
-                  setIsSearchOpen(true);
-                  setSelectedIndex(0);
-                }}
-                onFocus={() => setIsSearchOpen(true)}
-                onKeyDown={handleKeyDown}
-                placeholder="Cari menu & fitur aplikasi... (Ctrl+K)"
-                className="w-full pl-9 pr-16 sm:pr-20 py-1.5 bg-[#075985]/70 hover:bg-[#075985]/90 focus:bg-[#075985] text-white placeholder:text-sky-200/70 border border-sky-300/60 focus:border-amber-400 text-xs sm:text-sm rounded-none focus:outline-none focus:ring-1 focus:ring-amber-400 shadow-inner transition-all"
-              />
-              <div className="absolute inset-y-0 right-0 pr-2.5 flex items-center gap-1.5">
-                {searchQuery ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSearchQuery('');
-                      setSelectedIndex(0);
-                      searchInputRef.current?.focus();
-                    }}
-                    className="text-sky-200 hover:text-white p-0.5 rounded-none transition-colors cursor-pointer"
-                    title="Hapus pencarian"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                ) : (
-                  <kbd className="hidden sm:inline-flex items-center gap-0.5 text-[10px] bg-[#075985]/90 text-sky-200 border border-sky-400/60 px-1.5 py-0.5 rounded-none font-mono select-none">
-                    <Command className="w-2.5 h-2.5" /> K
-                  </kbd>
-                )}
-              </div>
-            </div>
-
-            {/* Search Results Dropdown */}
-            {isSearchOpen && (
-              <div className="absolute right-0 top-full mt-1.5 w-[320px] sm:w-[420px] md:w-[480px] max-w-[92vw] bg-white text-slate-800 rounded-none shadow-2xl border border-sky-900/20 max-h-[360px] sm:max-h-[420px] overflow-y-auto z-50 divide-y divide-slate-100">
-                {/* Header result info */}
-                <div className="px-3 py-2 bg-slate-50 flex items-center justify-between text-[11px] font-semibold text-slate-500 border-b border-slate-200 sticky top-0 z-10">
-                  <span className="flex items-center gap-1 text-[#164e63] font-bold">
-                    <Search className="w-3 h-3 text-[#164e63]" />
-                    {searchQuery ? `Hasil Pencarian (${filteredMenus.length} Menu)` : 'Daftar Menu & Pintasan Cepat'}
-                  </span>
-                  <span className="text-[10px] text-slate-400 hidden sm:inline">
-                    Gunakan ↑ ↓ dan Enter untuk memilih
-                  </span>
+          {/* Kolom Cari Menu di Pojok Kanan Atas - Disembunyikan pada halaman Administrator */}
+          {!isAdministrator && (
+            <div ref={searchContainerRef} className="relative w-36 sm:w-48 md:w-56 lg:w-64 xl:w-72 shrink-0 z-40">
+              <div className="relative flex items-center">
+                <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-300">
+                  <Search className="w-3.5 h-3.5" />
                 </div>
+                <input
+                  ref={searchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setIsSearchOpen(true);
+                    setSelectedIndex(0);
+                  }}
+                  onFocus={() => setIsSearchOpen(true)}
+                  onKeyDown={handleKeyDown}
+                  placeholder="Cari menu... (Ctrl+K)"
+                  className="w-full pl-8 pr-12 py-1 bg-[#1d3c58]/80 hover:bg-[#1d3c58] focus:bg-[#162d42] text-white placeholder:text-slate-300/70 border border-[#376189] focus:border-white text-xs rounded-none focus:outline-none focus:ring-1 focus:ring-white shadow-inner transition-all"
+                />
+                <div className="absolute inset-y-0 right-0 pr-2 flex items-center gap-1">
+                  {searchQuery ? (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSelectedIndex(0);
+                        searchInputRef.current?.focus();
+                      }}
+                      className="text-slate-300 hover:text-white p-0.5 rounded-none transition-colors cursor-pointer"
+                      title="Hapus pencarian"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  ) : (
+                    <kbd className="hidden sm:inline-flex items-center gap-0.5 text-[9px] bg-[#162d42] text-slate-300 border border-[#376189] px-1 py-0.2 rounded-none font-mono select-none">
+                      <Command className="w-2.5 h-2.5" /> K
+                    </kbd>
+                  )}
+                </div>
+              </div>
 
-                {filteredMenus.length > 0 ? (
-                  <div className="py-1">
-                    {filteredMenus.map((item, idx) => {
-                      const IconComp = item.icon;
-                      const isSelected = idx === selectedIndex;
-                      const isActiveTab = activeTab === item.id;
+              {/* Search Results Dropdown */}
+              {isSearchOpen && (
+                <div className="absolute right-0 top-full mt-1.5 w-[320px] sm:w-[420px] md:w-[480px] max-w-[92vw] bg-white text-slate-800 rounded-none shadow-2xl border border-sky-900/20 max-h-[360px] sm:max-h-[420px] overflow-y-auto z-50 divide-y divide-slate-100">
+                  {/* Header result info */}
+                  <div className="px-3 py-2 bg-slate-50 flex items-center justify-between text-[11px] font-semibold text-slate-500 border-b border-slate-200 sticky top-0 z-10">
+                    <span className="flex items-center gap-1 text-[#164e63] font-bold">
+                      <Search className="w-3 h-3 text-[#164e63]" />
+                      {searchQuery ? `Hasil Pencarian (${filteredMenus.length} Menu)` : 'Daftar Menu & Pintasan Cepat'}
+                    </span>
+                    <span className="text-[10px] text-slate-400 hidden sm:inline">
+                      Gunakan ↑ ↓ dan Enter untuk memilih
+                    </span>
+                  </div>
 
-                      return (
-                        <button
-                          key={item.id}
-                          type="button"
-                          onClick={() => handleSelectMenu(item.id)}
-                          onMouseEnter={() => setSelectedIndex(idx)}
-                          className={`w-full text-left px-3 py-2 flex items-center justify-between gap-3 transition-colors cursor-pointer ${
-                            isSelected 
-                              ? 'bg-cyan-50/90 text-[#164e63]' 
-                              : 'hover:bg-slate-50 text-slate-700'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2.5 min-w-0 flex-1">
-                            <div className={`w-8 h-8 rounded-none flex items-center justify-center shrink-0 border ${
-                              isActiveTab
-                                ? 'bg-cyan-900 text-white border-cyan-900'
-                                : isSelected
-                                ? 'bg-cyan-100 text-[#164e63] border-cyan-300'
-                                : 'bg-slate-100 text-slate-600 border-slate-200'
-                            }`}>
-                              <IconComp className="w-4 h-4" />
-                            </div>
-                            <div className="min-w-0 flex-1">
-                              <div className="flex items-center gap-2">
-                                <span className={`text-xs font-bold truncate ${isSelected ? 'text-[#164e63]' : 'text-slate-800'}`}>
-                                  {item.title}
-                                </span>
-                                {isActiveTab && (
-                                  <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-none border border-emerald-200 shrink-0">
-                                    Aktif
-                                  </span>
-                                )}
+                  {filteredMenus.length > 0 ? (
+                    <div className="py-1">
+                      {filteredMenus.map((item, idx) => {
+                        const IconComp = item.icon;
+                        const isSelected = idx === selectedIndex;
+                        const isActiveTab = activeTab === item.id;
+
+                        return (
+                          <button
+                            key={item.id}
+                            type="button"
+                            onClick={() => handleSelectMenu(item.id)}
+                            onMouseEnter={() => setSelectedIndex(idx)}
+                            className={`w-full text-left px-3 py-2 flex items-center justify-between gap-3 transition-colors cursor-pointer ${
+                              isSelected 
+                                ? 'bg-cyan-50/90 text-[#164e63]' 
+                                : 'hover:bg-slate-50 text-slate-700'
+                            }`}
+                          >
+                            <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                              <div className={`w-8 h-8 rounded-none flex items-center justify-center shrink-0 border ${
+                                isActiveTab
+                                  ? 'bg-cyan-900 text-white border-cyan-900'
+                                  : isSelected
+                                  ? 'bg-cyan-100 text-[#164e63] border-cyan-300'
+                                  : 'bg-slate-100 text-slate-600 border-slate-200'
+                              }`}>
+                                <IconComp className="w-4 h-4" />
                               </div>
-                              <p className="text-[11px] text-slate-500 truncate leading-tight mt-0.5">
-                                {item.subtitle}
-                              </p>
+                              <div className="min-w-0 flex-1">
+                                <div className="flex items-center gap-2">
+                                  <span className={`text-xs font-bold truncate ${isSelected ? 'text-[#164e63]' : 'text-slate-800'}`}>
+                                    {item.title}
+                                  </span>
+                                  {isActiveTab && (
+                                    <span className="text-[9px] bg-emerald-100 text-emerald-800 font-bold px-1.5 py-0.2 rounded-none border border-emerald-200 shrink-0">
+                                      Aktif
+                                    </span>
+                                  )}
+                                </div>
+                                <p className="text-[11px] text-slate-500 truncate leading-tight mt-0.5">
+                                  {item.subtitle}
+                                </p>
+                              </div>
                             </div>
-                          </div>
 
-                          <div className="flex items-center gap-2 shrink-0">
-                            <span className="text-[10px] bg-slate-100 text-slate-600 font-medium px-2 py-0.5 rounded-none border border-slate-200 hidden sm:inline-block">
-                              {item.category}
-                            </span>
-                            <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isSelected ? 'text-[#164e63] translate-x-0.5' : 'text-slate-300'}`} />
-                          </div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="p-6 text-center">
-                    <SearchX className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                    <p className="text-xs font-bold text-slate-700">
-                      Tidak ada menu yang sesuai dengan "{searchQuery}"
-                    </p>
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      Coba kata kunci lain: presensi, nilai, jurnal, kurikulum, data siswa, keuangan, dll.
-                    </p>
-                  </div>
-                )}
+                            <div className="flex items-center gap-2 shrink-0">
+                              <span className="text-[10px] bg-slate-100 text-slate-600 font-medium px-2 py-0.5 rounded-none border border-slate-200 hidden sm:inline-block">
+                                {item.category}
+                              </span>
+                              <ChevronRight className={`w-3.5 h-3.5 transition-transform ${isSelected ? 'text-[#164e63] translate-x-0.5' : 'text-slate-300'}`} />
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <div className="p-6 text-center">
+                      <SearchX className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                      <p className="text-xs font-bold text-slate-700">
+                        Tidak ada menu yang sesuai dengan "{searchQuery}"
+                      </p>
+                      <p className="text-[11px] text-slate-500 mt-1">
+                        Coba kata kunci lain: presensi, nilai, jurnal, kurikulum, data siswa, keuangan, dll.
+                      </p>
+                    </div>
+                  )}
 
-                {/* Quick tip footer */}
-                <div className="px-3 py-1.5 bg-slate-50 text-[10px] text-slate-400 flex items-center justify-between border-t border-slate-100">
-                  <span>Tekan <kbd className="font-mono bg-white border border-slate-200 px-1 py-0.5">ESC</kbd> untuk menutup</span>
-                  <span className="text-cyan-800 font-semibold cursor-pointer hover:underline" onClick={() => setIsSearchOpen(false)}>
-                    Tutup Pencarian
-                  </span>
+                  {/* Quick tip footer */}
+                  <div className="px-3 py-1.5 bg-slate-50 text-[10px] text-slate-400 flex items-center justify-between border-t border-slate-100">
+                    <span>Tekan <kbd className="font-mono bg-white border border-slate-200 px-1 py-0.5">ESC</kbd> untuk menutup</span>
+                    <span className="text-cyan-800 font-semibold cursor-pointer hover:underline" onClick={() => setIsSearchOpen(false)}>
+                      Tutup Pencarian
+                    </span>
+                  </div>
                 </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
         </div>
 
       </div>

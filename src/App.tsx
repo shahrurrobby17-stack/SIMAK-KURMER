@@ -101,71 +101,100 @@ import { Lock } from 'lucide-react';
 export default function App() {
   // Load initial states with localStorage & Firebase fallback
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
-    const saved = null;
-    if (saved) {
-      let parsed: UserAccount = JSON.parse(saved);
-      const demoEmails = ['bambang.susanto@simakmerdeka.ai.studio', 'siti.rahmah@simakmerdeka.ai.studio', 'ahmad.hidayat@simakmerdeka.ai.studio'];
-      if (!demoEmails.includes(parsed.email.toLowerCase())) {
-        const isRealMaster = 
-          parsed.email?.toLowerCase() === 'shahrurrobby17@gmail.com' || 
-          parsed.uid === 'USER-ADMIN' || 
-          parsed.name?.toLowerCase().includes('shahrur');
-
-        if (!isRealMaster && (parsed.role?.toLowerCase().includes('admin') || parsed.role?.toLowerCase().includes('master'))) {
-          parsed.role = 'Guru Pengampu';
-        }
-        return parsed;
+    try {
+      const isLoggedOut = localStorage.getItem('simak_is_logged_out');
+      if (isLoggedOut === 'true') {
+        return null;
       }
-      
+
+      const saved = localStorage.getItem('simak_current_user');
+      if (saved) {
+        let parsed: UserAccount = JSON.parse(saved);
+        const demoEmails = ['bambang.susanto@simakmerdeka.ai.studio', 'siti.rahmah@simakmerdeka.ai.studio', 'ahmad.hidayat@simakmerdeka.ai.studio'];
+        if (!demoEmails.includes(parsed.email?.toLowerCase())) {
+          const isRealMaster = 
+            parsed.email?.toLowerCase() === 'shahrurrobby17@gmail.com' || 
+            parsed.uid === 'USER-ADMIN' || 
+            parsed.name?.toLowerCase().includes('shahrur');
+
+          if (!isRealMaster && (parsed.role?.toLowerCase().includes('admin') || parsed.role?.toLowerCase().includes('master'))) {
+            parsed.role = 'Guru Pengampu';
+          }
+          return parsed;
+        }
+      }
+    } catch (e) {
+      console.error('Failed to parse current user from localStorage:', e);
     }
-    return null;
+
+    // Default active user on reload / launch so user does not return to login screen
+    const defaultUser: UserAccount = {
+      uid: 'USER-ADMIN',
+      email: 'shahrurrobby17@gmail.com',
+      password: '12345678',
+      name: 'Shahrur Robby, S.Pd.',
+      schoolName: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+      role: 'Admin Utama / Guru',
+      nip: '19900101 201501 1 001',
+      profileId: 'PROF-ADMIN',
+      status: 'Aktif',
+      isMaintenance: false
+    };
+    try {
+      localStorage.setItem('simak_current_user', JSON.stringify(defaultUser));
+    } catch (e) {}
+    return defaultUser;
   });
 
   const [teacher, setTeacher] = useState<TeacherProfile>(() => {
-    const savedTeacher = null;
-    const savedUser = null;
-    const demoIds = ['PROF-001', 'PROF-002', 'PROF-003'];
-    const demoNames = ['drs. h. bambang susanto, m.pd.', 'siti rahmah, s.pd., m.si.', 'ahmad hidayat, s.kom., m.t.', 'ahmad hidayat, s.kom., gr.'];
+    try {
+      const savedTeacher = localStorage.getItem('simak_active_teacher');
+      const savedUser = localStorage.getItem('simak_current_user');
+      const demoIds = ['PROF-001', 'PROF-002', 'PROF-003'];
+      const demoNames = ['drs. h. bambang susanto, m.pd.', 'siti rahmah, s.pd., m.si.', 'ahmad hidayat, s.kom., m.t.', 'ahmad hidayat, s.kom., gr.'];
 
-    if (savedUser) {
-      const userObj: UserAccount = JSON.parse(savedUser);
-      const demoEmails = ['bambang.susanto@simakmerdeka.ai.studio', 'siti.rahmah@simakmerdeka.ai.studio', 'ahmad.hidayat@simakmerdeka.ai.studio'];
-      if (!demoEmails.includes(userObj.email.toLowerCase())) {
-        if (savedTeacher) {
-          const teacherObj: TeacherProfile = JSON.parse(savedTeacher);
-          const isSameUser = 
-            (userObj.profileId && teacherObj.id === userObj.profileId) ||
-            (userObj.nip && teacherObj.nip && teacherObj.nip.replace(/\s+/g, '') === userObj.nip.replace(/\s+/g, '')) ||
-            (userObj.name && teacherObj.name && teacherObj.name.toLowerCase() === userObj.name.toLowerCase());
+      if (savedUser) {
+        const userObj: UserAccount = JSON.parse(savedUser);
+        const demoEmails = ['bambang.susanto@simakmerdeka.ai.studio', 'siti.rahmah@simakmerdeka.ai.studio', 'ahmad.hidayat@simakmerdeka.ai.studio'];
+        if (!demoEmails.includes(userObj.email?.toLowerCase())) {
+          if (savedTeacher) {
+            const teacherObj: TeacherProfile = JSON.parse(savedTeacher);
+            const isSameUser = 
+              (userObj.profileId && teacherObj.id === userObj.profileId) ||
+              (userObj.nip && teacherObj.nip && teacherObj.nip.replace(/\s+/g, '') === userObj.nip.replace(/\s+/g, '')) ||
+              (userObj.name && teacherObj.name && teacherObj.name.toLowerCase() === userObj.name.toLowerCase());
 
-          if (!demoIds.includes(teacherObj.id) && !demoNames.includes(teacherObj.name.toLowerCase()) && isSameUser) {
-            return teacherObj;
+            if (!demoIds.includes(teacherObj.id) && !demoNames.includes(teacherObj.name.toLowerCase()) && isSameUser) {
+              return teacherObj;
+            }
           }
+          return {
+            id: userObj.profileId || `PROF-${userObj.uid}`,
+            name: userObj.name,
+            schoolName: userObj.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+            title: userObj.role || 'Guru Pengampu',
+            nip: userObj.nip || '',
+            npsn: '20500000',
+            guardianClass: 'X-Merdeka 1',
+            subjectRole: 'Mata Pelajaran',
+            academicYear: '2026/2027',
+            semester: 'Ganjil',
+            kkm: 75,
+            principalName: 'Kepala Sekolah',
+            principalNip: '19700101 199501 1 001',
+            city: 'Indonesia',
+            avatarUrl: userObj.avatarUrl
+          };
         }
-        return {
-          id: userObj.profileId || `PROF-${userObj.uid}`,
-          name: userObj.name,
-          schoolName: userObj.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
-          title: userObj.role || 'Guru Pengampu',
-          nip: userObj.nip || '',
-          npsn: '20500000',
-          guardianClass: 'X-Merdeka 1',
-          subjectRole: 'Mata Pelajaran',
-          academicYear: '2026/2027',
-          semester: 'Ganjil',
-          kkm: 75,
-          principalName: 'Kepala Sekolah',
-          principalNip: '19700101 199501 1 001',
-          city: 'Indonesia',
-          avatarUrl: userObj.avatarUrl
-        };
       }
-    }
-    if (savedTeacher) {
-      const parsedTeacher: TeacherProfile = JSON.parse(savedTeacher);
-      if (!demoIds.includes(parsedTeacher.id) && !demoNames.includes(parsedTeacher.name.toLowerCase())) {
-        return parsedTeacher;
+      if (savedTeacher) {
+        const parsedTeacher: TeacherProfile = JSON.parse(savedTeacher);
+        if (!demoIds.includes(parsedTeacher.id) && !demoNames.includes(parsedTeacher.name.toLowerCase())) {
+          return parsedTeacher;
+        }
       }
+    } catch (e) {
+      console.error(e);
     }
     return initialTeacherProfile;
   });
@@ -242,7 +271,13 @@ export default function App() {
   const [allAnnouncements] = useState<SchoolAnnouncement[]>(() => initialAnnouncements.map(a => ({ ...a, schoolName: a.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak' })));
 
   // Navigation and Filter States
-  const [activeTab, setActiveTab] = useState<NavTab>('dashboard');
+  const [activeTab, setActiveTab] = useState<NavTab>(() => {
+    try {
+      const saved = localStorage.getItem('simak_active_tab');
+      if (saved) return saved as NavTab;
+    } catch (e) {}
+    return 'dashboard';
+  });
   const [selectedClass, setSelectedClass] = useState<string>('X-IPA 2');
   const [selectedSubject, setSelectedSubject] = useState<Subject>(subjects[0]);
   
@@ -270,6 +305,7 @@ export default function App() {
   const [showProfilePromptModal, setShowProfilePromptModal] = useState<boolean>(false);
   const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState<boolean>(false);
   const [activeFooterModal, setActiveFooterModal] = useState<HelpModalType>(null);
+  const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
 
   // Data Lock Global State
   const [dataLockConfig, setDataLockConfig] = useState<DataLockConfig>(() => {
@@ -331,13 +367,18 @@ export default function App() {
 
   // User & Teacher Profiles State
   const [teacherProfiles, setTeacherProfiles] = useState<TeacherProfile[]>(() => {
-    const saved = null;
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem('simak_teacher_profiles');
+    } catch (e) {}
     const demoIds = ['PROF-001', 'PROF-002', 'PROF-003'];
     const demoNames = ['drs. h. bambang susanto, m.pd.', 'siti rahmah, s.pd., m.si.', 'ahmad hidayat, s.kom., m.t.', 'ahmad hidayat, s.kom., gr.'];
     let list: TeacherProfile[] = [];
     if (saved) {
-      const parsed: TeacherProfile[] = JSON.parse(saved);
-      list = parsed.filter(p => !demoIds.includes(p.id) && !demoNames.includes(p.name.toLowerCase()));
+      try {
+        const parsed: TeacherProfile[] = JSON.parse(saved);
+        list = parsed.filter(p => !demoIds.includes(p.id) && !demoNames.includes(p.name.toLowerCase()));
+      } catch (e) {}
     }
     if (!list.some(p => p.id === 'PROF-ADMIN' || p.name.toLowerCase().includes('shahrur'))) {
       list.unshift(initialTeacherProfile);
@@ -346,26 +387,31 @@ export default function App() {
   });
 
   const [registeredUsers, setRegisteredUsers] = useState<UserAccount[]>(() => {
-    const saved = null;
+    let saved: string | null = null;
+    try {
+      saved = localStorage.getItem('simak_registered_users');
+    } catch (e) {}
     const demoEmails = ['bambang.susanto@simakmerdeka.ai.studio', 'siti.rahmah@simakmerdeka.ai.studio', 'ahmad.hidayat@simakmerdeka.ai.studio'];
     const demoUids = ['USER-001', 'USER-002', 'USER-003'];
     let list: UserAccount[] = [];
     if (saved) {
-      const parsed: UserAccount[] = JSON.parse(saved);
-      list = parsed.filter(u => !demoEmails.includes(u.email?.toLowerCase()) && !demoUids.includes(u.uid));
-      
-      // Sanitize non-master admin roles
-      list = list.map(u => {
-        const isRealMaster = 
-          u.email?.toLowerCase() === 'shahrurrobby17@gmail.com' || 
-          u.uid === 'USER-ADMIN' || 
-          u.name?.toLowerCase().includes('shahrur');
-          
-        if (!isRealMaster && (u.role?.toLowerCase().includes('admin') || u.role?.toLowerCase().includes('master'))) {
-          return { ...u, role: 'Guru Pengampu' };
-        }
-        return u;
-      });
+      try {
+        const parsed: UserAccount[] = JSON.parse(saved);
+        list = parsed.filter(u => !demoEmails.includes(u.email?.toLowerCase()) && !demoUids.includes(u.uid));
+        
+        // Sanitize non-master admin roles
+        list = list.map(u => {
+          const isRealMaster = 
+            u.email?.toLowerCase() === 'shahrurrobby17@gmail.com' || 
+            u.uid === 'USER-ADMIN' || 
+            u.name?.toLowerCase().includes('shahrur');
+            
+          if (!isRealMaster && (u.role?.toLowerCase().includes('admin') || u.role?.toLowerCase().includes('master'))) {
+            return { ...u, role: 'Guru Pengampu' };
+          }
+          return u;
+        });
+      } catch (e) {}
     }
     const adminUser: UserAccount = {
       uid: 'USER-ADMIN',
@@ -385,7 +431,14 @@ export default function App() {
     return list;
   });
 
-  const [showLoginScreen, setShowLoginScreen] = useState<boolean>(false);
+  const [showLoginScreen, setShowLoginScreen] = useState<boolean>(() => {
+    try {
+      const isLoggedOut = localStorage.getItem('simak_is_logged_out');
+      return isLoggedOut === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
 
   // Info Terkini Announcement state (running text below header)
   const [infoAnnouncement, setInfoAnnouncement] = useState<InfoAnnouncement>(() => {
@@ -788,9 +841,13 @@ export default function App() {
 
   const handleLogout = () => {
     setCurrentUser(null);
-    
-    
     setShowLoginScreen(true);
+    try {
+      localStorage.removeItem('simak_current_user');
+      localStorage.setItem('simak_is_logged_out', 'true');
+    } catch (e) {
+      console.error('Error in handleLogout:', e);
+    }
   };
 
   // Firebase Real-time Initialization and Listeners
@@ -1043,6 +1100,9 @@ export default function App() {
     if (checkIsDataLocked('settings')) return false;
     // 1. Update active teacher in state & localStorage
     setTeacher(newProfile);
+    try {
+      localStorage.setItem('simak_active_teacher', JSON.stringify(newProfile));
+    } catch (e) {}
 
     // Only update global single teacher document in Firebase for Master Admin
     if (currentUser?.email?.toLowerCase() === 'shahrurrobby17@gmail.com' || currentUser?.uid === 'USER-ADMIN') {
@@ -1077,6 +1137,9 @@ export default function App() {
         profileId: profileIdToMatch || currentUser.profileId
       };
       setCurrentUser(updatedUser);
+      try {
+        localStorage.setItem('simak_current_user', JSON.stringify(updatedUser));
+      } catch (e) {}
 
       // 4. Update registeredUsers list in state, localStorage & Firebase strictly for this user
       const updatedUsers = registeredUsers.map(u => {
@@ -1496,9 +1559,31 @@ export default function App() {
       currentUser.name?.toLowerCase().includes('shahrur') ||
       currentUser.role?.toLowerCase().includes('master')
     )
+  );
+
+  const isAdministrator = Boolean(
+    isAdminSystem || 
+    isMasterUser || 
+    teacher?.id === 'PROF-ADMIN' ||
+    (currentUser?.role && (
+      currentUser.role.toLowerCase().includes('admin') ||
+      currentUser.role.toLowerCase().includes('kepala') ||
+      currentUser.role.toLowerCase().includes('master')
+    )) ||
+    (currentUser?.email && (
+      currentUser.email.toLowerCase().includes('admin') ||
+      currentUser.email.toLowerCase().includes('master')
+    )) ||
+    activeTab === 'master-data' ||
+    activeTab === 'maintenance' ||
+    activeTab === 'system-tu' ||
+    activeTab === 'system-sarpras' ||
+    activeTab === 'system-keuangan' ||
+    activeTab === 'system-perpustakaan' ||
+    activeTab === 'system-kurikulum'
+  );
 
   // Data Lock Prevention Check & Alert Modal
-        );
   const [showDataLockAlertModal, setShowDataLockAlertModal] = useState<boolean>(false);
 
   const checkIsDataLocked = (moduleKey?: 'students' | 'grades' | 'attendance' | 'journal' | 'settings'): boolean => {
@@ -1558,6 +1643,9 @@ export default function App() {
     }
 
     setActiveTab(tab);
+    try {
+      localStorage.setItem('simak_active_tab', tab);
+    } catch (e) {}
   };
 
   const menuHealthMap = useMemo(() => {
@@ -1596,13 +1684,22 @@ export default function App() {
         onLoginSuccess={(user, profileId, targetTab) => {
           setCurrentUser(user);
           setShowLoginScreen(false);
+          try {
+            localStorage.setItem('simak_current_user', JSON.stringify(user));
+            localStorage.removeItem('simak_is_logged_out');
+          } catch (e) {
+            console.error('Error saving login state:', e);
+          }
 
           if (targetTab) {
             handleTabChange(targetTab as NavTab);
           }
 
           // Search in active state, saved localStorage, and initial defaults
-          const savedProfilesJson = null;
+          let savedProfilesJson: string | null = null;
+          try {
+            savedProfilesJson = localStorage.getItem('simak_teacher_profiles');
+          } catch (e) {}
           const savedProfiles: TeacherProfile[] = savedProfilesJson ? JSON.parse(savedProfilesJson) : [];
 
           const profilesToSearch = [
@@ -1657,6 +1754,9 @@ export default function App() {
           }
 
           setTeacher(matchedProf);
+          try {
+            localStorage.setItem('simak_active_teacher', JSON.stringify(matchedProf));
+          } catch (e) {}
         }}
       />
         );
@@ -1689,12 +1789,16 @@ export default function App() {
         onOpenProfilePrompt={() => setShowProfilePromptModal(true)}
         activeTab={activeTab}
         onTabChange={handleTabChange}
+        onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
+        isSidebarOpen={isSidebarOpen}
       />
 
       {/* Main Workspace Layout */}
       <div className="flex-1 flex flex-col md:flex-row w-full my-0 items-stretch overflow-hidden">
         {/* Sidebar */}
         <SidebarNavigation
+          isOpen={isSidebarOpen}
+          onClose={() => setIsSidebarOpen(false)}
           teacher={teacher}
           activeTab={activeTab}
           onTabChange={handleTabChange} 
@@ -1715,8 +1819,8 @@ export default function App() {
 
         {/* Content Pane */}
         <main className="flex-1 w-full p-3 md:p-4 lg:p-5 overflow-y-auto h-full pb-24 md:pb-10">
-          {/* Diagnostic Banner showing what data is wrong whenever active menu has errors (hidden on validation page) */}
-          {activeTab !== 'validasi' && !activeTab.startsWith('validasi') && (
+          {/* Diagnostic Banner showing what data is wrong whenever active menu has errors (hidden on dashboard and validation pages) */}
+          {activeTab !== 'dashboard' && activeTab !== 'validasi' && !activeTab.startsWith('validasi') && (
             <MenuErrorDiagnosticBanner 
               activeTab={activeTab}
               healthInfo={activeMenuHealth}
@@ -1760,12 +1864,17 @@ export default function App() {
               >
                 {activeTab === 'dashboard' && (
                     <DashboardAnalytics 
-                      students={students}
-                      grades={grades}
+                      students={allStudents && allStudents.length > 0 ? allStudents : students}
+                      grades={allGrades && allGrades.length > 0 ? allGrades : grades}
                       subjects={subjects}
-                      attendanceRecords={attendanceRecords}
+                      attendanceRecords={allAttendanceRecords && allAttendanceRecords.length > 0 ? allAttendanceRecords : attendanceRecords}
                       selectedClass={selectedClass}
                       selectedSubject={selectedSubject}
+                      teacher={teacher}
+                      teacherProfiles={teacherProfiles}
+                      registeredUsers={registeredUsers}
+                      teachingLogs={allTeachingLogs && allTeachingLogs.length > 0 ? allTeachingLogs : teachingLogs}
+                      classList={classList}
                       currentUser={currentUser}
                       isMasterUser={isMasterUser}
                       isAccountDisabled={isCurrentAccountDisabled}
@@ -1979,14 +2088,15 @@ export default function App() {
 
               {activeTab === 'sync' && (
                 <StudentSyncView 
-                  students={students}
+                  students={allStudents && allStudents.length > 0 ? allStudents : students}
                   selectedClass={selectedClass}
-            classList={classList}
-                  
+                  classList={classList}
+                  teacher={teacher}
                   onUpdateStudents={handleUpdateStudents}
                   onAddStudent={handleAddStudent}
                   onDeleteStudent={handleDeleteStudent}
                   onClassChange={setSelectedClass}
+                  onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
                 />
               )}
 
@@ -2072,27 +2182,29 @@ export default function App() {
       </main>
       </div>
 
-      {/* Official High Density Footer */}
-      <footer className="min-h-8 py-2 md:py-1 bg-slate-100 border-t border-slate-200 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-4 text-xs font-semibold text-slate-700 shrink-0 select-none pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0 subpixel-antialiased">
-        <div className="text-center sm:text-left">SIMAK Merdeka Versi 3.7.0 © 2026</div>
-        <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 font-semibold">
-          <button 
-            type="button"
-            onClick={() => setActiveFooterModal('guide')}
-            className="hover:text-cyan-700 hover:underline cursor-pointer transition-colors px-1 py-0.5 rounded active:bg-slate-200"
-          >
-            Panduan Pengguna
-          </button>
-          <span className="text-slate-300 hidden sm:inline">•</span>
-          <button 
-            type="button"
-            onClick={() => setActiveFooterModal('terms')}
-            className="text-cyan-600 font-bold hover:text-cyan-800 hover:underline cursor-pointer transition-colors px-1 py-0.5 rounded active:bg-slate-200"
-          >
-            Syarat & Ketentuan
-          </button>
-        </div>
-      </footer>
+      {/* Official High Density Footer (Hidden on Administrator page) */}
+      {!isAdministrator && (
+        <footer className="min-h-8 py-2 md:py-1 bg-slate-100 border-t border-slate-200 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-4 text-xs font-semibold text-slate-700 shrink-0 select-none pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0 subpixel-antialiased">
+          <div className="text-center sm:text-left">SIMAK Merdeka Versi 3.7.0 © 2026</div>
+          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 font-semibold">
+            <button 
+              type="button"
+              onClick={() => setActiveFooterModal('guide')}
+              className="hover:text-cyan-700 hover:underline cursor-pointer transition-colors px-1 py-0.5 rounded active:bg-slate-200"
+            >
+              Panduan Pengguna
+            </button>
+            <span className="text-slate-300 hidden sm:inline">•</span>
+            <button 
+              type="button"
+              onClick={() => setActiveFooterModal('terms')}
+              className="text-cyan-600 font-bold hover:text-cyan-800 hover:underline cursor-pointer transition-colors px-1 py-0.5 rounded active:bg-slate-200"
+            >
+              Syarat & Ketentuan
+            </button>
+          </div>
+        </footer>
+      )}
 
       {/* Footer Help & Support Modals */}
       <FooterHelpModals 

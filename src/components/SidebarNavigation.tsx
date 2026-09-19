@@ -33,7 +33,8 @@ import {
   FileText,
   Calendar,
   FileCheck,
-  AlertOctagon
+  AlertOctagon,
+  X
 } from 'lucide-react';
 
 export type NavTab = 
@@ -89,6 +90,8 @@ interface SidebarNavigationProps {
   attendanceRecords?: AttendanceRecord[];
   registeredUsers?: UserAccount[];
   studentTasks?: StudentTask[];
+  isOpen?: boolean;
+  onClose?: () => void;
 }
 
 const RESTRICTED_TABS: NavTab[] = ['sync', 'schedule', 'journal', 'upload-modul', 'students', 'attendance', 'extracurricular', 'grades', 'extra-tasks'];
@@ -109,7 +112,9 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   grades,
   attendanceRecords,
   registeredUsers,
-  studentTasks
+  studentTasks,
+  isOpen = true,
+  onClose
 }) => {
   const [isMasterDataOpen, setIsMasterDataOpen] = useState(true);
   const mobileNavContainerRef = React.useRef<HTMLDivElement>(null);
@@ -350,9 +355,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
   const isValidasiActive = activeTab === 'validasi' || validasiSubItems.some((item) => item.id === activeTab);
 
-  const [isValidasiOpen, setIsValidasiOpen] = useState<boolean>(() => {
-    return isValidasiActive;
-  });
+  const [isValidasiOpen, setIsValidasiOpen] = useState<boolean>(true);
 
   useEffect(() => {
     if (isValidasiActive) {
@@ -519,7 +522,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         settingsItem
       ];
 
-  const renderDesktopItem = (item: any) => {
+  const renderDesktopItem = (item: any, isMobileDrawer: boolean = false) => {
     const Icon = item.icon;
     const isActive = activeTab === item.id;
     const health = menuHealthMap[item.id as NavTab] || {
@@ -534,38 +537,43 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     return (
       <React.Fragment key={item.id}>
         {!isStudentRole && !isKurikulumOnlyMode && !isTuOnlyMode && item.id === 'attendance' && (
-          <div className="pt-3 pb-1 px-2.5 text-[10px] font-bold text-sky-200 uppercase tracking-wider flex items-center gap-1">
+          <div className="pt-3 pb-1 px-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
             <span>NAVIGASI SISWA</span>
           </div>
         )}
         {!isStudentRole && !isKurikulumOnlyMode && !isTuOnlyMode && item.id === 'ai-assistant' && (
-          <div className="pt-3 pb-1 px-2.5 text-[10px] font-bold text-sky-200 uppercase tracking-wider flex items-center gap-1">
+          <div className="pt-3 pb-1 px-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
             <span>AI & Sistem</span>
           </div>
         )}
         <motion.button 
           type="button" 
-          onClick={() => onTabChange(item.id)}
+          onClick={() => {
+            onTabChange(item.id);
+            if (isMobileDrawer && onClose) {
+              onClose();
+            }
+          }}
           whileHover={item.id === 'ai-assistant' ? undefined : { x: 2 }}
           whileTap={item.id === 'ai-assistant' ? undefined : { scale: 0.98 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
           title={health.tooltip}
           className={`relative w-full text-left px-3 py-2 rounded-none transition-colors flex items-center justify-between group cursor-pointer overflow-hidden ${
             isActive
-              ? 'bg-white/20 text-white font-semibold border-l-4 border-amber-300 shadow-xs backdrop-blur-xs'
-              : 'hover:bg-white/10 text-sky-100 hover:text-white font-medium'
+              ? 'bg-[#354152] text-white font-semibold border-l-4 border-[#337ab7] shadow-xs'
+              : 'hover:bg-[#2d3642] text-slate-300 hover:text-white font-medium'
           }`}
         >
           {isActive && (
             <motion.div
-              layoutId="activeSidebarBg"
-              className="absolute inset-0 bg-white/10 -z-0"
+              layoutId={isMobileDrawer ? "activeMobileDrawerBg" : "activeSidebarBg"}
+              className="absolute inset-0 bg-white/5 -z-0"
               transition={{ type: "spring", stiffness: 350, damping: 30 }}
             />
           )}
           
           <div className="flex items-center space-x-2.5 relative z-10 min-w-0 flex-1 mr-1">
-            <Icon className={`w-4.5 h-4.5 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-sky-200 group-hover:text-white opacity-90 group-hover:opacity-100'}`} />
+            <Icon className={`w-4.5 h-4.5 shrink-0 transition-colors ${isActive ? 'text-white' : 'text-slate-400 group-hover:text-white opacity-90 group-hover:opacity-100'}`} />
             <span className="text-xs sm:text-sm font-medium truncate">{item.label}</span>
           </div>
 
@@ -573,8 +581,8 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             <div className="relative z-10 flex items-center shrink-0">
               <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-none ${
                 item.id === 'ai-assistant'
-                  ? 'bg-amber-400 text-sky-950 font-black'
-                  : isActive ? 'bg-white/30 text-white' : 'bg-[#034d75] text-sky-100 border border-sky-300/30'
+                  ? 'bg-amber-400 text-slate-950 font-black'
+                  : isActive ? 'bg-[#337ab7] text-white' : 'bg-[#1e252e] text-slate-300 border border-slate-600/40'
               }`}>
                 {item.badge}
               </span>
@@ -585,12 +593,256 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     );
   };
 
+  const renderNavContent = (isMobileDrawer: boolean = false) => (
+    <div className="space-y-3 flex flex-col justify-between min-h-full">
+      <div className="space-y-3">
+        <div className="mb-3 pb-3 border-b border-[#35404e]">
+          <div className="flex items-start gap-2.5">
+            <div className="w-8 h-8 rounded-none bg-white/10 border border-white/20 flex items-center justify-center shrink-0 text-slate-200 mt-0.5 shadow-2xs">
+              <GraduationCap className="w-4.5 h-4.5 text-slate-200" />
+            </div>
+            <div className="flex flex-col text-left min-w-0 flex-1">
+              <p className="text-[12px] font-bold text-white truncate">
+                {currentUser?.name || teacher?.name || 'Pengguna'}
+              </p>
+              <p className="text-[10px] font-semibold text-slate-400 truncate leading-tight mt-0.5">
+                {currentUser?.role || teacher?.subjectRole || 'Guru Pengampu'}
+              </p>
+              {!isKurikulumOnlyMode && !isTuOnlyMode && !isStudentRole && (
+                <div className="flex items-center gap-1.5 mt-2">
+                  <div className={`w-1.5 h-1.5 rounded-full ${activeClasses.length > 0 ? 'bg-emerald-400' : 'bg-sky-400'}`}></div>
+                  <p className="text-[9px] font-bold truncate text-slate-300">
+                    Status: Kelas Aktif ({activeClassText})
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+          <span>{isStudentRole ? 'LMS Siswa Merdeka' : isKurikulumOnlyMode ? 'Sistem Kurikulum' : isTuOnlyMode ? 'Sistem Tata Usaha' : isSarprasOnlyMode ? 'Sistem Sarpras' : isPerpustakaanOnlyMode ? 'Sistem Perpustakaan' : 'Navigasi Utama'}</span>
+        </div>
+
+        <nav className="space-y-1">
+          {isStudentRole ? (
+            <>
+              {studentNavItems.map(item => renderDesktopItem(item, isMobileDrawer))}
+            </>
+          ) : isKurikulumOnlyMode ? (
+            <>
+              {renderDesktopItem(kurikulumItem, isMobileDrawer)}
+              {renderDesktopItem(settingsItem, isMobileDrawer)}
+              <div className="pt-2 pb-1 px-1">
+                <div className="border-b border-[#35404e] w-full" />
+              </div>
+            </>
+          ) : isTuOnlyMode ? (
+            <>
+              {renderDesktopItem(tuItem, isMobileDrawer)}
+              {renderDesktopItem(settingsItem, isMobileDrawer)}
+              <div className="pt-2 pb-1 px-1">
+                <div className="border-b border-[#35404e] w-full" />
+              </div>
+            </>
+          ) : isSarprasOnlyMode ? (
+            <>
+              {renderDesktopItem(sarprasItem, isMobileDrawer)}
+              {renderDesktopItem(settingsItem, isMobileDrawer)}
+              <div className="pt-2 pb-1 px-1">
+                <div className="border-b border-[#35404e] w-full" />
+              </div>
+            </>
+          ) : isPerpustakaanOnlyMode ? (
+            <>
+              {renderDesktopItem(perpustakaanItem, isMobileDrawer)}
+              {renderDesktopItem(settingsItem, isMobileDrawer)}
+              <div className="pt-2 pb-1 px-1">
+                <div className="border-b border-[#35404e] w-full" />
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Dashboard Item */}
+              {renderDesktopItem(dashboardItem, isMobileDrawer)}
+
+              {/* Master Data Section */}
+              {!isStudentRole && (
+                <div className="pt-2 pb-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsMasterDataOpen(!isMasterDataOpen)}
+                    className="w-full px-2.5 py-1.5 flex items-center justify-between text-[11px] font-bold text-slate-300 uppercase tracking-wider hover:bg-[#303a47] hover:text-white transition-colors group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <Database className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
+                      <span>Master Data</span>
+                      <span className="bg-[#337ab7] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-none">
+                        {masterDataSubItems.length}
+                      </span>
+                    </div>
+                    {isMasterDataOpen ? (
+                      <ChevronUp className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
+                    )}
+                  </button>
+                  
+                  <AnimatePresence initial={false}>
+                    {isMasterDataOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden mt-1 pl-1.5 space-y-0.5 border-l-2 border-[#337ab7] ml-2 py-0.5 bg-[#1f262f]"
+                      >
+                        {masterDataSubItems.map((subItem) => {
+                          const SubIcon = subItem.icon;
+                          const isSubActive = activeTab === subItem.id;
+                          const subHealth = menuHealthMap[subItem.id as NavTab] || {
+                            level: 'valid',
+                            badgeLabel: 'Valid',
+                            tooltip: 'Data valid & tuntas',
+                            invalidCount: 0,
+                            warningCount: 0,
+                            validCount: 1
+                          };
+
+                          return (
+                            <button
+                              key={subItem.id}
+                              type="button"
+                              onClick={() => {
+                                onTabChange(subItem.id);
+                                if (isMobileDrawer && onClose) onClose();
+                              }}
+                              className={`w-full text-left px-2.5 py-1.5 rounded-none flex items-center justify-between text-xs transition-colors group cursor-pointer ${
+                                isSubActive
+                                  ? 'bg-[#337ab7] text-white font-bold shadow-xs'
+                                  : 'text-slate-300 hover:text-white hover:bg-[#2d3642] font-medium'
+                              }`}
+                              title={subHealth.tooltip}
+                            >
+                              <div className="flex items-center gap-2 min-w-0 mr-1">
+                                <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                                <span className="truncate">{subItem.label}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {/* Validasi Dropdown Section */}
+              {!isStudentRole && (
+                <div className="pt-2 pb-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsValidasiOpen(!isValidasiOpen)}
+                    className="w-full px-2.5 py-1.5 flex items-center justify-between text-[11px] font-bold text-slate-300 uppercase tracking-wider hover:bg-[#303a47] hover:text-white transition-colors group cursor-pointer"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <ShieldCheck className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
+                      <span>Validasi</span>
+                      <span className="bg-[#337ab7] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-none">
+                        {validasiSubItems.length}
+                      </span>
+                    </div>
+                    {isValidasiOpen ? (
+                      <ChevronUp className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
+                    ) : (
+                      <ChevronDown className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
+                    )}
+                  </button>
+                  
+                  <AnimatePresence initial={false}>
+                    {isValidasiOpen && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        className="overflow-hidden mt-1 pl-1.5 space-y-0.5 border-l-2 border-[#337ab7] ml-2 py-0.5 bg-[#1f262f]"
+                      >
+                        {validasiSubItems.map((subItem) => {
+                          const SubIcon = subItem.icon;
+                          const isSubActive = activeTab === subItem.id || (activeTab === 'validasi' && subItem.id === 'validasi-dapodik');
+                          const subHealth = menuHealthMap[subItem.id as NavTab] || {
+                            level: 'valid',
+                            badgeLabel: 'Valid',
+                            tooltip: 'Data valid & tuntas',
+                            invalidCount: 0,
+                            warningCount: 0,
+                            validCount: 1
+                          };
+
+                          return (
+                            <button
+                              key={subItem.id}
+                              type="button"
+                              onClick={() => {
+                                onTabChange(subItem.id);
+                                if (isMobileDrawer && onClose) onClose();
+                              }}
+                              className={`w-full text-left px-2.5 py-1.5 rounded-none flex items-center justify-between text-xs transition-colors group cursor-pointer ${
+                                isSubActive
+                                  ? 'bg-[#337ab7] text-white font-bold shadow-xs'
+                                  : 'text-slate-300 hover:text-white hover:bg-[#2d3642] font-medium'
+                              }`}
+                              title={subHealth.tooltip}
+                            >
+                              <div className="flex items-center gap-2 min-w-0 mr-1">
+                                <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
+                                <span className="truncate">{subItem.label}</span>
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
+
+              {/* Main Navigation Items */}
+              {mainNavItems.map(item => renderDesktopItem(item, isMobileDrawer))}
+
+              {/* Settings Item */}
+              {renderDesktopItem(settingsItem, isMobileDrawer)}
+            </>
+          )}
+        </nav>
+      </div>
+      
+      {onLogout && (
+        <div className="pt-3 mt-3 border-t border-[#35404e]">
+          <button
+            type="button"
+            onClick={() => {
+              if (isMobileDrawer && onClose) onClose();
+              onLogout();
+            }}
+            className="w-full text-center px-4 py-2.5 rounded-none flex items-center justify-center space-x-2 bg-[#d9534f] hover:bg-[#c9302c] active:bg-[#ac2925] text-white font-bold transition-colors cursor-pointer shadow-sm group"
+            title="Keluar dari Akun"
+          >
+            <LogOut className="w-4 h-4 shrink-0 text-white transition-transform group-hover:-translate-x-0.5" />
+            <span className="text-sm font-bold text-white tracking-wide">Keluar</span>
+          </button>
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <>
       {/* Mobile Minimalist Elegant Quick Navigation Dock (Fixed at bottom on HP / mobile screens < md) */}
       <nav 
         aria-label="Menu Cepat Mobile"
-        className="fixed bottom-0 left-0 right-0 z-50 md:hidden pointer-events-none pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] px-2.5 sm:px-4"
+        className="fixed bottom-0 left-0 right-0 z-40 md:hidden pointer-events-none pb-[calc(0.5rem+env(safe-area-inset-bottom,0px))] px-2.5 sm:px-4"
       >
         <div className="pointer-events-auto max-w-lg mx-auto bg-white/95 backdrop-blur-xl border border-slate-200/90 shadow-[0_10px_35px_-5px_rgba(15,23,42,0.18)] rounded-2xl p-1.5 transition-all">
           <div 
@@ -619,7 +871,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                   {isActive && (
                     <motion.div
                       layoutId="activeMobileNavPill"
-                      className="absolute inset-0 bg-[#075985] rounded-xl -z-0"
+                      className="absolute inset-0 bg-[#2f618e] rounded-xl -z-0"
                       transition={{ type: "spring", stiffness: 450, damping: 35 }}
                     />
                   )}
@@ -656,238 +908,65 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         </div>
       </nav>
 
-      {/* Desktop Sidebar (Only visible on desktop/tablet >= md) */}
-      <aside className="hidden md:flex w-64 lg:w-68 bg-[#075985] text-white shrink-0 p-4 flex-col justify-between rounded-none shadow-md md:h-full overflow-y-auto border-r border-[#034d75]">
-        <div className="space-y-3">
-          <div className="mb-3 pb-3 border-b border-sky-300/30">
-            <div className="flex items-start gap-2.5">
-              <div className="w-8 h-8 rounded-none bg-white/15 border border-white/30 flex items-center justify-center shrink-0 text-sky-100 mt-0.5 shadow-2xs">
-                <GraduationCap className="w-4.5 h-4.5 text-sky-100" />
-              </div>
-              <div className="flex flex-col text-left min-w-0 flex-1">
-                <p className="text-[12px] font-bold text-white truncate">
-                  {currentUser?.name || teacher?.name || 'Pengguna'}
-                </p>
-                <p className="text-[10px] font-semibold text-white truncate leading-tight mt-0.5">
-                  {currentUser?.role || teacher?.subjectRole || 'Guru Pengampu'}
-                </p>
-                {!isKurikulumOnlyMode && !isTuOnlyMode && !isStudentRole && (
-                  <div className="flex items-center gap-1.5 mt-2">
-                    <div className={`w-1.5 h-1.5 rounded-full ${activeClasses.length > 0 ? 'bg-emerald-400' : 'bg-sky-400'}`}></div>
-                    <p className="text-[9px] font-bold truncate text-white">
-                      Status: Kelas Aktif ({activeClassText})
-                    </p>
-                  </div>
+      {/* Mobile Drawer (When hamburger 3 lines is clicked on Mobile) */}
+      <AnimatePresence>
+        {isOpen && (
+          <div className="fixed inset-0 z-50 md:hidden flex pointer-events-auto">
+            <motion.div
+              key="mobile-drawer-backdrop"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.22 }}
+              onClick={onClose}
+              className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs"
+            />
+            <motion.aside
+              key="mobile-drawer-panel"
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 26, stiffness: 280 }}
+              className="relative w-72 max-w-[85vw] bg-[#27313b] text-slate-200 shrink-0 p-3.5 flex flex-col justify-between shadow-2xl h-full overflow-y-auto border-r border-[#1e252e] z-10 select-none"
+            >
+              <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#35404e]">
+                <span className="text-xs font-black text-white uppercase tracking-wider">Menu Navigasi</span>
+                {onClose && (
+                  <button
+                    type="button"
+                    onClick={onClose}
+                    className="p-1 text-slate-400 hover:text-white hover:bg-white/10 rounded cursor-pointer transition-colors"
+                    title="Tutup Menu"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 )}
               </div>
-            </div>
+              <div className="flex-1 overflow-y-auto pr-0.5">
+                {renderNavContent(true)}
+              </div>
+            </motion.aside>
           </div>
-          
-          <div className="px-2 py-1 text-[10px] font-bold text-sky-200 uppercase tracking-wider flex items-center justify-between">
-            <span>{isStudentRole ? 'LMS Siswa Merdeka' : isKurikulumOnlyMode ? 'Sistem Kurikulum' : isTuOnlyMode ? 'Sistem Tata Usaha' : isSarprasOnlyMode ? 'Sistem Sarpras' : isPerpustakaanOnlyMode ? 'Sistem Perpustakaan' : 'Navigasi Utama'}</span>
-          </div>
+        )}
+      </AnimatePresence>
 
-          <nav className="space-y-1">
-            {isStudentRole ? (
-              <>
-                {studentNavItems.map(renderDesktopItem)}
-              </>
-            ) : isKurikulumOnlyMode ? (
-              <>
-                {renderDesktopItem(kurikulumItem)}
-                {renderDesktopItem(settingsItem)}
-                <div className="pt-2 pb-1 px-1">
-                  <div className="border-b border-sky-300/30 w-full" />
-                </div>
-              </>
-            ) : isTuOnlyMode ? (
-              <>
-                {renderDesktopItem(tuItem)}
-                {renderDesktopItem(settingsItem)}
-                <div className="pt-2 pb-1 px-1">
-                  <div className="border-b border-sky-300/30 w-full" />
-                </div>
-              </>
-            ) : isSarprasOnlyMode ? (
-              <>
-                {renderDesktopItem(sarprasItem)}
-                {renderDesktopItem(settingsItem)}
-                <div className="pt-2 pb-1 px-1">
-                  <div className="border-b border-sky-300/30 w-full" />
-                </div>
-              </>
-            ) : isPerpustakaanOnlyMode ? (
-              <>
-                {renderDesktopItem(perpustakaanItem)}
-                {renderDesktopItem(settingsItem)}
-                <div className="pt-2 pb-1 px-1">
-                  <div className="border-b border-sky-300/30 w-full" />
-                </div>
-              </>
-            ) : (
-              <>
-                {/* Dashboard Item */}
-                {renderDesktopItem(dashboardItem)}
-
-                {/* Master Data Section (Sinkronisasi, Monitoring Akun, Kurikulum, Guru, TU, Sarpras, Keuangan, Perpustakaan, Kesiswaan, Validasi) */}
-                {!isStudentRole && (
-                  <div className="pt-2 pb-1">
-                    <button
-                      type="button"
-                      onClick={() => setIsMasterDataOpen(!isMasterDataOpen)}
-                      className="w-full px-2.5 py-1.5 flex items-center justify-between text-[10px] font-bold text-sky-100 uppercase tracking-wider hover:bg-white/10 transition-colors group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <Database className="w-3.5 h-3.5 text-sky-200" />
-                        <span>Master Data</span>
-                        <span className="bg-amber-400 text-sky-950 text-[9px] font-black px-1.5 py-0.2 rounded-none">
-                          {masterDataSubItems.length}
-                        </span>
-                      </div>
-                      {isMasterDataOpen ? (
-                        <ChevronUp className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
-                      ) : (
-                        <ChevronDown className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
-                      )}
-                    </button>
-                    
-                    <AnimatePresence initial={false}>
-                      {isMasterDataOpen && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden mt-1 pl-1.5 space-y-0.5 border-l-2 border-amber-400/60 ml-1.5 py-0.5"
-                        >
-                          {masterDataSubItems.map((subItem) => {
-                            const SubIcon = subItem.icon;
-                            const isSubActive = activeTab === subItem.id;
-                            const subHealth = menuHealthMap[subItem.id as NavTab] || {
-                              level: 'valid',
-                              badgeLabel: 'Valid',
-                              tooltip: 'Data valid & tuntas',
-                              invalidCount: 0,
-                              warningCount: 0,
-                              validCount: 1
-                            };
-
-                            return (
-                              <button
-                                key={subItem.id}
-                                type="button"
-                                onClick={() => onTabChange(subItem.id)}
-                                className={`w-full text-left px-2 py-1.5 rounded-none flex items-center justify-between text-xs transition-colors group cursor-pointer ${
-                                  isSubActive
-                                    ? 'bg-amber-400 text-sky-950 font-black shadow-xs'
-                                    : 'text-sky-100 hover:text-white hover:bg-white/10 font-medium'
-                                }`}
-                                title={subHealth.tooltip}
-                              >
-                                <div className="flex items-center gap-1.5 min-w-0 mr-1">
-                                  <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? 'text-sky-950' : 'text-sky-200 group-hover:text-white'}`} />
-                                  <span className="truncate">{subItem.label}</span>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )}
-
-                {/* Validasi Dropdown Section (Directly under Master Data) */}
-                {!isStudentRole && (
-                  <div className="pt-2 pb-1">
-                    <button
-                      type="button"
-                      onClick={() => setIsValidasiOpen(!isValidasiOpen)}
-                      className="w-full px-2.5 py-1.5 flex items-center justify-between text-[10px] font-bold text-sky-100 uppercase tracking-wider hover:bg-white/10 transition-colors group cursor-pointer"
-                    >
-                      <div className="flex items-center gap-1.5">
-                        <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
-                        <span>Validasi</span>
-                        <span className="bg-amber-400 text-sky-950 text-[9px] font-black px-1.5 py-0.2 rounded-none">
-                          {validasiSubItems.length}
-                        </span>
-                      </div>
-                      {isValidasiOpen ? (
-                        <ChevronUp className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
-                      ) : (
-                        <ChevronDown className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
-                      )}
-                    </button>
-                    
-                    <AnimatePresence initial={false}>
-                      {isValidasiOpen && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.2 }}
-                          className="overflow-hidden mt-1 pl-1.5 space-y-0.5 border-l-2 border-amber-400/60 ml-1.5 py-0.5"
-                        >
-                          {validasiSubItems.map((subItem) => {
-                            const SubIcon = subItem.icon;
-                            const isSubActive = activeTab === subItem.id || (activeTab === 'validasi' && subItem.id === 'validasi-dapodik');
-                            const subHealth = menuHealthMap[subItem.id as NavTab] || {
-                              level: 'valid',
-                              badgeLabel: 'Valid',
-                              tooltip: 'Data valid & tuntas',
-                              invalidCount: 0,
-                              warningCount: 0,
-                              validCount: 1
-                            };
-
-                            return (
-                              <button
-                                key={subItem.id}
-                                type="button"
-                                onClick={() => onTabChange(subItem.id)}
-                                className={`w-full text-left px-2 py-1.5 rounded-none flex items-center justify-between text-xs transition-colors group cursor-pointer ${
-                                  isSubActive
-                                    ? 'bg-amber-400 text-sky-950 font-black shadow-xs'
-                                    : 'text-sky-100 hover:text-white hover:bg-white/10 font-medium'
-                                }`}
-                                title={subHealth.tooltip}
-                              >
-                                <div className="flex items-center gap-1.5 min-w-0 mr-1">
-                                  <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? 'text-sky-950' : 'text-sky-200 group-hover:text-white'}`} />
-                                  <span className="truncate">{subItem.label}</span>
-                                </div>
-                              </button>
-                            );
-                          })}
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                )}
-
-                {/* Main Navigation Items */}
-                {mainNavItems.map(renderDesktopItem)}
-
-                {/* Settings Item */}
-                {renderDesktopItem(settingsItem)}
-              </>
-            )}
-          </nav>
-          
-          {onLogout && (
-            <div className="pt-2 mt-2">
-              <button
-                type="button"
-                onClick={onLogout}
-                className="w-full text-left px-3.5 py-2.5 rounded-none flex items-center space-x-3 text-rose-200 hover:text-white hover:bg-rose-500/20 font-medium transition-colors cursor-pointer group"
-              >
-                <LogOut className="w-5 h-5 shrink-0 transition-colors opacity-80 group-hover:opacity-100" />
-                <span className="text-sm font-medium">Keluar</span>
-              </button>
+      {/* Desktop Animated Sidebar (Opens/Closes with smooth sliding width animation) */}
+      <AnimatePresence initial={false}>
+        {isOpen && (
+          <motion.aside
+            key="desktop-sidebar"
+            initial={{ width: 0, opacity: 0 }}
+            animate={{ width: 272, opacity: 1 }}
+            exit={{ width: 0, opacity: 0 }}
+            transition={{ duration: 0.26, ease: [0.4, 0, 0.2, 1] }}
+            className="hidden md:flex bg-[#27313b] text-slate-200 shrink-0 flex-col justify-between rounded-none shadow-md md:h-full overflow-hidden border-r border-[#1e252e] select-none"
+          >
+            <div className="w-68 min-w-[272px] p-3.5 flex flex-col justify-between h-full overflow-y-auto space-y-3">
+              {renderNavContent(false)}
             </div>
-          )}
-        </div>
-      </aside>
+          </motion.aside>
+        )}
+      </AnimatePresence>
     </>
   );
 };

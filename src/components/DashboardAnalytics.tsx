@@ -27,10 +27,12 @@ import {
   ChevronRight,
   Database,
   ShieldAlert,
+  ShieldCheck,
   FolderUp
 } from 'lucide-react';
 import { generatePdfReport } from '../utils/pdfExport';
 import { UserAccount } from '../types';
+import { AdminExecutiveAnalytics } from './AdminExecutiveAnalytics';
 
 interface DashboardAnalyticsProps {
   students: Student[];
@@ -45,6 +47,10 @@ interface DashboardAnalyticsProps {
   isAccountDisabled?: boolean;
   onTabChange?: (tab: NavTab) => void;
   isLoginView?: boolean;
+  teacherProfiles?: TeacherProfile[];
+  registeredUsers?: UserAccount[];
+  teachingLogs?: any[];
+  classList?: string[];
 }
 
 const RESTRICTED_TABS: NavTab[] = ['sync', 'schedule', 'journal', 'upload-modul', 'students', 'attendance', 'extracurricular', 'grades'];
@@ -61,11 +67,28 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
   isMasterUser,
   isAccountDisabled: propAccountDisabled,
   onTabChange,
-  isLoginView
+  isLoginView,
+  teacherProfiles = [],
+  registeredUsers = [],
+  teachingLogs = [],
+  classList = []
 }) => {
   const [aiAnalysis, setAiAnalysis] = useState<any>(null);
   const [loadingAi, setLoadingAi] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string | null>(null);
+
+  const isAdministrator = Boolean(
+    isMasterUser ||
+    currentUser?.role?.toLowerCase().includes('admin') ||
+    currentUser?.role?.toLowerCase().includes('master') ||
+    currentUser?.role?.toLowerCase().includes('operator') ||
+    currentUser?.email?.toLowerCase() === 'shahrurrobby17@gmail.com' ||
+    currentUser?.uid === 'USER-ADMIN'
+  );
+
+  const [activeDashboardView, setActiveDashboardView] = useState<'admin' | 'guru'>(
+    isAdministrator ? 'admin' : 'guru'
+  );
 
   const quickMenuItems = [
     {
@@ -331,34 +354,60 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
         </div>
       )}
 
-      {/* Header Title Section */}
-      {!isLoginView && (
-        <div className="bg-gradient-to-r from-[#002f54] via-[#164e63] to-[#003d6d] text-white p-5 rounded-none shadow-lg border border-cyan-800/40 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-            <BarChart3 className="w-48 h-48 text-white" />
-          </div>
+      {/* Mode View Selector: Analitik Administrator (14 Sistem) vs Analitik Guru */}
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={() => setActiveDashboardView('admin')}
+            className={`px-4 py-2 text-xs font-black uppercase tracking-wider cursor-pointer transition-all flex items-center gap-2 border ${
+              activeDashboardView === 'admin'
+                ? 'bg-[#164e63] text-white border-[#164e63] shadow-xs'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <ShieldCheck className="w-4 h-4 text-amber-300" />
+            <span>Analitik Administrator (14 Sistem)</span>
+            <span className="px-1.5 py-0.5 bg-amber-400 text-slate-950 font-black text-[10px]">
+              14 MODUL
+            </span>
+          </button>
 
-          <div className="relative z-10 flex items-center gap-4">
-            <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-none flex items-center justify-center border border-white/20 shrink-0 shadow-inner">
-              <BarChart3 className="w-6 h-6 text-amber-300" />
-            </div>
-            <div>
-              <div className="flex items-center space-x-2 text-xs font-bold text-amber-300 uppercase tracking-wider mb-1">
-                <Target className="w-3.5 h-3.5 text-amber-300" />
-                <span>Dashboard Performa Akademik & Analytics</span>
-              </div>
-              <h2 className="text-xl md:text-2xl font-bold tracking-tight text-white mt-1">
-                Analitik Nilai Rekap Keseluruhan
-                {displaySubjectName ? ` — ${displaySubjectName}` : ''}
-              </h2>
-              <p className="text-xs text-cyan-200/90 max-w-2xl mt-0.5">
-                Pantau ketercapaian KKTP ({selectedSubject.kktp}), distribusi predikat, dan presensi siswa secara real-time.
-              </p>
-            </div>
-          </div>
+          <button
+            onClick={() => setActiveDashboardView('guru')}
+            className={`px-4 py-2 text-xs font-black uppercase tracking-wider cursor-pointer transition-all flex items-center gap-2 border ${
+              activeDashboardView === 'guru'
+                ? 'bg-[#164e63] text-white border-[#164e63] shadow-xs'
+                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+            }`}
+          >
+            <GraduationCap className="w-4 h-4 text-cyan-500" />
+            <span>Analitik Akademik Guru</span>
+          </button>
         </div>
-      )}
 
+        <div className="flex items-center gap-2 text-xs text-slate-500">
+          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+          <span className="font-semibold text-slate-700">SIMAK Merdeka</span>
+          <span>• T.A 2026/2027 Ganjil</span>
+        </div>
+      </div>
+
+      {activeDashboardView === 'admin' ? (
+        <AdminExecutiveAnalytics 
+          students={students}
+          grades={grades}
+          subjects={subjects}
+          attendanceRecords={attendanceRecords}
+          teacher={teacher}
+          currentUser={currentUser}
+          teacherProfiles={teacherProfiles}
+          registeredUsers={registeredUsers}
+          teachingLogs={teachingLogs}
+          classList={classList}
+          onNavigateTab={onTabChange}
+        />
+      ) : (
+        <>
       {/* KPI Cards Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Card 1: Rata-rata Nilai */}
@@ -499,6 +548,8 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
           </div>
         </div>
       </div>
+        </>
+      )}
     </div>
   );
 };
