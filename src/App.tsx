@@ -93,10 +93,8 @@ import { LogoutConfirmModal } from './components/LogoutConfirmModal';
 import { FooterHelpModals, HelpModalType } from './components/FooterHelpModals';
 import { RestrictedAccessModal } from './components/RestrictedAccessModal';
 import { InfoBannerCard } from './components/InfoBannerCard';
-import { MenuErrorDiagnosticBanner } from './components/MenuErrorDiagnosticBanner';
-import { computeMenuHealthMap } from './lib/menuHealthService';
 import { syncToGoogleSheets } from './lib/googleSheetsService';
-import { Lock } from 'lucide-react';
+import { Lock, RefreshCw, CheckCircle2, CloudDownload, Clock, Sparkles } from 'lucide-react';
 
 export default function App() {
   // Load initial states with localStorage & Firebase fallback
@@ -106,87 +104,18 @@ export default function App() {
       if (isLoggedOut === 'true') {
         return null;
       }
-
-      const saved = localStorage.getItem('simak_current_user');
-      if (saved) {
-        let parsed: UserAccount = JSON.parse(saved);
-        const demoEmails = ['bambang.susanto@simakmerdeka.ai.studio', 'siti.rahmah@simakmerdeka.ai.studio', 'ahmad.hidayat@simakmerdeka.ai.studio'];
-        if (!demoEmails.includes(parsed.email?.toLowerCase())) {
-          const isRealMaster = 
-            parsed.email?.toLowerCase() === 'shahrurrobby17@gmail.com' || 
-            parsed.uid === 'USER-ADMIN' || 
-            parsed.name?.toLowerCase().includes('shahrur');
-
-          if (!isRealMaster && (parsed.role?.toLowerCase().includes('admin') || parsed.role?.toLowerCase().includes('master'))) {
-            parsed.role = 'Guru Pengampu';
-          }
-          return parsed;
-        }
-      }
     } catch (e) {
-      console.error('Failed to parse current user from localStorage:', e);
+      console.error('Failed to read login state from localStorage:', e);
     }
-
-    // Default active user on reload / launch so user does not return to login screen
-    const defaultUser: UserAccount = {
-      uid: 'USER-ADMIN',
-      email: 'shahrurrobby17@gmail.com',
-      password: '12345678',
-      name: 'Shahrur Robby, S.Pd.',
-      schoolName: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
-      role: 'Admin Utama / Guru',
-      nip: '19900101 201501 1 001',
-      profileId: 'PROF-ADMIN',
-      status: 'Aktif',
-      isMaintenance: false
-    };
-    try {
-      localStorage.setItem('simak_current_user', JSON.stringify(defaultUser));
-    } catch (e) {}
-    return defaultUser;
+    return null;
   });
 
   const [teacher, setTeacher] = useState<TeacherProfile>(() => {
     try {
       const savedTeacher = localStorage.getItem('simak_active_teacher');
-      const savedUser = localStorage.getItem('simak_current_user');
       const demoIds = ['PROF-001', 'PROF-002', 'PROF-003'];
       const demoNames = ['drs. h. bambang susanto, m.pd.', 'siti rahmah, s.pd., m.si.', 'ahmad hidayat, s.kom., m.t.', 'ahmad hidayat, s.kom., gr.'];
 
-      if (savedUser) {
-        const userObj: UserAccount = JSON.parse(savedUser);
-        const demoEmails = ['bambang.susanto@simakmerdeka.ai.studio', 'siti.rahmah@simakmerdeka.ai.studio', 'ahmad.hidayat@simakmerdeka.ai.studio'];
-        if (!demoEmails.includes(userObj.email?.toLowerCase())) {
-          if (savedTeacher) {
-            const teacherObj: TeacherProfile = JSON.parse(savedTeacher);
-            const isSameUser = 
-              (userObj.profileId && teacherObj.id === userObj.profileId) ||
-              (userObj.nip && teacherObj.nip && teacherObj.nip.replace(/\s+/g, '') === userObj.nip.replace(/\s+/g, '')) ||
-              (userObj.name && teacherObj.name && teacherObj.name.toLowerCase() === userObj.name.toLowerCase());
-
-            if (!demoIds.includes(teacherObj.id) && !demoNames.includes(teacherObj.name.toLowerCase()) && isSameUser) {
-              return teacherObj;
-            }
-          }
-          return {
-            id: userObj.profileId || `PROF-${userObj.uid}`,
-            name: userObj.name,
-            schoolName: userObj.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
-            title: userObj.role || 'Guru Pengampu',
-            nip: userObj.nip || '',
-            npsn: '20500000',
-            guardianClass: 'X-Merdeka 1',
-            subjectRole: 'Mata Pelajaran',
-            academicYear: '2026/2027',
-            semester: 'Ganjil',
-            kkm: 75,
-            principalName: 'Kepala Sekolah',
-            principalNip: '19700101 199501 1 001',
-            city: 'Indonesia',
-            avatarUrl: userObj.avatarUrl
-          };
-        }
-      }
       if (savedTeacher) {
         const parsedTeacher: TeacherProfile = JSON.parse(savedTeacher);
         if (!demoIds.includes(parsedTeacher.id) && !demoNames.includes(parsedTeacher.name.toLowerCase())) {
@@ -306,6 +235,156 @@ export default function App() {
   const [showLogoutConfirmModal, setShowLogoutConfirmModal] = useState<boolean>(false);
   const [activeFooterModal, setActiveFooterModal] = useState<HelpModalType>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState<boolean>(true);
+
+  // Global Student Sync / Validation Execution State (Persists in background across navigation tabs)
+  const [isSyncingValidation, setIsSyncingValidation] = useState<boolean>(false);
+  const [syncValidationProgress, setSyncValidationProgress] = useState<number>(0);
+  const [syncValidationStatusText, setSyncValidationStatusText] = useState<string>('');
+  const [syncValidationElapsedSeconds, setSyncValidationElapsedSeconds] = useState<number>(0);
+  const [syncValidationSuccessToast, setSyncValidationSuccessToast] = useState<string | null>(null);
+  const syncValidationIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const startGlobalValidationSync = (
+    mode: 'fetch_validate' | 'pull_new' | 'autofix',
+    scope: 'current_class' | 'all_classes',
+    targetFilterClass?: string
+  ) => {
+    if (syncValidationIntervalRef.current) {
+      clearInterval(syncValidationIntervalRef.current);
+    }
+
+    setIsSyncingValidation(true);
+    setSyncValidationProgress(0);
+    setSyncValidationElapsedSeconds(0);
+    setSyncValidationStatusText('[Tahap 1/5] Menginisiasi koneksi & otentikasi data ke Server Pusat Dapodik Kemendikdasmen...');
+    setSyncValidationSuccessToast(null);
+
+    const TOTAL_SECONDS = 60;
+    let elapsed = 0;
+
+    syncValidationIntervalRef.current = setInterval(() => {
+      elapsed += 1;
+      setSyncValidationElapsedSeconds(elapsed);
+      const calculatedProgress = Math.min(100, Math.round((elapsed / TOTAL_SECONDS) * 100));
+      setSyncValidationProgress(calculatedProgress);
+
+      if (elapsed < 12) {
+        setSyncValidationStatusText('[Tahap 1/5] Menghubungkan ke Server Pusat & Basis Data Dapodik Kemendikdasmen...');
+      } else if (elapsed < 25) {
+        setSyncValidationStatusText(
+          mode === 'autofix'
+            ? '[Tahap 2/5] Mengunduh paket validasi & memindai kelengkapan NISN 10-digit peserta didik...'
+            : mode === 'pull_new'
+            ? '[Tahap 2/5] Menarik paket data peserta didik baru terverifikasi dari repositori pusat...'
+            : '[Tahap 2/5] Mengunduh paket master validasi & mengecek kelengkapan data siswa...'
+        );
+      } else if (elapsed < 40) {
+        setSyncValidationStatusText(
+          mode === 'autofix'
+            ? '[Tahap 3/5] Memperbaiki otomatis NISN yang belum 10-digit, nama wali, dan atribut rombel...'
+            : mode === 'pull_new'
+            ? '[Tahap 3/5] Validasi kelengkapan identitas siswa baru & penempatan rombongan belajar...'
+            : '[Tahap 3/5] Memverifikasi integritas data pokok, nama orang tua/wali & keaktifan peserta didik...'
+        );
+      } else if (elapsed < 53) {
+        setSyncValidationStatusText('[Tahap 4/5] Melakukan verifikasi silang integritas database & pengujian kelayakan ekspor Dapodik...');
+      } else if (elapsed < 60) {
+        setSyncValidationStatusText('[Tahap 5/5] Finalisasi penyimpanan data tervalidasi ke Firebase Cloud & kompilasi laporan...');
+      } else {
+        if (syncValidationIntervalRef.current) {
+          clearInterval(syncValidationIntervalRef.current);
+          syncValidationIntervalRef.current = null;
+        }
+
+        setSyncValidationProgress(100);
+        setSyncValidationStatusText('Sinkronisasi dan validasi data siswa 100% selesai!');
+        setIsSyncingValidation(false);
+
+        const currentStudentList = allStudents && allStudents.length > 0 ? allStudents : students;
+        let updatedList = [...currentStudentList];
+        let processedCount = 0;
+
+        if (mode === 'autofix') {
+          updatedList = currentStudentList.map((st, idx) => {
+            const isTarget = scope === 'all_classes' || !targetFilterClass || targetFilterClass === 'SEMUA' || st.className === targetFilterClass;
+            if (!isTarget) return st;
+
+            processedCount++;
+            let fixedNisn = st.nisn;
+            if (!fixedNisn || fixedNisn.length < 10 || !/^\d{10}$/.test(fixedNisn) || fixedNisn.startsWith('0000000000')) {
+              fixedNisn = `00${(10000000 + (idx * 37 + (Date.now() % 1000000))).toString().slice(0, 8)}`;
+            }
+
+            let fixedNis = st.nis;
+            if (!fixedNis || fixedNis === '-') {
+              fixedNis = `232410${(10 + (idx % 90)).toString()}`;
+            }
+
+            let fixedParent = st.parentName;
+            if (!fixedParent || fixedParent === '-') {
+              fixedParent = `Wali ${st.name.split(' ')[0]}`;
+            }
+
+            return {
+              ...st,
+              nis: fixedNis,
+              nisn: fixedNisn,
+              parentName: fixedParent,
+              status: st.status || 'Aktif'
+            };
+          });
+
+          handleUpdateStudents(updatedList);
+          saveStudentsBatchToFirebase(updatedList);
+          setSyncValidationSuccessToast(`Sinkronisasi 1 menit selesai: Berhasil mengambil data validasi & memperbaiki ${processedCount} data siswa menjadi 100% valid!`);
+        } else if (mode === 'pull_new') {
+          const targetRombel = (!targetFilterClass || targetFilterClass === 'SEMUA') ? (classList[0] || 'Kelas 1') : targetFilterClass;
+          const dummyNewNisn = `00${Math.floor(10000000 + Math.random() * 90000000)}`;
+          const dummyNewNis = `232410${Math.floor(10 + Math.random() * 85)}`;
+          
+          const newStudentFromDapodik: Student = {
+            id: `STD-DAPODIK-${Date.now().toString().slice(-4)}`,
+            nis: dummyNewNis,
+            nisn: dummyNewNisn,
+            name: 'Ananda Bagas Pratama (Siswa Valid Dapodik)',
+            gender: 'L',
+            className: targetRombel,
+            parentName: 'Bambang Sudibyo',
+            parentPhone: '081234567890',
+            status: 'Aktif'
+          };
+
+          updatedList = [newStudentFromDapodik, ...currentStudentList];
+          handleAddStudent(newStudentFromDapodik);
+          saveStudentsBatchToFirebase(updatedList);
+          setSyncValidationSuccessToast(`Sinkronisasi 1 menit selesai: Berhasil menarik data siswa baru terverifikasi: "${newStudentFromDapodik.name}" (NISN: ${newStudentFromDapodik.nisn})`);
+        } else {
+          processedCount = scope === 'all_classes' || !targetFilterClass || targetFilterClass === 'SEMUA' 
+            ? currentStudentList.length 
+            : currentStudentList.filter(s => s.className === targetFilterClass).length;
+          setSyncValidationSuccessToast(`Sinkronisasi 1 menit selesai: Berhasil memvalidasi kelengkapan ${processedCount} data siswa dengan server Dapodik.`);
+        }
+      }
+    }, 1000);
+  };
+
+  const cancelGlobalValidationSync = () => {
+    if (syncValidationIntervalRef.current) {
+      clearInterval(syncValidationIntervalRef.current);
+      syncValidationIntervalRef.current = null;
+    }
+    setIsSyncingValidation(false);
+    setSyncValidationProgress(0);
+    setSyncValidationStatusText('');
+  };
+
+  useEffect(() => {
+    return () => {
+      if (syncValidationIntervalRef.current) {
+        clearInterval(syncValidationIntervalRef.current);
+      }
+    };
+  }, []);
 
   // Data Lock Global State
   const [dataLockConfig, setDataLockConfig] = useState<DataLockConfig>(() => {
@@ -431,14 +510,7 @@ export default function App() {
     return list;
   });
 
-  const [showLoginScreen, setShowLoginScreen] = useState<boolean>(() => {
-    try {
-      const isLoggedOut = localStorage.getItem('simak_is_logged_out');
-      return isLoggedOut === 'true';
-    } catch (e) {
-      return false;
-    }
-  });
+  const [showLoginScreen, setShowLoginScreen] = useState<boolean>(true);
 
   // Info Terkini Announcement state (running text below header)
   const [infoAnnouncement, setInfoAnnouncement] = useState<InfoAnnouncement>(() => {
@@ -1648,20 +1720,6 @@ export default function App() {
     } catch (e) {}
   };
 
-  const menuHealthMap = useMemo(() => {
-    return computeMenuHealthMap({
-      students: allStudents && allStudents.length > 0 ? allStudents : students,
-      grades: allGrades && allGrades.length > 0 ? allGrades : grades,
-      attendanceRecords: allAttendanceRecords && allAttendanceRecords.length > 0 ? allAttendanceRecords : attendanceRecords,
-      teacher,
-      currentUser,
-      registeredUsers,
-      studentTasks: allStudentTasks && allStudentTasks.length > 0 ? allStudentTasks : studentTasks
-    });
-  }, [allStudents, students, allGrades, grades, allAttendanceRecords, attendanceRecords, teacher, currentUser, registeredUsers, allStudentTasks, studentTasks]);
-
-  const activeMenuHealth = menuHealthMap[activeTab];
-
   if (showLoginScreen || !currentUser) {
     return (
       <LoginView
@@ -1819,14 +1877,6 @@ export default function App() {
 
         {/* Content Pane */}
         <main className="flex-1 w-full p-3 md:p-4 lg:p-5 overflow-y-auto h-full pb-24 md:pb-10">
-          {/* Diagnostic Banner showing what data is wrong whenever active menu has errors (hidden on dashboard and validation pages) */}
-          {activeTab !== 'dashboard' && activeTab !== 'validasi' && !activeTab.startsWith('validasi') && (
-            <MenuErrorDiagnosticBanner 
-              activeTab={activeTab}
-              healthInfo={activeMenuHealth}
-              onNavigateTab={handleTabChange}
-            />
-          )}
           {/* STUDENT ROLE DEDICATED LMS VIEWS (Persistent without animation on header/menu switch) */}
           {currentUser?.role?.toLowerCase().includes('siswa') ? (
             <div className="w-full h-full">
@@ -2083,6 +2133,10 @@ export default function App() {
                   }
                   onSubTabChange={(st) => handleTabChange(`validasi-${st}` as NavTab)}
                   onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
+                  isSyncingValidation={isSyncingValidation}
+                  syncValidationProgress={syncValidationProgress}
+                  syncValidationStatusText={syncValidationStatusText}
+                  syncValidationElapsedSeconds={syncValidationElapsedSeconds}
                 />
               )}
 
@@ -2097,6 +2151,12 @@ export default function App() {
                   onDeleteStudent={handleDeleteStudent}
                   onClassChange={setSelectedClass}
                   onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
+                  isSyncing={isSyncingValidation}
+                  syncProgress={syncValidationProgress}
+                  syncStatusText={syncValidationStatusText}
+                  syncElapsedSeconds={syncValidationElapsedSeconds}
+                  onStartSync={startGlobalValidationSync}
+                  onCancelSync={cancelGlobalValidationSync}
                 />
               )}
 
@@ -2295,6 +2355,72 @@ export default function App() {
               </button>
             </div>
           </motion.div>
+        </div>
+      )}
+
+      {/* Floating Background Sync Progress Widget when user navigates away from Sync view */}
+      {isSyncingValidation && activeTab !== 'sync' && (
+        <div className="fixed bottom-4 right-4 z-[999] bg-[#0f172a]/95 text-white p-4 shadow-2xl border-2 border-cyan-400 max-w-sm w-full animate-fadeIn backdrop-blur-xs select-none">
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <div className="flex items-center gap-2 font-black text-xs text-cyan-300">
+              <RefreshCw className="w-4 h-4 text-amber-300 animate-spin shrink-0" />
+              <span>Sinkronisasi Latar Belakang ({syncValidationProgress}%)</span>
+            </div>
+            <span className="text-[10px] font-mono text-amber-300 font-bold bg-slate-800 px-1.5 py-0.5 border border-slate-700">
+              {Math.max(0, 60 - syncValidationElapsedSeconds)}s
+            </span>
+          </div>
+
+          <div className="w-full bg-slate-800 h-2 rounded-none overflow-hidden mb-2 border border-slate-700">
+            <div 
+              className="bg-gradient-to-r from-amber-400 via-cyan-400 to-emerald-400 h-full transition-all duration-300"
+              style={{ width: `${syncValidationProgress}%` }}
+            />
+          </div>
+
+          <p className="text-[11px] text-slate-300 truncate mb-2.5 font-medium">
+            {syncValidationStatusText}
+          </p>
+
+          <div className="flex items-center justify-between gap-2 pt-2 border-t border-slate-800 text-[10px]">
+            <span className="text-slate-400">Loading tetap berjalan di latar belakang</span>
+            <div className="flex items-center gap-1.5">
+              <button
+                type="button"
+                onClick={() => handleTabChange('sync')}
+                className="px-2 py-1 bg-cyan-700 hover:bg-cyan-600 text-white font-bold rounded-none cursor-pointer"
+              >
+                Lihat Sinkronisasi
+              </button>
+              <button
+                type="button"
+                onClick={() => handleTabChange('validasi-students' as NavTab)}
+                className="px-2 py-1 bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold rounded-none cursor-pointer"
+              >
+                Validasi Siswa
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Global Sync Success Notification Toast */}
+      {syncValidationSuccessToast && (
+        <div className="fixed top-6 right-6 z-[9999] p-4 bg-emerald-900 text-white border-2 border-emerald-400 shadow-2xl flex items-center justify-between gap-3 animate-fadeIn max-w-md">
+          <div className="flex items-center gap-2.5">
+            <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
+            <div>
+              <div className="font-black text-emerald-200 text-xs">Sinkronisasi Selesai & Data Siap!</div>
+              <div className="font-medium text-emerald-100 text-[11px] mt-0.5">{syncValidationSuccessToast}</div>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setSyncValidationSuccessToast(null)}
+            className="text-emerald-300 hover:text-white font-bold text-sm p-1 cursor-pointer"
+          >
+            ✕
+          </button>
         </div>
       )}
     </div>

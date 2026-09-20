@@ -317,7 +317,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     },
     {
       id: 'validasi-overview' as NavTab,
-      label: 'Ringkasan Audit SIMAK',
+      label: 'Ringkasan Audit',
       subtitle: 'Audit Integritas Data & Rapor',
       icon: ShieldCheck
     },
@@ -594,14 +594,15 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   };
 
   const renderNavContent = (isMobileDrawer: boolean = false) => (
-    <div className="space-y-3 flex flex-col justify-between min-h-full">
-      <div className="space-y-3">
-        <div className="mb-3 pb-3 border-b border-[#35404e]">
+    <div className="flex flex-col justify-between min-h-full w-full max-w-full overflow-x-hidden">
+      <div className="space-y-2 w-full max-w-full overflow-x-hidden">
+        {/* Profile Card at Top of Sidebar with generous breathing space */}
+        <div className="pt-4 sm:pt-5 pb-3.5 px-3.5 sm:px-4 mb-2 border-b border-[#35404e] bg-[#222b34]/40">
           <div className="flex items-start gap-2.5">
             <div className="w-8 h-8 rounded-none bg-white/10 border border-white/20 flex items-center justify-center shrink-0 text-slate-200 mt-0.5 shadow-2xs">
               <GraduationCap className="w-4.5 h-4.5 text-slate-200" />
             </div>
-            <div className="flex flex-col text-left min-w-0 flex-1">
+            <div className="flex flex-col text-left min-w-0 flex-1 overflow-hidden">
               <p className="text-[12px] font-bold text-white truncate">
                 {currentUser?.name || teacher?.name || 'Pengguna'}
               </p>
@@ -620,11 +621,11 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           </div>
         </div>
         
-        <div className="px-2 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
+        <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
           <span>{isStudentRole ? 'LMS Siswa Merdeka' : isKurikulumOnlyMode ? 'Sistem Kurikulum' : isTuOnlyMode ? 'Sistem Tata Usaha' : isSarprasOnlyMode ? 'Sistem Sarpras' : isPerpustakaanOnlyMode ? 'Sistem Perpustakaan' : 'Navigasi Utama'}</span>
         </div>
 
-        <nav className="space-y-1">
+        <nav className="space-y-1 w-full max-w-full overflow-x-hidden">
           {isStudentRole ? (
             <>
               {studentNavItems.map(item => renderDesktopItem(item, isMobileDrawer))}
@@ -668,23 +669,23 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
               {/* Master Data Section */}
               {!isStudentRole && (
-                <div className="pt-2 pb-1">
+                <div className="pt-2 pb-1 w-full max-w-full overflow-x-hidden">
                   <button
                     type="button"
                     onClick={() => setIsMasterDataOpen(!isMasterDataOpen)}
                     className="w-full px-2.5 py-1.5 flex items-center justify-between text-[11px] font-bold text-slate-300 uppercase tracking-wider hover:bg-[#303a47] hover:text-white transition-colors group cursor-pointer"
                   >
-                    <div className="flex items-center gap-1.5">
-                      <Database className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
-                      <span>Master Data</span>
-                      <span className="bg-[#337ab7] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-none">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <Database className="w-3.5 h-3.5 text-slate-400 group-hover:text-white shrink-0" />
+                      <span className="truncate">Master Data</span>
+                      <span className="bg-[#337ab7] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-none shrink-0">
                         {masterDataSubItems.length}
                       </span>
                     </div>
                     {isMasterDataOpen ? (
-                      <ChevronUp className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
+                      <ChevronUp className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100 shrink-0" />
                     ) : (
-                      <ChevronDown className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
+                      <ChevronDown className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100 shrink-0" />
                     )}
                   </button>
                   
@@ -695,7 +696,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="overflow-hidden mt-1 pl-1.5 space-y-0.5 border-l-2 border-[#337ab7] ml-2 py-0.5 bg-[#1f262f]"
+                        className="overflow-hidden mt-1 ml-2 mr-2 pl-2 space-y-0.5 py-0.5 bg-[#1a2027]/80 rounded-none border-l border-slate-700/60"
                       >
                         {masterDataSubItems.map((subItem) => {
                           const SubIcon = subItem.icon;
@@ -717,14 +718,14 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                                 onTabChange(subItem.id);
                                 if (isMobileDrawer && onClose) onClose();
                               }}
-                              className={`w-full text-left px-2.5 py-1.5 rounded-none flex items-center justify-between text-xs transition-colors group cursor-pointer ${
+                              className={`w-full text-left pl-2.5 pr-2 py-1.5 rounded-none flex items-center justify-between text-xs transition-colors group cursor-pointer ${
                                 isSubActive
                                   ? 'bg-[#337ab7] text-white font-bold shadow-xs'
                                   : 'text-slate-300 hover:text-white hover:bg-[#2d3642] font-medium'
                               }`}
                               title={subHealth.tooltip}
                             >
-                              <div className="flex items-center gap-2 min-w-0 mr-1">
+                              <div className="flex items-center gap-2 min-w-0 mr-1 overflow-hidden">
                                 <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                                 <span className="truncate">{subItem.label}</span>
                               </div>
@@ -739,23 +740,23 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
               {/* Validasi Dropdown Section */}
               {!isStudentRole && (
-                <div className="pt-2 pb-1">
+                <div className="pt-2 pb-1 w-full max-w-full overflow-x-hidden">
                   <button
                     type="button"
                     onClick={() => setIsValidasiOpen(!isValidasiOpen)}
                     className="w-full px-2.5 py-1.5 flex items-center justify-between text-[11px] font-bold text-slate-300 uppercase tracking-wider hover:bg-[#303a47] hover:text-white transition-colors group cursor-pointer"
                   >
-                    <div className="flex items-center gap-1.5">
-                      <ShieldCheck className="w-3.5 h-3.5 text-slate-400 group-hover:text-white" />
-                      <span>Validasi</span>
-                      <span className="bg-[#337ab7] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-none">
+                    <div className="flex items-center gap-1.5 min-w-0">
+                      <ShieldCheck className="w-3.5 h-3.5 text-slate-400 group-hover:text-white shrink-0" />
+                      <span className="truncate">Validasi</span>
+                      <span className="bg-[#337ab7] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-none shrink-0">
                         {validasiSubItems.length}
                       </span>
                     </div>
                     {isValidasiOpen ? (
-                      <ChevronUp className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
+                      <ChevronUp className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100 shrink-0" />
                     ) : (
-                      <ChevronDown className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100" />
+                      <ChevronDown className="w-3.5 h-3.5 opacity-80 group-hover:opacity-100 shrink-0" />
                     )}
                   </button>
                   
@@ -766,7 +767,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         animate={{ height: "auto", opacity: 1 }}
                         exit={{ height: 0, opacity: 0 }}
                         transition={{ duration: 0.2 }}
-                        className="overflow-hidden mt-1 pl-1.5 space-y-0.5 border-l-2 border-[#337ab7] ml-2 py-0.5 bg-[#1f262f]"
+                        className="overflow-hidden mt-1 ml-2 mr-2 pl-2 space-y-0.5 py-0.5 bg-[#1a2027]/80 rounded-none border-l border-slate-700/60"
                       >
                         {validasiSubItems.map((subItem) => {
                           const SubIcon = subItem.icon;
@@ -788,14 +789,14 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                                 onTabChange(subItem.id);
                                 if (isMobileDrawer && onClose) onClose();
                               }}
-                              className={`w-full text-left px-2.5 py-1.5 rounded-none flex items-center justify-between text-xs transition-colors group cursor-pointer ${
+                              className={`w-full text-left pl-2.5 pr-2 py-1.5 rounded-none flex items-center justify-between text-xs transition-colors group cursor-pointer ${
                                 isSubActive
                                   ? 'bg-[#337ab7] text-white font-bold shadow-xs'
                                   : 'text-slate-300 hover:text-white hover:bg-[#2d3642] font-medium'
                               }`}
                               title={subHealth.tooltip}
                             >
-                              <div className="flex items-center gap-2 min-w-0 mr-1">
+                              <div className="flex items-center gap-2 min-w-0 mr-1 overflow-hidden">
                                 <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? 'text-white' : 'text-slate-400 group-hover:text-white'}`} />
                                 <span className="truncate">{subItem.label}</span>
                               </div>
@@ -817,19 +818,19 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           )}
         </nav>
       </div>
-      
+
       {onLogout && (
-        <div className="pt-3 mt-3 border-t border-[#35404e]">
+        <div className="w-full shrink-0 border-t border-[#35404e] mt-4">
           <button
             type="button"
             onClick={() => {
               if (isMobileDrawer && onClose) onClose();
               onLogout();
             }}
-            className="w-full text-center px-4 py-2.5 rounded-none flex items-center justify-center space-x-2 bg-[#d9534f] hover:bg-[#c9302c] active:bg-[#ac2925] text-white font-bold transition-colors cursor-pointer shadow-sm group"
+            className="w-full text-left px-4 py-3 rounded-none flex items-center justify-start space-x-2.5 bg-[#d9534f] hover:bg-[#c9302c] active:bg-[#ac2925] text-white font-bold transition-colors cursor-pointer shadow-sm group"
             title="Keluar dari Akun"
           >
-            <LogOut className="w-4 h-4 shrink-0 text-white transition-transform group-hover:-translate-x-0.5" />
+            <LogOut className="w-4.5 h-4.5 shrink-0 text-white transition-transform group-hover:-translate-x-0.5" />
             <span className="text-sm font-bold text-white tracking-wide">Keluar</span>
           </button>
         </div>
@@ -927,9 +928,9 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 26, stiffness: 280 }}
-              className="relative w-72 max-w-[85vw] bg-[#27313b] text-slate-200 shrink-0 p-3.5 flex flex-col justify-between shadow-2xl h-full overflow-y-auto border-r border-[#1e252e] z-10 select-none"
+              className="relative w-72 max-w-[85vw] bg-[#27313b] text-slate-200 shrink-0 flex flex-col justify-between shadow-2xl h-full overflow-hidden border-r border-[#1e252e] z-10 select-none"
             >
-              <div className="flex items-center justify-between pb-2 mb-2 border-b border-[#35404e]">
+              <div className="p-3.5 pb-2.5 border-b border-[#35404e] flex items-center justify-between shrink-0">
                 <span className="text-xs font-black text-white uppercase tracking-wider">Menu Navigasi</span>
                 {onClose && (
                   <button
@@ -942,7 +943,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                   </button>
                 )}
               </div>
-              <div className="flex-1 overflow-y-auto pr-0.5">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden">
                 {renderNavContent(true)}
               </div>
             </motion.aside>
@@ -961,8 +962,10 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             transition={{ duration: 0.26, ease: [0.4, 0, 0.2, 1] }}
             className="hidden md:flex bg-[#27313b] text-slate-200 shrink-0 flex-col justify-between rounded-none shadow-md md:h-full overflow-hidden border-r border-[#1e252e] select-none"
           >
-            <div className="w-68 min-w-[272px] p-3.5 flex flex-col justify-between h-full overflow-y-auto space-y-3">
-              {renderNavContent(false)}
+            <div className="w-68 min-w-[272px] max-w-[272px] flex flex-col justify-between h-full overflow-hidden">
+              <div className="flex-1 overflow-y-auto overflow-x-hidden">
+                {renderNavContent(false)}
+              </div>
             </div>
           </motion.aside>
         )}

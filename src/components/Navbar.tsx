@@ -481,7 +481,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   };
 
   return (
-    <header className="bg-gradient-to-r from-[#3e4854] via-[#35526e] to-[#2f618e] border-b border-[#234d72] sticky top-0 z-30 shadow-sm pt-[env(safe-area-inset-top,0px)]">
+    <header className="bg-gradient-to-r from-[#1c4772] via-[#265582] to-[#2f618e] border-b border-[#1c3f63] sticky top-0 z-30 shadow-sm pt-[env(safe-area-inset-top,0px)]">
       {/* Main Header Content - Compact slim height */}
       <div className="px-3 md:px-5 py-1 md:py-1.5 w-full flex items-center justify-between gap-2 md:gap-3">
         
@@ -521,13 +521,9 @@ export const Navbar: React.FC<NavbarProps> = ({
               title={isSidebarOpen ? "Tutup Menu Navigasi (Garis 3)" : "Buka Menu Navigasi (Garis 3)"}
               aria-label="Menu Navigasi"
             >
-              <motion.div
-                animate={{ rotate: isSidebarOpen ? 90 : 0 }}
-                transition={{ duration: 0.22, ease: "easeInOut" }}
-                className="flex items-center justify-center"
-              >
+              <div className="flex items-center justify-center">
                 <Menu className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
-              </motion.div>
+              </div>
             </motion.button>
             <p className="text-[11px] sm:text-xs md:text-sm text-white font-bold tracking-tight truncate leading-tight">
               {teacher?.schoolName || currentUser?.schoolName || 'SMA ISLAM DIPONEGORO WAGIR'}

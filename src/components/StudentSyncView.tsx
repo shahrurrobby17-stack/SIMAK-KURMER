@@ -110,6 +110,12 @@ interface StudentSyncViewProps {
   teacher?: TeacherProfile;
   onClassChange?: (newClass: string) => void;
   onNavigateTab?: (tab: string) => void;
+  isSyncing?: boolean;
+  syncProgress?: number;
+  syncStatusText?: string;
+  syncElapsedSeconds?: number;
+  onStartSync?: (mode: 'fetch_validate' | 'pull_new' | 'autofix', scope: 'current_class' | 'all_classes', targetFilterClass?: string) => void;
+  onCancelSync?: () => void;
 }
 
 export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
@@ -121,7 +127,13 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
   onDeleteStudent,
   teacher,
   onClassChange,
-  onNavigateTab
+  onNavigateTab,
+  isSyncing: isSyncingProp,
+  syncProgress: syncProgressProp,
+  syncStatusText: syncStatusTextProp,
+  syncElapsedSeconds: syncElapsedSecondsProp,
+  onStartSync: onStartSyncProp,
+  onCancelSync: onCancelSyncProp
 }) => {
   // Helper to get current formatted time string
   const getFormattedNow = (): string => {
@@ -134,10 +146,14 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
     return `${dateStr} ${monthStr} ${yearStr}, ${hoursStr}:${minutesStr} WIB`;
   };
 
-  const [isSyncing, setIsSyncing] = useState<boolean>(false);
-  const [syncProgress, setSyncProgress] = useState<number>(0);
-  const [syncStatusText, setSyncStatusText] = useState<string>('');
+  const [localIsSyncing, setLocalIsSyncing] = useState<boolean>(false);
+  const [localSyncProgress, setLocalSyncProgress] = useState<number>(0);
+  const [localSyncStatusText, setLocalSyncStatusText] = useState<string>('');
   const syncIntervalRef = React.useRef<NodeJS.Timeout | null>(null);
+
+  const isSyncing = isSyncingProp !== undefined ? isSyncingProp : localIsSyncing;
+  const syncProgress = syncProgressProp !== undefined ? syncProgressProp : localSyncProgress;
+  const syncStatusText = syncStatusTextProp !== undefined ? syncStatusTextProp : localSyncStatusText;
 
   const [lastSyncedTime, setLastSyncedTime] = useState<string>(() => {
     const initialTime = getFormattedNow();
@@ -315,14 +331,20 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
 
   // CORE: Run Fetch / Sync Student Validation Logic (Duration: 1 Minute / 60 Seconds)
   const executeStudentValidationSync = (mode: 'fetch_validate' | 'pull_new' | 'autofix', scope: 'current_class' | 'all_classes') => {
+    setShowValidationModal(false);
+
+    if (onStartSyncProp) {
+      onStartSyncProp(mode, scope, activeFilterClass);
+      return;
+    }
+
     if (syncIntervalRef.current) {
       clearInterval(syncIntervalRef.current);
     }
 
-    setIsSyncing(true);
-    setSyncProgress(0);
-    setSyncStatusText('[Tahap 1/5] Menginisiasi koneksi & otentikasi data ke Server Pusat Dapodik Kemendikdasmen...');
-    setShowValidationModal(false);
+    setLocalIsSyncing(true);
+    setLocalSyncProgress(0);
+    setLocalSyncStatusText('[Tahap 1/5] Menginisiasi koneksi & otentikasi data ke Server Pusat Dapodik Kemendikdasmen...');
 
     const TOTAL_SECONDS = 60;
     let elapsedSeconds = 0;
@@ -331,13 +353,13 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
       elapsedSeconds += 1;
       const calculatedProgress = Math.min(100, Math.round((elapsedSeconds / TOTAL_SECONDS) * 100));
 
-      setSyncProgress(calculatedProgress);
+      setLocalSyncProgress(calculatedProgress);
 
       // Dynamic Stage Status Text across 60 seconds (1 minute timeline)
       if (elapsedSeconds < 12) {
-        setSyncStatusText('[Tahap 1/5] Menghubungkan ke Server Pusat & Basis Data Dapodik Kemendikdasmen...');
+        setLocalSyncStatusText('[Tahap 1/5] Menghubungkan ke Server Pusat & Basis Data Dapodik Kemendikdasmen...');
       } else if (elapsedSeconds < 25) {
-        setSyncStatusText(
+        setLocalSyncStatusText(
           mode === 'autofix'
             ? '[Tahap 2/5] Mengunduh paket validasi & memindai kelengkapan NISN 10-digit peserta didik...'
             : mode === 'pull_new'
@@ -345,7 +367,7 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
             : '[Tahap 2/5] Mengunduh paket master validasi & mengecek kelengkapan data siswa...'
         );
       } else if (elapsedSeconds < 40) {
-        setSyncStatusText(
+        setLocalSyncStatusText(
           mode === 'autofix'
             ? '[Tahap 3/5] Memperbaiki otomatis NISN yang belum 10-digit, nama wali, dan atribut rombel...'
             : mode === 'pull_new'
@@ -353,9 +375,9 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
             : '[Tahap 3/5] Memverifikasi integritas data pokok, nama orang tua/wali & keaktifan peserta didik...'
         );
       } else if (elapsedSeconds < 53) {
-        setSyncStatusText('[Tahap 4/5] Melakukan verifikasi silang integritas database & pengujian kelayakan ekspor Dapodik...');
+        setLocalSyncStatusText('[Tahap 4/5] Melakukan verifikasi silang integritas database & pengujian kelayakan ekspor Dapodik...');
       } else if (elapsedSeconds < 60) {
-        setSyncStatusText('[Tahap 5/5] Finalisasi penyimpanan data tervalidasi ke Firebase Cloud & kompilasi laporan...');
+        setLocalSyncStatusText('[Tahap 5/5] Finalisasi penyimpanan data tervalidasi ke Firebase Cloud & kompilasi laporan...');
       } else {
         // 60 Seconds Reached -> Complete Sync
         if (syncIntervalRef.current) {
@@ -363,13 +385,13 @@ export const StudentSyncView: React.FC<StudentSyncViewProps> = ({
           syncIntervalRef.current = null;
         }
 
-        setSyncProgress(100);
-        setSyncStatusText('Sinkronisasi dan validasi data siswa 100% selesai!');
+        setLocalSyncProgress(100);
+        setLocalSyncStatusText('Sinkronisasi dan validasi data siswa 100% selesai!');
 
         const nowStr = getFormattedNow();
         setLastSyncedTime(nowStr);
         saveLastSyncedTimeToFirebase(nowStr);
-        setIsSyncing(false);
+        setLocalIsSyncing(false);
 
         let updatedList = [...students];
         let actionLogTitle = '';

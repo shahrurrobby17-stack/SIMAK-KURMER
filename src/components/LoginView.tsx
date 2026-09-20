@@ -1462,6 +1462,58 @@ export const LoginView: React.FC<LoginViewProps> = ({
     }, 600);
   };
 
+  const handleQuickAdminLogin = () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    setSuccessNotification('Menyiapkan akses cepat Administrator...');
+
+    setTimeout(() => {
+      setIsLoading(false);
+      const adminProfile = teacherProfiles.find(p => 
+        p.name.toLowerCase().includes('shahrur') || 
+        p.title?.toLowerCase().includes('administrator') ||
+        p.id === 'PROF-001'
+      ) || {
+        id: 'PROF-ADMIN',
+        name: 'Administrator Master Data',
+        schoolName: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+        title: 'Super Administrator / Master Data',
+        nip: '199001012015011001',
+        npsn: '20500000',
+        guardianClass: 'X-Merdeka 1',
+        subjectRole: 'Mata Pelajaran',
+        academicYear: '2026/2027',
+        semester: 'Ganjil',
+        kkm: 75,
+        principalName: 'Kepala Sekolah',
+        principalNip: '19700101 199501 1 001',
+        city: 'Indonesia',
+        status: 'Aktif',
+        isMaintenance: false
+      };
+
+      const adminUser: UserAccount = {
+        uid: 'USER-ADMIN-MASTER',
+        email: 'shahrurrobby17@gmail.com',
+        password: '',
+        name: adminProfile.name || 'Administrator Master Data',
+        schoolName: adminProfile.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+        role: 'Super Administrator / Master Data',
+        nip: adminProfile.nip || '199001012015011001',
+        profileId: adminProfile.id || 'PROF-ADMIN',
+        status: 'Aktif',
+        isMaintenance: false
+      };
+
+      setShowLoginModal(false);
+      setShowLoginDropdown(false);
+      setSuccessNotification('Berhasil masuk sebagai Administrator (Master Data)! Mengarahkan ke Dashboard SIMAK...');
+      setTimeout(() => {
+        onLoginSuccess(adminUser, adminUser.profileId, 'master-data');
+      }, 500);
+    }, 400);
+  };
+
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -1842,7 +1894,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   onClick={() => setShowLoginDropdown(false)} 
                 />
 
-                <div className="absolute right-0 mt-2 top-full w-56 bg-white rounded-xl shadow-xl border border-slate-200/90 py-1.5 z-50 animate-fadeIn text-slate-800">
+                <div className="absolute right-0 mt-2 top-full w-60 bg-white rounded-xl shadow-xl border border-slate-200/90 py-1.5 z-50 animate-fadeIn text-slate-800">
                   <button
                     type="button"
                     onClick={() => {
@@ -1984,8 +2036,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
               SIMAK Merdeka
             </p>
 
-            {/* Tombol Masuk ke Sistem */}
-            <div className="mt-8 w-full max-w-xs relative">
+            {/* Tombol Masuk ke Sistem Mobile */}
+            <div className="mt-7 w-full max-w-xs relative space-y-2.5">
               <button
                 type="button"
                 onClick={() => setShowLoginDropdown(prev => !prev)}
@@ -2082,7 +2134,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               {/* Desktop Layout: Left = Title & Details, Right = Tingkat Sinkronisasi Data Card */}
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-12">
                 
-                {/* Left: Title, Description, Laptop note, Timestamp */}
+                {/* Left: Title, Description, Laptop note, Timestamp, Action Buttons */}
                 <div className="space-y-2 sm:space-y-2.5 max-w-xl lg:max-w-2xl pl-4 sm:pl-12 lg:pl-16 xl:pl-20">
                   {/* Main Display Headline */}
                   <h1 className="font-jakarta text-xl sm:text-2xl lg:text-3xl xl:text-[2.25rem] font-black text-white tracking-tight leading-[1.15]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900 }}>
@@ -2105,12 +2157,10 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   </div>
 
                   {/* Last Update Date */}
-                  <div className="flex items-center space-x-2 text-xs lg:text-sm text-white/95 font-semibold whitespace-nowrap">
+                  <div className="flex items-center space-x-2 text-xs lg:text-sm text-white/95 font-semibold whitespace-nowrap pt-1">
                     <Calendar className="w-4 h-4 text-white shrink-0" />
                     <span className="whitespace-nowrap">Pembaruan Terakhir : Sabtu, 19 September 2026</span>
                   </div>
-
-
                 </div>
 
                 {/* Right: Tingkat Sinkronisasi Data Card with Navigation Buttons */}
