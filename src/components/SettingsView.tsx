@@ -75,6 +75,7 @@ interface SettingsViewProps {
   loginBackgroundConfig?: LoginBackgroundConfig;
   onUpdateLoginBackgroundConfig?: (config: LoginBackgroundConfig) => void;
   currentUser?: UserAccount | null;
+  onOpenSchoolSelector?: () => void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -102,7 +103,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onUpdateInfoAnnouncement,
   loginBackgroundConfig,
   onUpdateLoginBackgroundConfig,
-  currentUser
+  currentUser,
+  onOpenSchoolSelector
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'profile' | 'school' | 'academic' | 'dataLock' | 'systemAnnouncement' | 'notifications' | 'system' | 'loginBackground'>('profile');
   
@@ -714,6 +716,17 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
 
+        {onOpenSchoolSelector && (
+          <button
+            type="button"
+            onClick={onOpenSchoolSelector}
+            className="inline-flex items-center gap-2 px-3.5 py-2 bg-white/10 hover:bg-white/20 active:bg-white/30 text-white border border-white/25 text-xs font-bold transition-all shadow-xs cursor-pointer shrink-0 z-10"
+            title="Kelola & Beralih Partisi Penyimpanan Sekolah"
+          >
+            <Database className="w-4 h-4 text-cyan-300" />
+            <span>Penyimpanan Sekolah Terpisah</span>
+          </button>
+        )}
       </div>
 
       {/* Animated Save Success Modal */}

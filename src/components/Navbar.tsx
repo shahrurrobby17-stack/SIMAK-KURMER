@@ -324,6 +324,7 @@ interface NavbarProps {
   onLogout?: () => void;
   onOpenLogin?: () => void;
   onOpenProfilePrompt?: () => void;
+  onOpenSchoolSelector?: () => void;
   showClassSelector?: boolean;
   activeTab?: string;
   onTabChange?: (tab: any) => void;
@@ -342,6 +343,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   onLogout,
   onOpenLogin,
   onOpenProfilePrompt,
+  onOpenSchoolSelector,
   showClassSelector = true,
   activeTab = 'dashboard',
   onTabChange,
@@ -525,19 +527,46 @@ export const Navbar: React.FC<NavbarProps> = ({
                 <Menu className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-white" />
               </div>
             </motion.button>
-            <p className="text-[11px] sm:text-xs md:text-sm text-white font-bold tracking-tight truncate leading-tight">
-              {teacher?.schoolName || currentUser?.schoolName || 'SMA ISLAM DIPONEGORO WAGIR'}
-              {!isStudentPage && (
-                <span className="inline text-slate-200 font-semibold">
-                  {' - '}NPSN: {teacher?.npsn || '20517834'} - Semester {teacher?.semester || 'Ganjil'} {teacher?.academicYear || '2026/2027'}
-                </span>
-              )}
-            </p>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <button
+                type="button"
+                onClick={onOpenSchoolSelector}
+                className="flex items-center gap-1.5 text-left hover:bg-white/10 px-1.5 py-0.5 rounded-none transition-colors cursor-pointer group max-w-[280px] sm:max-w-xs md:max-w-md"
+                title="Klik untuk melihat atau beralih partisi penyimpanan sekolah"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1 min-w-0">
+                    <span className="text-[8px] uppercase tracking-wider bg-cyan-900/80 text-cyan-200 border border-cyan-400/40 px-1 py-0.1 font-bold shrink-0">
+                      Penyimpanan
+                    </span>
+                    <p className="text-[11px] sm:text-xs md:text-sm text-white font-bold tracking-tight truncate leading-tight group-hover:text-cyan-200 transition-colors">
+                      {teacher?.schoolName || currentUser?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak'}
+                    </p>
+                    <Database className="w-3 h-3 text-cyan-300 opacity-75 group-hover:opacity-100 shrink-0" />
+                  </div>
+                  {!isStudentPage && (
+                    <span className="block text-[10px] sm:text-[11px] text-slate-200 font-medium truncate">
+                      NPSN: {teacher?.npsn || '20500000'} • Semester {teacher?.semester || 'Ganjil'} {teacher?.academicYear || '2026/2027'}
+                    </span>
+                  )}
+                </div>
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Mobile Action Buttons (Logout on HP) */}
         <div className="md:hidden flex items-center gap-1.5 shrink-0">
+          {onOpenSchoolSelector && (
+            <button
+              type="button"
+              onClick={onOpenSchoolSelector}
+              className="flex items-center space-x-1 bg-[#1d3c58] text-white border border-[#376189] px-2 py-1 rounded-none text-[11px] font-bold transition-all shrink-0 cursor-pointer shadow-xs"
+              title="Penyimpanan Sekolah"
+            >
+              <Database className="w-3 h-3 text-cyan-300" />
+            </button>
+          )}
           {onLogout && (
             <button
               type="button"
@@ -553,6 +582,19 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Right Side: Filter Kelas & Kolom Cari Menu */}
         <div className="flex items-center justify-end gap-2 md:gap-2.5 shrink-0 ml-auto">
+          {/* Quick Switch School Storage button on Desktop */}
+          {onOpenSchoolSelector && (
+            <button
+              type="button"
+              onClick={onOpenSchoolSelector}
+              className="hidden lg:flex items-center gap-1.5 bg-[#1d3c58] hover:bg-[#234769] text-white border border-[#376189] px-2 py-1 text-xs font-bold transition-all shadow-2xs cursor-pointer shrink-0"
+              title="Kelola & Beralih Penyimpanan Masing-Masing Sekolah"
+            >
+              <Building2 className="w-3.5 h-3.5 text-cyan-300" />
+              <span className="text-[11px] whitespace-nowrap">Penyimpanan Sekolah</span>
+            </button>
+          )}
+
           {/* Status Kelas Aktif - Hanya untuk guru non-admin dan hanya jika ada jadwal aktif */}
           {!isAdministrator && !isKurikulumPage && !isTuPage && !isStudentPage && activeClasses.length > 0 && (
             <div className="hidden xl:flex items-center gap-1.5 shrink-0 bg-[#1d3c58]/85 border border-[#376189] px-2 py-0.5">

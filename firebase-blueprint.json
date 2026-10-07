@@ -1,5 +1,22 @@
 {
   "entities": {
+    "RegisteredSchool": {
+      "title": "RegisteredSchool",
+      "description": "Entitas satuan pendidikan dan metadata penyimpanan per sekolah",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "npsn": { "type": "string" },
+        "address": { "type": "string" },
+        "principalName": { "type": "string" },
+        "academicYear": { "type": "string" },
+        "semester": { "type": "string" },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name"]
+    },
     "TeacherProfile": {
       "title": "TeacherProfile",
       "description": "Profil guru dan data akademis sekolah",
@@ -33,7 +50,9 @@
         "className": { "type": "string" },
         "parentName": { "type": "string" },
         "parentPhone": { "type": "string" },
-        "status": { "type": "string" }
+        "status": { "type": "string" },
+        "schoolName": { "type": "string" },
+        "schoolId": { "type": "string" }
       },
       "required": ["id", "nis", "name", "className"]
     },
@@ -52,7 +71,9 @@
         "pas": { "type": "number" },
         "finalScore": { "type": "number" },
         "predicate": { "type": "string" },
-        "achievementDescription": { "type": "string" }
+        "achievementDescription": { "type": "string" },
+        "schoolName": { "type": "string" },
+        "schoolId": { "type": "string" }
       },
       "required": ["studentId", "subjectId"]
     },
@@ -66,7 +87,9 @@
         "date": { "type": "string" },
         "status": { "type": "string" },
         "note": { "type": "string" },
-        "recordedAt": { "type": "string" }
+        "recordedAt": { "type": "string" },
+        "schoolName": { "type": "string" },
+        "schoolId": { "type": "string" }
       },
       "required": ["id", "studentId", "date", "status"]
     },
@@ -84,7 +107,9 @@
         "summaryMaterial": { "type": "string" },
         "presentCount": { "type": "number" },
         "absentCount": { "type": "number" },
-        "notes": { "type": "string" }
+        "notes": { "type": "string" },
+        "schoolName": { "type": "string" },
+        "schoolId": { "type": "string" }
       },
       "required": ["id", "date", "className"]
     },
@@ -104,31 +129,61 @@
         "status": { "type": "string" },
         "description": { "type": "string" },
         "submittedCount": { "type": "number" },
-        "totalStudents": { "type": "number" }
+        "totalStudents": { "type": "number" },
+        "schoolName": { "type": "string" },
+        "schoolId": { "type": "string" }
       },
       "required": ["id", "title", "category", "className"]
     }
   },
   "firestore": {
+    "/schools/{schoolId}": {
+      "schema": "RegisteredSchool",
+      "description": "Dokumen registrasi sekolah terdaftar"
+    },
+    "/schools/{schoolId}/students/{studentId}": {
+      "schema": "Student",
+      "description": "Koleksi data peserta didik khusus pada penyimpanan masing-masing sekolah"
+    },
+    "/schools/{schoolId}/grades/{gradeId}": {
+      "schema": "StudentGrade",
+      "description": "Koleksi nilai capaian pembelajaran dan TP siswa pada sekolah tersebut"
+    },
+    "/schools/{schoolId}/attendance/{attendanceId}": {
+      "schema": "AttendanceRecord",
+      "description": "Koleksi presensi harian siswa pada sekolah tersebut"
+    },
+    "/schools/{schoolId}/teachingLogs/{logId}": {
+      "schema": "TeachingLog",
+      "description": "Koleksi jurnal agenda mengajar harian pada sekolah tersebut"
+    },
+    "/schools/{schoolId}/studentTasks/{taskId}": {
+      "schema": "StudentTask",
+      "description": "Koleksi penugasan dan evaluasi siswa pada sekolah tersebut"
+    },
+    "/schools/{schoolId}/settings/{settingId}": {
+      "schema": "TeacherProfile",
+      "description": "Pengaturan mata pelajaran, rombel, dan kalender pada sekolah tersebut"
+    },
     "/students/{studentId}": {
       "schema": "Student",
-      "description": "Koleksi data peserta didik per sekolah"
+      "description": "Fallback koleksi data peserta didik global"
     },
     "/grades/{gradeId}": {
       "schema": "StudentGrade",
-      "description": "Koleksi nilai capaian pembelajaran dan TP siswa"
+      "description": "Fallback koleksi nilai capaian pembelajaran dan TP siswa"
     },
     "/attendance/{attendanceId}": {
       "schema": "AttendanceRecord",
-      "description": "Koleksi presensi harian siswa"
+      "description": "Fallback koleksi presensi harian siswa"
     },
     "/teachingLogs/{logId}": {
       "schema": "TeachingLog",
-      "description": "Koleksi jurnal agenda mengajar harian"
+      "description": "Fallback koleksi jurnal agenda mengajar harian"
     },
     "/studentTasks/{taskId}": {
       "schema": "StudentTask",
-      "description": "Koleksi penugasan dan evaluasi siswa"
+      "description": "Fallback koleksi penugasan dan evaluasi siswa"
     }
   }
 }

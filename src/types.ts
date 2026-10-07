@@ -1,3 +1,16 @@
+export interface RegisteredSchool {
+  id: string;
+  name: string;
+  npsn?: string;
+  address?: string;
+  principalName?: string;
+  principalNip?: string;
+  academicYear?: string;
+  semester?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 export type AttendanceStatus = 'HADIR' | 'IZIN' | 'SAKIT' | 'ALPA';
 
 export interface Student {

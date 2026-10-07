@@ -3,6 +3,12 @@ import { motion, AnimatePresence } from 'motion/react';
 import { collection, doc, onSnapshot, db } from './lib/firestore';
 import { 
   seedInitialDataIfEmpty, 
+  seedSchoolDataIfEmpty,
+  normalizeSchoolId,
+  setActiveSchoolContext,
+  subscribeToRegisteredSchools,
+  registerSchoolToFirebase,
+  initialRegisteredSchools,
   saveTeacherProfileToFirebase, 
   saveTeacherProfilesToFirebase,
   saveClassListsToFirebase, 
@@ -43,6 +49,7 @@ import {
   InfoAnnouncement,
   DataLockConfig,
   LoginBackgroundConfig,
+  RegisteredSchool,
   defaultLoginBackgroundConfig
 } from './types';
 import { 
@@ -92,6 +99,7 @@ import { ProfilePromptModal } from './components/ProfilePromptModal';
 import { LogoutConfirmModal } from './components/LogoutConfirmModal';
 import { FooterHelpModals, HelpModalType } from './components/FooterHelpModals';
 import { RestrictedAccessModal } from './components/RestrictedAccessModal';
+import { SchoolStorageSelectorModal } from './components/SchoolStorageSelectorModal';
 import { InfoBannerCard } from './components/InfoBannerCard';
 import { syncToGoogleSheets } from './lib/googleSheetsService';
 import { Lock, RefreshCw, CheckCircle2, CloudDownload, Clock, Sparkles } from 'lucide-react';
@@ -128,7 +136,55 @@ export default function App() {
     return initialTeacherProfile;
   });
 
-    const activeSchoolName = currentUser?.schoolName || teacher?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak';
+  const [registeredSchools, setRegisteredSchools] = useState<RegisteredSchool[]>(initialRegisteredSchools);
+  const [showSchoolStorageModal, setShowSchoolStorageModal] = useState<boolean>(false);
+  const [selectedSchoolName, setSelectedSchoolName] = useState<string>(() => {
+    try {
+      const saved = localStorage.getItem('simak_selected_school_name');
+      if (saved) return saved;
+    } catch (e) {}
+    return '';
+  });
+
+  const activeSchoolName = selectedSchoolName || currentUser?.schoolName || teacher?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak';
+  const activeSchoolId = useMemo(() => normalizeSchoolId(activeSchoolName), [activeSchoolName]);
+
+  useEffect(() => {
+    setActiveSchoolContext(activeSchoolName);
+    if (teacher && teacher.schoolName !== activeSchoolName) {
+      setTeacher(prev => ({ ...prev, schoolName: activeSchoolName }));
+    }
+  }, [activeSchoolName]);
+
+  useEffect(() => {
+    const unsub = subscribeToRegisteredSchools((schools) => {
+      if (schools && schools.length > 0) {
+        setRegisteredSchools(schools);
+      }
+    });
+    return () => unsub();
+  }, []);
+
+  const handleSelectSchoolStorage = (school: RegisteredSchool) => {
+    setSelectedSchoolName(school.name);
+    try {
+      localStorage.setItem('simak_selected_school_name', school.name);
+    } catch (e) {}
+    setTeacher(prev => ({
+      ...prev,
+      schoolName: school.name,
+      npsn: school.npsn || prev.npsn || '20500000',
+      principalName: school.principalName || prev.principalName
+    }));
+    setActiveSchoolContext(school.name);
+  };
+
+  const handleRegisterNewSchool = async (newSchoolData: Partial<RegisteredSchool> & { name: string }) => {
+    const created = await registerSchoolToFirebase(newSchoolData);
+    await seedSchoolDataIfEmpty(created.id, created.name);
+    handleSelectSchoolStorage(created);
+  };
+
   const isDemoAdmin = !currentUser || 
     currentUser.uid === 'USER-ADMIN' || 
     currentUser.email?.toLowerCase() === 'shahrurrobby17@gmail.com' ||
@@ -732,41 +788,14 @@ export default function App() {
   }, [inactiveClasses, selectedClass, validRegisteredClasses]);
 
   const students = useMemo(() => {
-    const rawFiltered = isDemoAdmin
-      ? allStudents
-      : allStudents.filter(s => !s.schoolName || s.schoolName === activeSchoolName);
-    
     // Only exclude if class is explicitly inactive or removed
-    return rawFiltered.filter(s => !inactiveClasses.includes(s.className) && !removedClasses.includes(s.className));
-  }, [allStudents, activeSchoolName, isDemoAdmin, inactiveClasses, removedClasses]);
+    return allStudents.filter(s => !inactiveClasses.includes(s.className) && !removedClasses.includes(s.className));
+  }, [allStudents, inactiveClasses, removedClasses]);
 
-  const grades = useMemo(() => {
-    if (isDemoAdmin) {
-      return allGrades;
-    }
-    return allGrades.filter(g => !g.schoolName || g.schoolName === activeSchoolName);
-  }, [allGrades, activeSchoolName, isDemoAdmin]);
-
-  const attendanceRecords = useMemo(() => {
-    if (isDemoAdmin) {
-      return allAttendanceRecords;
-    }
-    return allAttendanceRecords.filter(a => !a.schoolName || a.schoolName === activeSchoolName);
-  }, [allAttendanceRecords, activeSchoolName, isDemoAdmin]);
-
-  const teachingLogs = useMemo(() => {
-    if (isDemoAdmin) {
-      return allTeachingLogs;
-    }
-    return allTeachingLogs.filter(l => !l.schoolName || l.schoolName === activeSchoolName);
-  }, [allTeachingLogs, activeSchoolName, isDemoAdmin]);
-
-  const studentTasks = useMemo(() => {
-    if (isDemoAdmin) {
-      return allStudentTasks;
-    }
-    return allStudentTasks.filter(t => !t.schoolName || t.schoolName === activeSchoolName);
-  }, [allStudentTasks, activeSchoolName, isDemoAdmin]);
+  const grades = allGrades;
+  const attendanceRecords = allAttendanceRecords;
+  const teachingLogs = allTeachingLogs;
+  const studentTasks = allStudentTasks;
 
   const announcements = useMemo(() => {
     if (isDemoAdmin) {
@@ -778,11 +807,15 @@ export default function App() {
   // Make sure new records get schoolName
   const injectSchool = <T extends Record<string, any>>(item: T): T => ({ ...item, schoolName: activeSchoolName });
 
-
   const handleRegisterNewAccount = (newUser: UserAccount, newProfile?: TeacherProfile) => {
     const updatedUsers = [...registeredUsers.filter(u => u.email?.toLowerCase() !== newUser.email.toLowerCase()), newUser];
     setRegisteredUsers(updatedUsers);
     saveRegisteredUsersToFirebase(updatedUsers);
+
+    if (newUser.schoolName) {
+      registerSchoolToFirebase({ name: newUser.schoolName.trim() });
+      seedSchoolDataIfEmpty(normalizeSchoolId(newUser.schoolName), newUser.schoolName.trim());
+    }
 
     if (newProfile) {
       handleAddTeacherProfile(newProfile);
@@ -922,11 +955,11 @@ export default function App() {
     }
   };
 
-  // Firebase Real-time Initialization and Listeners
+  // Firebase Real-time Initialization and Listeners per Active School Storage
   useEffect(() => {
     seedInitialDataIfEmpty();
+    seedSchoolDataIfEmpty(activeSchoolId, activeSchoolName);
 
-    const settingsScope = currentUser && !isDemoAdmin ? `_${currentUser.uid}` : '';
     const handleListenerError = (name: string) => (err: any) => {
       if (err?.message?.includes('offline') || err?.code === 'unavailable' || err?.message?.includes('Could not reach')) {
         return; // Handled gracefully by Firestore local cache
@@ -934,7 +967,8 @@ export default function App() {
       console.warn(`Realtime ${name} listener error:`, err);
     };
 
-    const unsubClasses = onSnapshot(doc(db, 'settings', `classLists${settingsScope}`), (snapshot) => {
+    // 1. Listen to active school class lists
+    const unsubClasses = onSnapshot(doc(db, 'schools', activeSchoolId, 'settings', 'classLists'), (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
         if (data.customClasses && Array.isArray(data.customClasses)) {
@@ -949,7 +983,8 @@ export default function App() {
       }
     }, handleListenerError('classLists'));
 
-    const unsubSubjects = onSnapshot(doc(db, 'settings', 'subjects'), (snapshot) => {
+    // 2. Listen to active school subjects
+    const unsubSubjects = onSnapshot(doc(db, 'schools', activeSchoolId, 'settings', 'subjects'), (snapshot) => {
       if (snapshot.exists()) {
         const data = snapshot.data();
         if (data?.items && Array.isArray(data.items) && data.items.length > 0) {
@@ -958,7 +993,8 @@ export default function App() {
       }
     }, handleListenerError('subjects'));
 
-    const unsubStudents = onSnapshot(collection(db, 'students'), (snapshot) => {
+    // 3. Listen to active school students collection
+    const unsubStudents = onSnapshot(collection(db, 'schools', activeSchoolId, 'students'), (snapshot) => {
       const remoteList: Student[] = [];
       snapshot.forEach(d => {
         const data = d.data() as Student;
@@ -967,57 +1003,53 @@ export default function App() {
       if (remoteList.length > 0) {
         const formatted = remoteList.map(s => ({
           ...s,
-          schoolName: s.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak'
+          schoolName: s.schoolName || activeSchoolName
         })).sort((a, b) => a.name.localeCompare(b.name));
         setStudents(formatted);
       } else if (!snapshot.metadata.hasPendingWrites && !snapshot.metadata.fromCache) {
-        // If Firestore remote collection is truly empty, seed default data
-        seedInitialDataIfEmpty();
+        // If empty, seed default data for this school
+        seedSchoolDataIfEmpty(activeSchoolId, activeSchoolName);
       }
     }, handleListenerError('students'));
 
-    const unsubGrades = onSnapshot(collection(db, 'grades'), (snapshot) => {
+    // 4. Listen to active school grades collection
+    const unsubGrades = onSnapshot(collection(db, 'schools', activeSchoolId, 'grades'), (snapshot) => {
       const list: StudentGrade[] = [];
       snapshot.forEach(d => {
         const data = d.data() as StudentGrade;
         if (data && data.studentId) list.push(data);
       });
-      if (list.length > 0) {
-        setGrades(list);
-      }
+      setGrades(list);
     }, handleListenerError('grades'));
 
-    const unsubAttendance = onSnapshot(collection(db, 'attendance'), (snapshot) => {
+    // 5. Listen to active school attendance collection
+    const unsubAttendance = onSnapshot(collection(db, 'schools', activeSchoolId, 'attendance'), (snapshot) => {
       const list: AttendanceRecord[] = [];
       snapshot.forEach(d => {
         const data = d.data() as AttendanceRecord;
         if (data && data.studentId) list.push(data);
       });
-      if (list.length > 0) {
-        setAttendanceRecords(list);
-      }
+      setAttendanceRecords(list);
     }, handleListenerError('attendance'));
 
-    const unsubLogs = onSnapshot(collection(db, 'teachingLogs'), (snapshot) => {
+    // 6. Listen to active school teaching logs collection
+    const unsubLogs = onSnapshot(collection(db, 'schools', activeSchoolId, 'teachingLogs'), (snapshot) => {
       const list: TeachingLog[] = [];
       snapshot.forEach(d => {
         const data = d.data() as TeachingLog;
         if (data && data.id) list.push(data);
       });
-      if (list.length > 0) {
-        setTeachingLogs(list);
-      }
+      setTeachingLogs(list);
     }, handleListenerError('teachingLogs'));
 
-    const unsubTasks = onSnapshot(collection(db, 'studentTasks'), (snapshot) => {
+    // 7. Listen to active school student tasks collection
+    const unsubTasks = onSnapshot(collection(db, 'schools', activeSchoolId, 'studentTasks'), (snapshot) => {
       const list: StudentTask[] = [];
       snapshot.forEach(d => {
         const data = d.data() as StudentTask;
         if (data && data.id) list.push(data);
       });
-      if (list.length > 0) {
-        setStudentTasks(list);
-      }
+      setStudentTasks(list);
     }, handleListenerError('studentTasks'));
 
     const unsubUsers = subscribeToRegisteredUsers((users) => {
@@ -1091,7 +1123,7 @@ export default function App() {
       if (remoteSchedules && Array.isArray(remoteSchedules)) {
         const scheduleStorageKey = teacher?.id ? `simak_schedules_${teacher.id}` : 'simak_schedules';
       }
-    }, settingsScope);
+    }, `_${activeSchoolId}`);
 
     const unsubInfo = subscribeToInfoAnnouncement((remoteInfo) => {
       if (remoteInfo && remoteInfo.text) {
@@ -1112,7 +1144,7 @@ export default function App() {
       unsubSchedules();
       unsubInfo();
     };
-  }, [currentUser?.uid, isDemoAdmin]);
+  }, [currentUser?.uid, isDemoAdmin, activeSchoolId, activeSchoolName]);
 
 
   // Sync selectedSubject whenever subjects state is updated
@@ -1749,6 +1781,16 @@ export default function App() {
             console.error('Error saving login state:', e);
           }
 
+          if (user.schoolName) {
+            setSelectedSchoolName(user.schoolName);
+            setActiveSchoolContext(user.schoolName);
+            try {
+              localStorage.setItem('simak_selected_school_name', user.schoolName);
+            } catch (e) {}
+            registerSchoolToFirebase({ name: user.schoolName });
+            seedSchoolDataIfEmpty(normalizeSchoolId(user.schoolName), user.schoolName);
+          }
+
           if (targetTab) {
             handleTabChange(targetTab as NavTab);
           }
@@ -1845,6 +1887,7 @@ export default function App() {
         onLogout={() => setShowLogoutConfirmModal(true)}
         onOpenLogin={() => setShowLoginScreen(true)}
         onOpenProfilePrompt={() => setShowProfilePromptModal(true)}
+        onOpenSchoolSelector={() => setShowSchoolStorageModal(true)}
         activeTab={activeTab}
         onTabChange={handleTabChange}
         onToggleSidebar={() => setIsSidebarOpen(prev => !prev)}
@@ -2229,6 +2272,7 @@ export default function App() {
                   loginBackgroundConfig={loginBackgroundConfig}
                   onUpdateLoginBackgroundConfig={handleUpdateLoginBackgroundConfig}
                   currentUser={currentUser}
+                  onOpenSchoolSelector={() => setShowSchoolStorageModal(true)}
                   onChangePassword={(newPass) => {
                     if (currentUser && currentUser.email) {
                       handleResetPassword(currentUser.email, newPass);
@@ -2423,6 +2467,17 @@ export default function App() {
           </button>
         </div>
       )}
+
+      {/* Multi-Tenant School Storage Selector Modal */}
+      <SchoolStorageSelectorModal
+        isOpen={showSchoolStorageModal}
+        onClose={() => setShowSchoolStorageModal(false)}
+        activeSchoolName={activeSchoolName}
+        onSelectSchool={handleSelectSchoolStorage}
+        schools={registeredSchools}
+        onRegisterSchool={handleRegisterNewSchool}
+        currentStudents={students}
+      />
     </div>
         );
 }
