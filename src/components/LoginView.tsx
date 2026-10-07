@@ -1462,58 +1462,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
     }, 600);
   };
 
-  const handleQuickAdminLogin = () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    setSuccessNotification('Menyiapkan akses cepat Administrator...');
-
-    setTimeout(() => {
-      setIsLoading(false);
-      const adminProfile = teacherProfiles.find(p => 
-        p.name.toLowerCase().includes('shahrur') || 
-        p.title?.toLowerCase().includes('administrator') ||
-        p.id === 'PROF-001'
-      ) || {
-        id: 'PROF-ADMIN',
-        name: 'Administrator Master Data',
-        schoolName: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
-        title: 'Super Administrator / Master Data',
-        nip: '199001012015011001',
-        npsn: '20500000',
-        guardianClass: 'X-Merdeka 1',
-        subjectRole: 'Mata Pelajaran',
-        academicYear: '2026/2027',
-        semester: 'Ganjil',
-        kkm: 75,
-        principalName: 'Kepala Sekolah',
-        principalNip: '19700101 199501 1 001',
-        city: 'Indonesia',
-        status: 'Aktif',
-        isMaintenance: false
-      };
-
-      const adminUser: UserAccount = {
-        uid: 'USER-ADMIN-MASTER',
-        email: 'shahrurrobby17@gmail.com',
-        password: '',
-        name: adminProfile.name || 'Administrator Master Data',
-        schoolName: adminProfile.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
-        role: 'Super Administrator / Master Data',
-        nip: adminProfile.nip || '199001012015011001',
-        profileId: adminProfile.id || 'PROF-ADMIN',
-        status: 'Aktif',
-        isMaintenance: false
-      };
-
-      setShowLoginModal(false);
-      setShowLoginDropdown(false);
-      setSuccessNotification('Berhasil masuk sebagai Administrator (Master Data)! Mengarahkan ke Dashboard SIMAK...');
-      setTimeout(() => {
-        onLoginSuccess(adminUser, adminUser.profileId, 'master-data');
-      }, 500);
-    }, 400);
-  };
-
   const handleRegisterSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -2159,7 +2107,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   {/* Last Update Date */}
                   <div className="flex items-center space-x-2 text-xs lg:text-sm text-white/95 font-semibold whitespace-nowrap pt-1">
                     <Calendar className="w-4 h-4 text-white shrink-0" />
-                    <span className="whitespace-nowrap">Pembaruan Terakhir : Sabtu, 19 September 2026</span>
+                    <span className="whitespace-nowrap">Pembaruan Terakhir : Rabu, 7 Oktober 2026</span>
                   </div>
                 </div>
 
