@@ -44,7 +44,9 @@ import {
   Database,
   ArrowUpRight,
   ExternalLink,
-  Wallet
+  Wallet,
+  Package,
+  Library
 } from 'lucide-react';
 import { UserAccount, TeacherProfile, InfoAnnouncement, InfoAnnouncementItem, getAnnouncementItems } from '../types';
 import { SaveSuccessModal } from './SaveSuccessModal';
@@ -475,30 +477,143 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
         </div>
       )}
 
-      {/* Global Action Bar with Active System Indicator and Action Buttons (Only shown on Monitoring Akun Utama / Semua) */}
-      {selectedCategory === 'Semua' && (
-        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 w-full">
-            {/* Active System Indicator / Breadcrumb */}
-            <div className="flex items-center gap-2">
-              <div className="inline-flex items-center gap-2 px-3 py-2 bg-white border border-slate-300 text-[#164e63] text-xs font-bold shadow-2xs">
-                <Database className="w-4 h-4 text-[#164e63]" />
-                <span>Monitoring Seluruh Akun ({totalCount} Pengguna Terdaftar)</span>
-              </div>
+      {/* Persistent Navigation Bar Akses Sistem Administrator - Tetap ada & tidak hilang ketika menu diklik */}
+      <div className="bg-white border border-slate-200 px-3.5 pt-3 pb-2.5 shadow-xs">
+        <div className="flex items-center justify-between gap-3 mb-2.5 pb-2 border-b border-slate-100 flex-wrap">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-[#164e63] text-white">
+              <Database className="w-4 h-4" />
             </div>
-
-            {/* Action Buttons: Tambah Akun */}
-            <div className="flex items-center justify-end gap-2.5 shrink-0 flex-wrap">
-              <button
-                type="button"
-                onClick={() => handleOpenAddModal()}
-                className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-2 shadow-2xs transition-all cursor-pointer active:scale-95"
-              >
-                <UserPlus className="w-4 h-4" />
-                <span>Tambah Akun</span>
-              </button>
+            <div>
+              <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800">
+                Pusat Kendali Administrasi & Sistem Sekolah
+              </h2>
+              <p className="text-[11px] text-slate-500">
+                Pilih menu sistem di bawah ini untuk mengakses atau memonitor modul terkait
+              </p>
             </div>
           </div>
-      )}
+          {selectedCategory === 'Semua' && (
+            <button
+              type="button"
+              onClick={() => handleOpenAddModal()}
+              className="px-3.5 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              <span>Tambah Akun</span>
+            </button>
+          )}
+        </div>
+
+        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('Semua')}
+            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+              selectedCategory === 'Semua'
+                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <Database className="w-3.5 h-3.5 text-[#164e63]" />
+            <span>Monitoring Akun ({totalCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('Kurikulum')}
+            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+              selectedCategory === 'Kurikulum'
+                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+            <span>Kurikulum ({kurikulumCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('Guru')}
+            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+              selectedCategory === 'Guru'
+                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <Users className="w-3.5 h-3.5 text-indigo-600" />
+            <span>Guru & PTK ({guruCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('TU')}
+            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+              selectedCategory === 'TU'
+                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5 text-amber-600" />
+            <span>Tata Usaha ({tuCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('Sarpras')}
+            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+              selectedCategory === 'Sarpras'
+                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <Package className="w-3.5 h-3.5 text-purple-600" />
+            <span>Sarpras ({sarprasCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (onNavigateTab) onNavigateTab('system-keuangan');
+              else setSelectedCategory('Keuangan');
+            }}
+            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+              selectedCategory === 'Keuangan'
+                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <Wallet className="w-3.5 h-3.5 text-emerald-600" />
+            <span>Keuangan</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('Siswa')}
+            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+              selectedCategory === 'Siswa'
+                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <GraduationCap className="w-3.5 h-3.5 text-cyan-700" />
+            <span>Kesiswaan ({siswaCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('Perpustakaan')}
+            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+              selectedCategory === 'Perpustakaan'
+                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <Library className="w-3.5 h-3.5 text-teal-600" />
+            <span>Perpustakaan ({perpustakaanCount})</span>
+          </button>
+        </div>
+      </div>
 
       {/* CONDITIONAL RENDERING OF DEDICATED SYSTEMS */}
       {selectedCategory === 'Kurikulum' ? (

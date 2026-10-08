@@ -447,21 +447,23 @@ export const Navbar: React.FC<NavbarProps> = ({
     if (isKepalaSekolah) {
       list = list.filter(m => m.id !== 'master-data' && m.id !== 'ai-assistant' && m.id !== 'residu');
     }
-    if (isGuruRole) {
-      const allowedGuru = ['dashboard', 'students', 'schedule', 'journal', 'upload-modul', 'attendance', 'grades', 'settings'];
-      list = list.filter(m => allowedGuru.includes(m.id));
-    }
-    if (isTuPage) {
-      const allowedTu = ['system-tu', 'settings'];
-      list = list.filter(m => allowedTu.includes(m.id));
-    }
-    if (isKurikulumPage) {
-      const allowedKurikulum = ['system-kurikulum', 'validasi-dapodik', 'settings'];
-      list = list.filter(m => allowedKurikulum.includes(m.id));
-    }
-    if (isKesiswaanPage) {
-      const allowedKesiswaan = ['system-kesiswaan', 'attendance', 'settings'];
-      list = list.filter(m => allowedKesiswaan.includes(m.id));
+    if (!isAdministrator) {
+      if (isGuruRole) {
+        const allowedGuru = ['dashboard', 'students', 'schedule', 'journal', 'upload-modul', 'attendance', 'grades', 'settings'];
+        list = list.filter(m => allowedGuru.includes(m.id));
+      }
+      if (isTuPage) {
+        const allowedTu = ['system-tu', 'settings'];
+        list = list.filter(m => allowedTu.includes(m.id));
+      }
+      if (isKurikulumPage) {
+        const allowedKurikulum = ['system-kurikulum', 'validasi-dapodik', 'settings'];
+        list = list.filter(m => allowedKurikulum.includes(m.id));
+      }
+      if (isKesiswaanPage) {
+        const allowedKesiswaan = ['system-kesiswaan', 'attendance', 'settings'];
+        list = list.filter(m => allowedKesiswaan.includes(m.id));
+      }
     }
     const q = searchQuery.trim().toLowerCase();
     if (!q) {
