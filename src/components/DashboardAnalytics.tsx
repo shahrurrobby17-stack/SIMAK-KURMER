@@ -77,18 +77,46 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
   const [loadingAi, setLoadingAi] = useState<boolean>(false);
   const [aiError, setAiError] = useState<string | null>(null);
 
+  const isKepalaSekolah = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('kepala') ||
+      currentUser.role.toLowerCase().includes('principal')
+    )
+  );
+
+  const isGuruRole = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('guru') ||
+      currentUser.role.toLowerCase().includes('pendidik') ||
+      currentUser.role.toLowerCase().includes('pengampu') ||
+      currentUser.role.toLowerCase().includes('wali kelas')
+    ) && (
+      !currentUser.role.toLowerCase().includes('admin') &&
+      !currentUser.role.toLowerCase().includes('master')
+    )
+  );
+
   const isAdministrator = Boolean(
-    isMasterUser ||
-    currentUser?.role?.toLowerCase().includes('admin') ||
-    currentUser?.role?.toLowerCase().includes('master') ||
-    currentUser?.role?.toLowerCase().includes('operator') ||
-    currentUser?.email?.toLowerCase() === 'shahrurrobby17@gmail.com' ||
-    currentUser?.uid === 'USER-ADMIN'
+    !isGuruRole && (
+      isMasterUser ||
+      isKepalaSekolah ||
+      currentUser?.role?.toLowerCase().includes('admin') ||
+      currentUser?.role?.toLowerCase().includes('master') ||
+      currentUser?.role?.toLowerCase().includes('operator') ||
+      currentUser?.email?.toLowerCase() === 'shahrurrobby17@gmail.com' ||
+      currentUser?.uid === 'USER-ADMIN'
+    )
   );
 
   const [activeDashboardView, setActiveDashboardView] = useState<'admin' | 'guru'>(
-    isAdministrator ? 'admin' : 'guru'
+    isGuruRole ? 'guru' : (isAdministrator ? 'admin' : 'guru')
   );
+
+  React.useEffect(() => {
+    if (isGuruRole) {
+      setActiveDashboardView('guru');
+    }
+  }, [isGuruRole]);
 
   const quickMenuItems = [
     {
@@ -131,7 +159,7 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
       color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
       iconBg: 'bg-[#164e63] text-white'
     },
-    ...(isMasterUser ? [{
+    ...(!isKepalaSekolah && !isGuruRole && isMasterUser ? [{
       id: 'master-data' as NavTab,
       label: 'Master Data',
       desc: 'Monitoring Akun Terdaftar',
@@ -139,7 +167,7 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
       color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
       iconBg: 'bg-[#164e63] text-white'
     }] : []),
-    {
+    ...(!isGuruRole ? [{
       id: 'extracurricular' as NavTab,
       label: 'Presensi Ekstra',
       desc: 'Ekstrakurikuler',
@@ -154,15 +182,15 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
       icon: RefreshCw,
       color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
       iconBg: 'bg-[#164e63] text-white'
-    },
-    {
+    }] : []),
+    ...(!isKepalaSekolah && !isGuruRole ? [{
       id: 'ai-assistant' as NavTab,
       label: 'Asisten AI',
       desc: 'Generator Modul',
       icon: Sparkles,
       color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
       iconBg: 'bg-[#164e63] text-white'
-    },
+    }] : []),
     {
       id: 'settings' as NavTab,
       label: 'Pengaturan',
@@ -354,45 +382,47 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
         </div>
       )}
 
-      {/* Mode View Selector: Analitik Administrator (14 Sistem) vs Analitik Guru */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            onClick={() => setActiveDashboardView('admin')}
-            className={`px-4 py-2 text-xs font-black uppercase tracking-wider cursor-pointer transition-all flex items-center gap-2 border ${
-              activeDashboardView === 'admin'
-                ? 'bg-[#164e63] text-white border-[#164e63] shadow-xs'
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            <ShieldCheck className="w-4 h-4 text-amber-300" />
-            <span>Analitik Administrator (14 Sistem)</span>
-            <span className="px-1.5 py-0.5 bg-amber-400 text-slate-950 font-black text-[10px]">
-              14 MODUL
-            </span>
-          </button>
+      {/* Mode View Selector: Analitik Administrator (14 Sistem) vs Analitik Guru - Disembunyikan pada Halaman Guru */}
+      {!isGuruRole && (
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              onClick={() => setActiveDashboardView('admin')}
+              className={`px-4 py-2 text-xs font-black uppercase tracking-wider cursor-pointer transition-all flex items-center gap-2 border ${
+                activeDashboardView === 'admin'
+                  ? 'bg-[#164e63] text-white border-[#164e63] shadow-xs'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <ShieldCheck className="w-4 h-4 text-amber-300" />
+              <span>{isKepalaSekolah ? 'Analitik Kepala Sekolah (14 Sistem)' : 'Analitik Administrator (14 Sistem)'}</span>
+              <span className="px-1.5 py-0.5 bg-amber-400 text-slate-950 font-black text-[10px]">
+                14 MODUL
+              </span>
+            </button>
 
-          <button
-            onClick={() => setActiveDashboardView('guru')}
-            className={`px-4 py-2 text-xs font-black uppercase tracking-wider cursor-pointer transition-all flex items-center gap-2 border ${
-              activeDashboardView === 'guru'
-                ? 'bg-[#164e63] text-white border-[#164e63] shadow-xs'
-                : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
-            }`}
-          >
-            <GraduationCap className="w-4 h-4 text-cyan-500" />
-            <span>Analitik Akademik Guru</span>
-          </button>
+            <button
+              onClick={() => setActiveDashboardView('guru')}
+              className={`px-4 py-2 text-xs font-black uppercase tracking-wider cursor-pointer transition-all flex items-center gap-2 border ${
+                activeDashboardView === 'guru'
+                  ? 'bg-[#164e63] text-white border-[#164e63] shadow-xs'
+                  : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-50'
+              }`}
+            >
+              <GraduationCap className="w-4 h-4 text-cyan-500" />
+              <span>Analitik Akademik Guru</span>
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 text-xs text-slate-500">
+            <Sparkles className="w-3.5 h-3.5 text-amber-500" />
+            <span className="font-semibold text-slate-700">SIMAK Merdeka</span>
+            <span>• T.A 2026/2027 Ganjil</span>
+          </div>
         </div>
+      )}
 
-        <div className="flex items-center gap-2 text-xs text-slate-500">
-          <Sparkles className="w-3.5 h-3.5 text-amber-500" />
-          <span className="font-semibold text-slate-700">SIMAK Merdeka</span>
-          <span>• T.A 2026/2027 Ganjil</span>
-        </div>
-      </div>
-
-      {activeDashboardView === 'admin' ? (
+      {activeDashboardView === 'admin' && !isGuruRole ? (
         <AdminExecutiveAnalytics 
           students={students}
           grades={grades}

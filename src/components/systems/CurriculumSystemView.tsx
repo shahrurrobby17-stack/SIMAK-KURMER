@@ -26,6 +26,7 @@ import {
   UserCheck,
   UserPlus,
   ShieldCheck,
+  ShieldAlert,
   KeyRound,
   Settings,
   Eye,
@@ -1308,15 +1309,26 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
         </button>
 
         {onNavigateTab && (
-          <button
-            type="button"
-            onClick={() => onNavigateTab('settings')}
-            className="px-3.5 py-2.5 text-xs font-bold border-b-2 border-transparent text-slate-600 hover:text-[#164e63] hover:bg-slate-50 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ml-auto"
-            title="Buka Pengaturan Sistem"
-          >
-            <Settings className="w-4 h-4 text-slate-500" />
-            <span className="border-b border-slate-400/80 pb-0.5">Pengaturan</span>
-          </button>
+          <div className="flex items-center gap-1 ml-auto">
+            <button
+              type="button"
+              onClick={() => onNavigateTab('validasi-dapodik')}
+              className="px-3 py-2 text-xs font-bold border-b-2 border-transparent text-amber-700 hover:text-amber-900 hover:bg-amber-50 flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+              title="Buka Pusat Validasi Lokal Dapodik"
+            >
+              <ShieldAlert className="w-4 h-4 text-amber-600" />
+              <span className="border-b border-amber-400/80 pb-0.5">Validasi Lokal</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigateTab('settings')}
+              className="px-3 py-2 text-xs font-bold border-b-2 border-transparent text-slate-600 hover:text-[#164e63] hover:bg-slate-50 flex items-center gap-1.5 transition-all cursor-pointer whitespace-nowrap"
+              title="Buka Pengaturan Sistem"
+            >
+              <Settings className="w-4 h-4 text-slate-500" />
+              <span className="border-b border-slate-400/80 pb-0.5">Pengaturan</span>
+            </button>
+          </div>
         )}
       </div>
 

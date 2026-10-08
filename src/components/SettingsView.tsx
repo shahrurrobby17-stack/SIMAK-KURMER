@@ -76,6 +76,7 @@ interface SettingsViewProps {
   onUpdateLoginBackgroundConfig?: (config: LoginBackgroundConfig) => void;
   currentUser?: UserAccount | null;
   onOpenSchoolSelector?: () => void;
+  activeSchoolName?: string;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -104,10 +105,52 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   loginBackgroundConfig,
   onUpdateLoginBackgroundConfig,
   currentUser,
-  onOpenSchoolSelector
+  onOpenSchoolSelector,
+  activeSchoolName
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'profile' | 'school' | 'academic' | 'dataLock' | 'systemAnnouncement' | 'notifications' | 'system' | 'loginBackground'>('profile');
   
+  const isKepalaSekolah = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('kepala') ||
+      currentUser.role.toLowerCase().includes('principal')
+    )
+  );
+
+  const normalizeSchoolStr = (str?: string) => (str || '').trim().toLowerCase().replace(/[\s\-_.,/()]/g, '');
+  const userSchoolNorm = normalizeSchoolStr(currentUser?.schoolName);
+  const currentSchoolNorm = normalizeSchoolStr(teacher?.schoolName || activeSchoolName);
+
+  // Detail sekolah HANYA bisa diedit oleh kepala sekolah sekolah tersebut
+  const isPrincipalOfThisSchool = Boolean(
+    isKepalaSekolah &&
+    userSchoolNorm &&
+    currentSchoolNorm &&
+    (
+      userSchoolNorm === currentSchoolNorm ||
+      userSchoolNorm.includes(currentSchoolNorm) ||
+      currentSchoolNorm.includes(userSchoolNorm)
+    )
+  );
+
+  const isGuruRole = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('guru') ||
+      currentUser.role.toLowerCase().includes('pendidik') ||
+      currentUser.role.toLowerCase().includes('pengampu') ||
+      currentUser.role.toLowerCase().includes('wali kelas')
+    ) && (
+      !currentUser.role.toLowerCase().includes('admin') &&
+      !currentUser.role.toLowerCase().includes('master')
+    )
+  );
+
+  useEffect(() => {
+    if (isKepalaSekolah && (activeSubTab === 'system' || activeSubTab === 'loginBackground' || activeSubTab === 'dataLock' || activeSubTab === 'systemAnnouncement')) {
+      setActiveSubTab('profile');
+    }
+  }, [isKepalaSekolah, activeSubTab]);
+
   const isAdministratorUser = Boolean(
     isAdmin ||
     teacher?.nip === '199001012015011001' ||
@@ -253,6 +296,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [newEmail, setNewEmail] = useState('');
   const [emailErrorMsg, setEmailErrorMsg] = useState('');
   const [emailSuccessMsg, setEmailSuccessMsg] = useState('');
+  const [schoolEditFeedback, setSchoolEditFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
   const handleSaveEmail = (e: React.FormEvent) => {
     e.preventDefault();
@@ -606,6 +650,52 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     }
   }, [teacher?.id]);
 
+  const handleSaveSchoolDetails = (e: React.FormEvent) => {
+    e.preventDefault();
+    setSchoolEditFeedback(null);
+
+    if (!isPrincipalOfThisSchool) {
+      setSchoolEditFeedback({
+        type: 'error',
+        message: `Akses ditolak: Detail sekolah hanya dapat diedit oleh Kepala Sekolah dari ${schoolName || teacher?.schoolName || 'sekolah tersebut'}.`
+      });
+      return;
+    }
+
+    if (!schoolName.trim()) {
+      setSchoolEditFeedback({
+        type: 'error',
+        message: 'Nama satuan pendidikan (sekolah) tidak boleh kosong.'
+      });
+      return;
+    }
+
+    const res = onUpdateTeacherProfile({
+      ...teacher,
+      name: teacherName,
+      title: teacherTitle,
+      nip: nip,
+      npsn: npsn.trim(),
+      subjectRole: subject,
+      schoolName: schoolName.trim(),
+      academicYear: academicYear,
+      semester: semester,
+      kkm: defaultKkm,
+      principalName: principalName.trim(),
+      principalNip: principalNip.trim(),
+      city: city.trim(),
+      avatarUrl: ''
+    });
+
+    if (res !== false) {
+      setSchoolEditFeedback({
+        type: 'success',
+        message: `Detail sekolah "${schoolName}" berhasil diperbarui oleh Kepala Sekolah.`
+      });
+      setSaveSuccess(true);
+    }
+  };
+
   const handleSaveSettings = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const res = onUpdateTeacherProfile({
@@ -613,15 +703,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       name: teacherName,
       title: teacherTitle,
       nip: nip,
-      npsn: npsn,
+      // Lindungi detail sekolah: jika bukan Kepala Sekolah sekolah ini, pertahankan data sekolah yang sudah ada
+      npsn: isPrincipalOfThisSchool ? npsn : (teacher?.npsn || npsn),
       subjectRole: subject,
-      schoolName: schoolName,
+      schoolName: isPrincipalOfThisSchool ? schoolName : (teacher?.schoolName || schoolName),
       academicYear: academicYear,
       semester: semester,
       kkm: defaultKkm,
-      principalName: principalName,
-      principalNip: principalNip,
-      city: city,
+      principalName: isPrincipalOfThisSchool ? principalName : (teacher?.principalName || principalName),
+      principalNip: isPrincipalOfThisSchool ? principalNip : (teacher?.principalNip || principalNip),
+      city: isPrincipalOfThisSchool ? city : (teacher?.city || city),
       avatarUrl: ''
     });
     if (res !== false) {
@@ -716,7 +807,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
 
-        {onOpenSchoolSelector && (
+        {onOpenSchoolSelector && !isKepalaSekolah && !isGuruRole && (
           <button
             type="button"
             onClick={onOpenSchoolSelector}
@@ -772,17 +863,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </button>
 
           <button
-            onClick={() => setActiveSubTab('school')}
-            className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
+            onClick={() => {
+              setActiveSubTab('school');
+              setSchoolEditFeedback(null);
+            }}
+            className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center justify-between gap-2 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
               activeSubTab === 'school' 
                 ? 'bg-[#164e63] text-white shadow-sm border-l-4 border-white' 
                 : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
             }`}
           >
-            <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'school' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-[#164e63]'}`}>
-              <School className="w-4 h-4" />
+            <div className="flex items-center gap-3">
+              <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'school' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-[#164e63]'}`}>
+                <School className="w-4 h-4" />
+              </div>
+              <span className="block font-bold">Details Sekolah</span>
             </div>
-            <span className="block font-bold">Details Sekolah</span>
+            {!isPrincipalOfThisSchool && (
+              <span className="text-[10px] bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded-none flex items-center gap-1 font-semibold" title="Terkunci - Hanya dapat diedit oleh Kepala Sekolah sekolah tersebut">
+                <Lock className="w-2.5 h-2.5 text-slate-500" />
+                Lihat
+              </span>
+            )}
           </button>
 
           <button
@@ -799,8 +901,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <span className="block font-bold">Tahun Ajaran & Kelas</span>
           </button>
 
-          {/* Tombol Kunci Data (Diatas Menu Pengumuman Sistem - Khusus Administrator) */}
-          {isAdministratorUser && (
+          {/* Tombol Kunci Data (Diatas Menu Pengumuman Sistem - Khusus Administrator, disembunyikan untuk Kepala Sekolah) */}
+          {isAdministratorUser && !isKepalaSekolah && (
             <button
               onClick={() => setActiveSubTab('dataLock')}
               className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
@@ -816,8 +918,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </button>
           )}
 
-          {/* Menu Pengumuman Sistem - Di Bawah Menu Kunci Data (Khusus Administrator) */}
-          {isAdministratorUser && (
+          {/* Menu Pengumuman Sistem - Di Bawah Menu Kunci Data (Khusus Administrator, disembunyikan untuk Kepala Sekolah) */}
+          {isAdministratorUser && !isKepalaSekolah && (
             <button
               onClick={() => setActiveSubTab('systemAnnouncement')}
               className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
@@ -833,22 +935,24 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </button>
           )}
 
-          <button
-            onClick={() => setActiveSubTab('system')}
-            className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
-              activeSubTab === 'system' 
-                ? 'bg-[#164e63] text-white shadow-sm border-l-4 border-white' 
-                : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
-            }`}
-          >
-            <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'system' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-[#164e63]'}`}>
-              <ShieldCheck className="w-4 h-4" />
-            </div>
-            <span className="block font-bold">Keamanan & Data</span>
-          </button>
+          {!isKepalaSekolah && (
+            <button
+              onClick={() => setActiveSubTab('system')}
+              className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
+                activeSubTab === 'system' 
+                  ? 'bg-[#164e63] text-white shadow-sm border-l-4 border-white' 
+                  : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+              }`}
+            >
+              <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'system' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-[#164e63]'}`}>
+                <ShieldCheck className="w-4 h-4" />
+              </div>
+              <span className="block font-bold">Keamanan & Data</span>
+            </button>
+          )}
 
           {/* Menu Background Latar Belakang Login - Di Bawah Menu Keamanan & Data */}
-          {isAdministratorUser && (
+          {isAdministratorUser && !isKepalaSekolah && (
             <button
               onClick={() => setActiveSubTab('loginBackground')}
               className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
@@ -1080,62 +1184,192 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
           {activeSubTab === 'school' && (
             <div className="space-y-6 max-w-xl">
-              <form onSubmit={handleSaveSettings} className="space-y-4">
+              <form onSubmit={handleSaveSchoolDetails} className="space-y-4">
                 <div className="flex items-center gap-2.5 p-3 rounded-none bg-slate-100 border border-slate-200">
                   <div className="p-2 bg-[#164e63] text-white rounded-none shadow-xs">
                     <School className="w-4 h-4" />
                   </div>
                   <div>
-                    <h2 className="text-xs font-bold text-slate-800">Edit Details Satuan Pendidikan / Sekolah: {schoolName}</h2>
+                    <h2 className="text-xs font-bold text-slate-800">
+                      {isPrincipalOfThisSchool ? 'Edit Details Satuan Pendidikan / Sekolah' : 'Informasi Satuan Pendidikan / Sekolah (Hanya-Lihat)'}: {schoolName}
+                    </h2>
                     <p className="text-[10px] text-slate-500">Data resmi sekolah dan pengesahan Kepala Sekolah untuk dokumen Rapor</p>
                   </div>
                 </div>
 
+                {/* Banner Status Otoritas Akses Edit */}
+                {!isPrincipalOfThisSchool && !isKepalaSekolah && (
+                  <div className="p-3.5 bg-amber-50 border border-amber-300 text-amber-900 rounded-none text-xs flex items-start gap-3 shadow-xs">
+                    <div className="p-1.5 bg-amber-200/80 rounded-none text-amber-900 shrink-0 mt-0.5">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-amber-950">Mode Hanya-Lihat: Detail Sekolah Terkunci</span>
+                        <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 uppercase tracking-wider">
+                          Khusus Kepala Sekolah
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-amber-800 leading-relaxed">
+                        Data identitas satuan pendidikan (Nama Sekolah, NPSN, Kota Pengesahan, Nama & NIP Kepala Sekolah) hanya dapat diedit oleh <strong>Kepala Sekolah</strong> dari <strong>{schoolName || teacher?.schoolName || 'sekolah ini'}</strong>. Akun Anda saat ini memiliki hak akses <strong>{currentUser?.role || 'Guru'}</strong> dan hanya diperbolehkan membaca data ini.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {!isPrincipalOfThisSchool && isKepalaSekolah && (
+                  <div className="p-3.5 bg-rose-50 border border-rose-300 text-rose-900 rounded-none text-xs flex items-start gap-3 shadow-xs">
+                    <div className="p-1.5 bg-rose-200/80 rounded-none text-rose-900 shrink-0 mt-0.5">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <span className="font-bold text-rose-950">Akses Dibatasi: Bukan Kepala Sekolah Sekolah Ini</span>
+                        <span className="text-[10px] bg-rose-200 text-rose-900 font-bold px-2 py-0.5 uppercase tracking-wider">
+                          Akses Ditolak
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-rose-800 leading-relaxed">
+                        Anda tercatat sebagai Kepala Sekolah untuk <strong>{currentUser?.schoolName}</strong>. Detail satuan pendidikan <strong>{schoolName || teacher?.schoolName}</strong> hanya dapat diedit oleh Kepala Sekolah dari sekolah tersebut.
+                      </p>
+                    </div>
+                  </div>
+                )}
+
+                {isPrincipalOfThisSchool && (
+                  <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-none text-xs flex items-center justify-between shadow-xs">
+                    <div className="flex items-center gap-3">
+                      <div className="p-1.5 bg-emerald-200/80 rounded-none text-emerald-800 shrink-0">
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <p className="font-bold text-emerald-950">Otorisasi Terverifikasi: Kepala Sekolah Satuan Pendidikan Ini</p>
+                        <p className="text-[11px] text-emerald-700">Anda adalah Kepala Sekolah resmi dari {schoolName || teacher?.schoolName}. Anda memiliki izin penuh untuk mengedit detail sekolah ini.</p>
+                      </div>
+                    </div>
+                    <span className="px-2.5 py-1 bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-wider shrink-0">
+                      Akses Edit Penuh
+                    </span>
+                  </div>
+                )}
+
+                {/* Feedback Toast */}
+                {schoolEditFeedback && (
+                  <div className={`p-3 rounded-none text-xs font-semibold flex items-center gap-2 ${
+                    schoolEditFeedback.type === 'success' 
+                      ? 'bg-emerald-50 border border-emerald-300 text-emerald-800' 
+                      : 'bg-rose-50 border border-rose-300 text-rose-800'
+                  }`}>
+                    {schoolEditFeedback.type === 'success' ? (
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                    ) : (
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                    )}
+                    <span>{schoolEditFeedback.message}</span>
+                  </div>
+                )}
+
                 <div className="space-y-3 text-xs">
                   <div>
-                    <label className="block text-slate-600 font-semibold mb-1">Nama Satuan Pendidikan (Sekolah)</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-slate-600 font-semibold">Nama Satuan Pendidikan (Sekolah)</label>
+                      {!isPrincipalOfThisSchool && (
+                        <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5 text-amber-600" />
+                          Hanya Kepala Sekolah
+                        </span>
+                      )}
+                    </div>
                     <input 
                       type="text" 
                       value={schoolName}
+                      disabled={!isPrincipalOfThisSchool}
+                      readOnly={!isPrincipalOfThisSchool}
                       onChange={(e) => setSchoolName(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
+                      className={`w-full px-3 py-2 border rounded-none font-medium ${
+                        isPrincipalOfThisSchool 
+                          ? 'bg-slate-50 border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-800' 
+                          : 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed select-none'
+                      }`}
                       placeholder="Contoh: SMA Negeri 1 Indonesia"
                     />
                   </div>
 
                   <div>
-                    <label className="block text-slate-600 font-semibold mb-1">NPSN (Nomor Pokok Sekolah Nasional)</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-slate-600 font-semibold">NPSN (Nomor Pokok Sekolah Nasional)</label>
+                      {!isPrincipalOfThisSchool && (
+                        <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5 text-amber-600" />
+                          Hanya Kepala Sekolah
+                        </span>
+                      )}
+                    </div>
                     <input 
                       type="text" 
                       value={npsn}
+                      disabled={!isPrincipalOfThisSchool}
+                      readOnly={!isPrincipalOfThisSchool}
                       onChange={(e) => setNpsn(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono font-bold text-[#164e63]"
+                      className={`w-full px-3 py-2 border rounded-none font-mono font-bold ${
+                        isPrincipalOfThisSchool 
+                          ? 'bg-slate-50 border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-[#164e63]' 
+                          : 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed select-none'
+                      }`}
                       placeholder="Contoh: 20401928"
                     />
                     <p className="text-[10px] text-slate-400 mt-1">Kode 8 digit NPSN resmi satuan pendidikan sekolah.</p>
                   </div>
 
                   <div>
-                    <label className="block text-slate-600 font-semibold mb-1">Kota / Kabupaten (Lokasi Pengesahan di Atas TTD)</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="block text-slate-600 font-semibold">Kota / Kabupaten (Lokasi Pengesahan di Atas TTD)</label>
+                      {!isPrincipalOfThisSchool && (
+                        <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5 text-amber-600" />
+                          Hanya Kepala Sekolah
+                        </span>
+                      )}
+                    </div>
                     <input 
                       type="text" 
                       value={city}
+                      disabled={!isPrincipalOfThisSchool}
+                      readOnly={!isPrincipalOfThisSchool}
                       onChange={(e) => setCity(e.target.value)}
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
+                      className={`w-full px-3 py-2 border rounded-none font-medium ${
+                        isPrincipalOfThisSchool 
+                          ? 'bg-slate-50 border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-800' 
+                          : 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed select-none'
+                      }`}
                       placeholder="Contoh: Malang"
                     />
                     <p className="text-[10px] text-slate-400 mt-1">Digunakan sebagai tempat/kota pada format tanggal tanda tangan laporan dan e-Rapor (contoh: Malang, 4 Agustus 2026).</p>
                   </div>
 
                   <div className="pt-2 border-t border-slate-200 space-y-3">
-                    <span className="text-xs font-bold text-slate-700 block">Identitas Kepala Sekolah (Pengesahan)</span>
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-slate-700 block">Identitas Kepala Sekolah (Pengesahan)</span>
+                      {!isPrincipalOfThisSchool && (
+                        <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 flex items-center gap-1">
+                          <Lock className="w-2.5 h-2.5 text-amber-600" />
+                          Hanya Kepala Sekolah
+                        </span>
+                      )}
+                    </div>
                     <div>
                       <label className="block text-slate-600 font-semibold mb-1">Nama Kepala Sekolah (Gelar)</label>
                       <input 
                         type="text" 
                         value={principalName}
+                        disabled={!isPrincipalOfThisSchool}
+                        readOnly={!isPrincipalOfThisSchool}
                         onChange={(e) => setPrincipalName(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-medium"
+                        className={`w-full px-3 py-2 border rounded-none font-medium ${
+                          isPrincipalOfThisSchool 
+                            ? 'bg-slate-50 border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-800' 
+                            : 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed select-none'
+                        }`}
                         placeholder="Contoh: Dr. Hj. Sri Wahyuni, M.Si."
                       />
                     </div>
@@ -1145,8 +1379,14 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       <input 
                         type="text" 
                         value={principalNip}
+                        disabled={!isPrincipalOfThisSchool}
+                        readOnly={!isPrincipalOfThisSchool}
                         onChange={(e) => setPrincipalNip(e.target.value)}
-                        className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono"
+                        className={`w-full px-3 py-2 border rounded-none font-mono ${
+                          isPrincipalOfThisSchool 
+                            ? 'bg-slate-50 border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-800' 
+                            : 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed select-none'
+                        }`}
                         placeholder="Contoh: 19691120 199403 2 003"
                       />
                     </div>
@@ -1154,13 +1394,25 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
 
                 <div className="pt-2">
-                  <button
-                    type="submit"
-                    className="px-4 py-2 bg-[#164e63] hover:bg-[#003d6d] text-white font-semibold rounded-none text-xs shadow-sm flex items-center gap-2 cursor-pointer"
-                  >
-                    <Save className="w-3.5 h-3.5" />
-                    Simpan Details Sekolah
-                  </button>
+                  {isPrincipalOfThisSchool ? (
+                    <button
+                      type="submit"
+                      className="px-4 py-2 bg-[#164e63] hover:bg-[#003d6d] text-white font-semibold rounded-none text-xs shadow-sm flex items-center gap-2 cursor-pointer transition-colors"
+                    >
+                      <Save className="w-3.5 h-3.5" />
+                      Simpan Details Sekolah
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      disabled
+                      className="px-4 py-2 bg-slate-100 border border-slate-300 text-slate-400 font-semibold rounded-none text-xs flex items-center gap-2 cursor-not-allowed select-none"
+                      title={`Hanya Kepala Sekolah ${schoolName || teacher?.schoolName} yang dapat mengubah data`}
+                    >
+                      <Lock className="w-3.5 h-3.5 text-slate-400" />
+                      Detail Sekolah Terkunci (Khusus Kepala Sekolah {schoolName || teacher?.schoolName})
+                    </button>
+                  )}
                 </div>
               </form>
             </div>
@@ -1386,7 +1638,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           )}
 
-          {activeSubTab === 'dataLock' && (
+          {!isKepalaSekolah && activeSubTab === 'dataLock' && (
             <div className="space-y-5 max-w-2xl">
               {/* Header Info Banner */}
               <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[#002f54] via-[#164e63] to-[#003d6d] text-white border border-cyan-800/40 rounded-none shadow-md">
@@ -1607,7 +1859,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           )}
 
-          {activeSubTab === 'systemAnnouncement' && isAdministratorUser && (
+          {!isKepalaSekolah && activeSubTab === 'systemAnnouncement' && isAdministratorUser && (
             <div className="space-y-5 max-w-2xl">
               {/* Header Info Banner */}
               <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[#002f54] via-[#164e63] to-[#003d6d] text-white border border-cyan-800/40 rounded-none shadow-md">
@@ -1826,7 +2078,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           )}
 
-          {activeSubTab === 'system' && (
+          {!isKepalaSekolah && activeSubTab === 'system' && (
             <div className="space-y-4 max-w-xl">
               {/* Quick Kunci Data Access Card inside Keamanan & Data - Khusus Administrator */}
               {isAdministratorUser && (
@@ -1989,7 +2241,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </div>
           )}
 
-          {activeSubTab === 'loginBackground' && (
+          {!isKepalaSekolah && activeSubTab === 'loginBackground' && (
             <LoginBackgroundSettings 
               currentConfig={loginBackgroundConfig}
               onSaveConfig={(newConfig) => {

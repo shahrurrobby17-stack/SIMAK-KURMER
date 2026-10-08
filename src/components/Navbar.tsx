@@ -388,8 +388,12 @@ export const Navbar: React.FC<NavbarProps> = ({
     isMasterUser
   });
 
-  const isTuRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('tu') || currentUser.role.toLowerCase().includes('tata usaha')) : false;
-  const isTuPage = activeTab === 'system-tu' || (isTuRole && activeTab === 'settings');
+  const isTuRole = currentUser?.role ? (
+    currentUser.role.toLowerCase().includes('tu') || 
+    currentUser.role.toLowerCase().includes('tata usaha') ||
+    currentUser.role.toLowerCase().includes('administrasi')
+  ) : false;
+  const isTuPage = isTuRole || activeTab === 'system-tu' || (activeTab as string) === 'tu';
 
   const isSarprasRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('sarpras') || currentUser.role.toLowerCase().includes('sarana')) : false;
   const isSarprasPage = activeTab === 'system-sarpras' || (isSarprasRole && activeTab === 'settings');
@@ -400,15 +404,64 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isKeuanganPage = activeTab === 'system-keuangan';
 
   const isKurikulumRole = currentUser?.role ? currentUser.role.toLowerCase().includes('kurikulum') : false;
-  const isKurikulumPage = activeTab === 'system-kurikulum' || (isKurikulumRole && activeTab === 'settings');
-  const isStudentUser = currentUser?.role ? currentUser.role.toLowerCase().includes('siswa') : false;
-  const isStudentPage = activeTab === 'system-kesiswaan' || isStudentUser;
+  const isKurikulumPage = isKurikulumRole || activeTab === 'system-kurikulum' || (activeTab as string) === 'kurikulum';
+
+  const isKesiswaanRole = currentUser?.role ? (
+    currentUser.role.toLowerCase().includes('kesiswaan') ||
+    currentUser.role.toLowerCase().includes('wakasek kesiswaan')
+  ) : false;
+  const isKesiswaanPage = isKesiswaanRole || activeTab === 'system-kesiswaan' || (activeTab as string) === 'kesiswaan';
+
+  const isStudentUser = Boolean(
+    currentUser?.role &&
+    !currentUser.role.toLowerCase().includes('kesiswaan') &&
+    (currentUser.role.toLowerCase().includes('siswa') || currentUser.role.toLowerCase().includes('murid'))
+  );
+  const isStudentPage = isStudentUser;
+
+  const isKepalaSekolah = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('kepala') ||
+      currentUser.role.toLowerCase().includes('principal')
+    )
+  );
+
+  const isGuruRole = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('guru') ||
+      currentUser.role.toLowerCase().includes('pendidik') ||
+      currentUser.role.toLowerCase().includes('pengampu') ||
+      currentUser.role.toLowerCase().includes('wali kelas')
+    ) && (
+      !currentUser.role.toLowerCase().includes('admin') &&
+      !currentUser.role.toLowerCase().includes('master')
+    )
+  );
 
   // Filter menu catalog based on role & search query
   const filteredMenus = useMemo(() => {
     let list = MENU_CATALOG;
     if (isStudentUser) {
       list = list.filter(m => m.studentAccessible);
+    }
+    if (isKepalaSekolah) {
+      list = list.filter(m => m.id !== 'master-data' && m.id !== 'ai-assistant' && m.id !== 'residu');
+    }
+    if (isGuruRole) {
+      const allowedGuru = ['dashboard', 'students', 'schedule', 'journal', 'upload-modul', 'attendance', 'grades', 'settings'];
+      list = list.filter(m => allowedGuru.includes(m.id));
+    }
+    if (isTuPage) {
+      const allowedTu = ['system-tu', 'settings'];
+      list = list.filter(m => allowedTu.includes(m.id));
+    }
+    if (isKurikulumPage) {
+      const allowedKurikulum = ['system-kurikulum', 'validasi-dapodik', 'settings'];
+      list = list.filter(m => allowedKurikulum.includes(m.id));
+    }
+    if (isKesiswaanPage) {
+      const allowedKesiswaan = ['system-kesiswaan', 'attendance', 'settings'];
+      list = list.filter(m => allowedKesiswaan.includes(m.id));
     }
     const q = searchQuery.trim().toLowerCase();
     if (!q) {
@@ -422,7 +475,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         item.keywords.some(k => k.toLowerCase().includes(q))
       );
     });
-  }, [searchQuery, isStudentUser]);
+  }, [searchQuery, isStudentUser, isKepalaSekolah, isGuruRole, isTuPage, isKurikulumPage, isKesiswaanPage]);
 
   // Handle outside click to close search dropdown
   useEffect(() => {
@@ -437,7 +490,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
   // Global Ctrl+K / Cmd+K shortcut
   useEffect(() => {
-    if (isAdministrator) return;
+    if (isAdministrator || isGuruRole) return;
     const handleGlobalKeyDown = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
         e.preventDefault();
@@ -447,7 +500,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     };
     window.addEventListener('keydown', handleGlobalKeyDown);
     return () => window.removeEventListener('keydown', handleGlobalKeyDown);
-  }, [isAdministrator]);
+  }, [isAdministrator, isGuruRole]);
 
   // Keyboard navigation within search results
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -490,15 +543,23 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Left & Center: Emblem Title + School Info */}
         <div className="flex items-center gap-2 sm:gap-3 md:gap-4 min-w-0 flex-1">
           {/* School Emblem Title & App Brand */}
-          <div className="flex items-center space-x-2 md:space-x-2.5 shrink-0">
+          <div 
+            onClick={() => {
+              if (!isStudentUser && !isTuRole && !isKurikulumRole && onTabChange) {
+                onTabChange('dashboard');
+              }
+            }}
+            className={`flex items-center space-x-2 md:space-x-2.5 shrink-0 ${!isStudentUser && !isTuRole && !isKurikulumRole && !isKesiswaanRole ? 'cursor-pointer hover:opacity-95' : ''}`}
+            title={!isStudentUser && !isTuRole && !isKurikulumRole && !isKesiswaanRole ? "Kembali ke Dashboard Utama" : undefined}
+          >
             <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white rounded-none shadow-xs shrink-0 flex items-center justify-center p-0.5 sm:p-1 border border-white/25">
               <TutWuriHandayaniLogo className="w-full h-full" />
             </div>
             <div className="flex flex-col justify-center min-w-0">
               <h1 className="text-xs sm:text-sm md:text-base font-black text-white uppercase tracking-wider leading-none">
-                {isStudentUser ? 'Learning Management System' : isTuPage ? 'ADMINISTRASI TATA USAHA' : isSarprasPage ? 'SARANA & PRASARANA' : isPerpustakaanPage ? 'PERPUSTAKAAN SEKOLAH' : isKurikulumPage ? 'KURIKULUM' : 'SIMAK MERDEKA'}
+                {isStudentUser ? 'Learning Management System' : isTuPage ? 'ADMINISTRASI TATA USAHA' : isSarprasPage ? 'SARANA & PRASARANA' : isPerpustakaanPage ? 'PERPUSTAKAAN SEKOLAH' : isKurikulumPage ? 'KURIKULUM' : isKesiswaanPage ? 'KESISWAAN' : isKepalaSekolah ? 'SISTEM MANAJEMEN KEPALA SEKOLAH' : 'SIMAK MERDEKA'}
               </h1>
-              {!isStudentUser && !isTuPage && !isKurikulumPage && !isSarprasPage && !isPerpustakaanPage && (
+              {!isStudentUser && !isTuPage && !isKurikulumPage && !isKesiswaanPage && !isSarprasPage && !isPerpustakaanPage && (
                 <div className="flex items-center gap-1 mt-0.5">
                   <span className="bg-amber-400 text-slate-950 font-black text-[8.5px] sm:text-[9.5px] px-1 py-0.2 rounded-none shadow-xs shrink-0 tracking-wider leading-none">
                     V.3.8.1
@@ -528,36 +589,51 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </motion.button>
             <div className="flex items-center gap-1.5 min-w-0">
-              <button
-                type="button"
-                onClick={onOpenSchoolSelector}
-                className="flex items-center gap-1.5 text-left hover:bg-white/10 px-1.5 py-0.5 rounded-none transition-colors cursor-pointer group max-w-[280px] sm:max-w-xs md:max-w-md"
-                title="Klik untuk melihat atau beralih partisi penyimpanan sekolah"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-1 min-w-0">
-                    <span className="text-[8px] uppercase tracking-wider bg-cyan-900/80 text-cyan-200 border border-cyan-400/40 px-1 py-0.1 font-bold shrink-0">
-                      Penyimpanan
-                    </span>
-                    <p className="text-[11px] sm:text-xs md:text-sm text-white font-bold tracking-tight truncate leading-tight group-hover:text-cyan-200 transition-colors">
+              {isKepalaSekolah || isGuruRole || isKurikulumPage ? (
+                <div className="flex items-center gap-1.5 text-left px-1.5 py-0.5 max-w-[280px] sm:max-w-xs md:max-w-md select-none">
+                  <div className="min-w-0">
+                    <p className="text-[11px] sm:text-xs md:text-sm text-white font-bold tracking-tight truncate leading-tight">
                       {teacher?.schoolName || currentUser?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak'}
                     </p>
-                    <Database className="w-3 h-3 text-cyan-300 opacity-75 group-hover:opacity-100 shrink-0" />
+                    {!isStudentPage && (
+                      <span className="block text-[10px] sm:text-[11px] text-slate-200 font-medium truncate">
+                        NPSN: {teacher?.npsn || '20500000'} • Semester {teacher?.semester || 'Ganjil'} {teacher?.academicYear || '2026/2027'}
+                      </span>
+                    )}
                   </div>
-                  {!isStudentPage && (
-                    <span className="block text-[10px] sm:text-[11px] text-slate-200 font-medium truncate">
-                      NPSN: {teacher?.npsn || '20500000'} • Semester {teacher?.semester || 'Ganjil'} {teacher?.academicYear || '2026/2027'}
-                    </span>
-                  )}
                 </div>
-              </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={onOpenSchoolSelector}
+                  className="flex items-center gap-1.5 text-left hover:bg-white/10 px-1.5 py-0.5 rounded-none transition-colors cursor-pointer group max-w-[280px] sm:max-w-xs md:max-w-md"
+                  title="Klik untuk melihat atau beralih partisi penyimpanan sekolah"
+                >
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-1 min-w-0">
+                      <span className="text-[8px] uppercase tracking-wider bg-cyan-900/80 text-cyan-200 border border-cyan-400/40 px-1 py-0.1 font-bold shrink-0">
+                        Penyimpanan
+                      </span>
+                      <p className="text-[11px] sm:text-xs md:text-sm text-white font-bold tracking-tight truncate leading-tight group-hover:text-cyan-200 transition-colors">
+                        {teacher?.schoolName || currentUser?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak'}
+                      </p>
+                      <Database className="w-3 h-3 text-cyan-300 opacity-75 group-hover:opacity-100 shrink-0" />
+                    </div>
+                    {!isStudentPage && (
+                      <span className="block text-[10px] sm:text-[11px] text-slate-200 font-medium truncate">
+                        NPSN: {teacher?.npsn || '20500000'} • Semester {teacher?.semester || 'Ganjil'} {teacher?.academicYear || '2026/2027'}
+                      </span>
+                    )}
+                  </div>
+                </button>
+              )}
             </div>
           </div>
         </div>
 
         {/* Mobile Action Buttons (Logout on HP) */}
         <div className="md:hidden flex items-center gap-1.5 shrink-0">
-          {onOpenSchoolSelector && (
+          {onOpenSchoolSelector && !isKepalaSekolah && !isGuruRole && !isKurikulumPage && (
             <button
               type="button"
               onClick={onOpenSchoolSelector}
@@ -583,7 +659,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Right Side: Filter Kelas & Kolom Cari Menu */}
         <div className="flex items-center justify-end gap-2 md:gap-2.5 shrink-0 ml-auto">
           {/* Quick Switch School Storage button on Desktop */}
-          {onOpenSchoolSelector && (
+          {onOpenSchoolSelector && !isKepalaSekolah && !isGuruRole && !isKurikulumPage && (
             <button
               type="button"
               onClick={onOpenSchoolSelector}
@@ -621,8 +697,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
-          {/* Kolom Cari Menu di Pojok Kanan Atas - Disembunyikan pada halaman Administrator */}
-          {!isAdministrator && (
+          {/* Kolom Cari Menu di Pojok Kanan Atas - Disembunyikan pada halaman Administrator dan halaman Guru */}
+          {!isAdministrator && !isGuruRole && (
             <div ref={searchContainerRef} className="relative w-36 sm:w-48 md:w-56 lg:w-64 xl:w-72 shrink-0 z-40">
               <div className="relative flex items-center">
                 <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-300">

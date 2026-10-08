@@ -156,20 +156,84 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     isMasterUser
   });
 
-  const isAdministrator = isAdmin || isMasterUser || Boolean(
-    currentUser && (
-      currentUser.role?.toLowerCase().includes('admin') ||
-      currentUser.role?.toLowerCase().includes('master') ||
-      currentUser.email?.toLowerCase().includes('master') ||
-      currentUser.email?.toLowerCase() === 'shahrurrobby17@gmail.com'
+  const isGuruRole = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('guru') ||
+      currentUser.role.toLowerCase().includes('pendidik') ||
+      currentUser.role.toLowerCase().includes('pengampu') ||
+      currentUser.role.toLowerCase().includes('wali kelas')
+    ) && (
+      !currentUser.role.toLowerCase().includes('admin') &&
+      !currentUser.role.toLowerCase().includes('master')
     )
   );
 
-  const isKurikulumRole = currentUser?.role ? currentUser.role.toLowerCase().includes('kurikulum') : false;
-  const isKurikulumOnlyMode = !isAdministrator && (activeTab === 'system-kurikulum' || (isKurikulumRole && activeTab === 'settings'));
+  const isAdministrator = !isGuruRole && (isAdmin || isMasterUser || Boolean(
+    currentUser && (
+      currentUser.role?.toLowerCase().includes('admin') ||
+      currentUser.role?.toLowerCase().includes('master') ||
+      (currentUser.email?.toLowerCase().includes('master') && !currentUser.role?.toLowerCase().includes('guru')) ||
+      (currentUser.email?.toLowerCase() === 'shahrurrobby17@gmail.com' && !currentUser.role?.toLowerCase().includes('guru'))
+    )
+  ));
 
-  const isTuRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('tu') || currentUser.role.toLowerCase().includes('tata usaha')) : false;
-  const isTuOnlyMode = !isAdministrator && (activeTab === 'system-tu' || (isTuRole && activeTab === 'settings'));
+  const isKurikulumRole = currentUser?.role ? currentUser.role.toLowerCase().includes('kurikulum') : false;
+
+  const isTuRole = currentUser?.role ? (
+    currentUser.role.toLowerCase().includes('tu') || 
+    currentUser.role.toLowerCase().includes('tata usaha') ||
+    currentUser.role.toLowerCase().includes('administrasi')
+  ) : false;
+
+  const isKesiswaanRole = currentUser?.role ? (
+    currentUser.role.toLowerCase().includes('kesiswaan') ||
+    currentUser.role.toLowerCase().includes('wakasek kesiswaan')
+  ) : false;
+
+  const [lastSystemMode, setLastSystemMode] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (activeTab === 'system-tu') {
+      setLastSystemMode('tu');
+    } else if (activeTab === 'system-kurikulum') {
+      setLastSystemMode('kurikulum');
+    } else if (activeTab === 'system-kesiswaan') {
+      setLastSystemMode('kesiswaan');
+    } else if (activeTab === 'system-sarpras') {
+      setLastSystemMode('sarpras');
+    } else if (activeTab === 'system-perpustakaan') {
+      setLastSystemMode('perpustakaan');
+    } else if (activeTab === 'validasi-dapodik' || activeTab === 'validasi') {
+      if (lastSystemMode === 'kurikulum' || isKurikulumRole) {
+        setLastSystemMode('kurikulum');
+      } else {
+        setLastSystemMode(null);
+      }
+    } else if (activeTab === 'attendance') {
+      if (lastSystemMode === 'kesiswaan' || isKesiswaanRole) {
+        setLastSystemMode('kesiswaan');
+      } else {
+        setLastSystemMode(null);
+      }
+    } else if (activeTab !== 'settings') {
+      setLastSystemMode(null);
+    }
+  }, [activeTab, isKurikulumRole, isKesiswaanRole, lastSystemMode]);
+
+  // Halaman Kurikulum hanya menampilkan menu kurikulum, validasi lokal, dan pengaturan (berlaku untuk akses Kurikulum maupun saat berada di halaman Kurikulum)
+  const isKurikulumOnlyMode = isKurikulumRole || 
+    activeTab === 'system-kurikulum' || 
+    (activeTab as string) === 'kurikulum' || 
+    (lastSystemMode === 'kurikulum' && (activeTab === 'settings' || activeTab === 'validasi-dapodik' || activeTab === 'validasi'));
+
+  // Halaman TU hanya menampilkan menu TU dan pengaturan (berlaku untuk akses TU maupun saat berada di halaman TU)
+  const isTuOnlyMode = isTuRole || activeTab === 'system-tu' || (activeTab as string) === 'tu' || (lastSystemMode === 'tu' && activeTab === 'settings');
+
+  // Halaman Kesiswaan hanya menampilkan menu kesiswaan, presensi siswa, dan pengaturan (berlaku untuk akses Kesiswaan maupun saat berada di halaman Kesiswaan)
+  const isKesiswaanOnlyMode = isKesiswaanRole || 
+    activeTab === 'system-kesiswaan' || 
+    (activeTab as string) === 'kesiswaan' || 
+    (lastSystemMode === 'kesiswaan' && (activeTab === 'settings' || activeTab === 'attendance'));
 
   const isSarprasRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('sarpras') || currentUser.role.toLowerCase().includes('sarana')) : false;
   const isSarprasOnlyMode = !isAdministrator && (activeTab === 'system-sarpras' || (isSarprasRole && activeTab === 'settings'));
@@ -177,7 +241,17 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   const isPerpustakaanRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('perpustakaan') || currentUser.role.toLowerCase().includes('pustaka') || currentUser.role.toLowerCase().includes('pustakawan')) : false;
   const isPerpustakaanOnlyMode = !isAdministrator && (activeTab === 'system-perpustakaan' || (isPerpustakaanRole && activeTab === 'settings'));
 
-  const isStudentRole = currentUser?.role ? currentUser.role.toLowerCase().includes('siswa') : false;
+  const isStudentRole = currentUser?.role ? (
+    (currentUser.role.toLowerCase().includes('siswa') || currentUser.role.toLowerCase().includes('murid')) &&
+    !currentUser.role.toLowerCase().includes('kesiswaan')
+  ) : false;
+
+  const isKepalaSekolah = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('kepala') ||
+      currentUser.role.toLowerCase().includes('principal')
+    )
+  );
 
   React.useEffect(() => {
     if (mobileNavContainerRef.current) {
@@ -193,6 +267,14 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     label: 'Kurikulum',
     subtitle: 'Sistem Kurikulum',
     icon: BookOpen,
+    badge: null
+  };
+
+  const validasiLokalItem = {
+    id: 'validasi-dapodik' as NavTab,
+    label: 'Validasi Lokal',
+    subtitle: 'Audit Warning & Invalid',
+    icon: ShieldAlert,
     badge: null
   };
 
@@ -217,6 +299,22 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     label: 'Perpustakaan',
     subtitle: 'Katalog & Sirkulasi',
     icon: Library,
+    badge: null
+  };
+
+  const kesiswaanItem = {
+    id: 'system-kesiswaan' as NavTab,
+    label: 'Kesiswaan',
+    subtitle: 'Sistem Kesiswaan',
+    icon: GraduationCap,
+    badge: null
+  };
+
+  const presensiSiswaKesiswaanItem = {
+    id: 'attendance' as NavTab,
+    label: 'Presensi Siswa',
+    subtitle: 'Kehadiran Siswa',
+    icon: UserCheck,
     badge: null
   };
 
@@ -302,11 +400,17 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     }
   ];
 
+  // Pada halaman/akses Kepala Sekolah, sembunyikan menu Monitoring Akun
+  const displayedMasterDataSubItems = masterDataSubItems.filter(item => {
+    if (isKepalaSekolah && item.id === 'master-data') return false;
+    return true;
+  });
+
   useEffect(() => {
-    if (masterDataSubItems.some((item) => item.id === activeTab)) {
+    if (displayedMasterDataSubItems.some((item) => item.id === activeTab)) {
       setIsMasterDataOpen(true);
     }
-  }, [activeTab]);
+  }, [activeTab, displayedMasterDataSubItems]);
 
   const validasiSubItems = [
     {
@@ -438,7 +542,11 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     }
   ];
 
-
+  // Pada halaman/akses Kepala Sekolah, sembunyikan menu Asisten AI dan Residu
+  const displayedMainNavItems = mainNavItems.filter(item => {
+    if (isKepalaSekolah && (item.id === 'ai-assistant' || item.id === 'residu')) return false;
+    return true;
+  });
 
   const studentNavItems = [
     {
@@ -499,12 +607,63 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     }
   ];
 
-  const allVisibleItems = isStudentRole
+  const guruNavItems = [
+    dashboardItem,
+    {
+      id: 'students' as NavTab,
+      label: 'Data Siswa',
+      subtitle: 'Data Siswa & Rombel',
+      icon: Users,
+      badge: null
+    },
+    {
+      id: 'schedule' as NavTab,
+      label: 'Jadwal Mengajar',
+      subtitle: 'Agenda Tatap Muka',
+      icon: Clock,
+      badge: null
+    },
+    {
+      id: 'journal' as NavTab,
+      label: 'Jurnal Guru',
+      subtitle: 'Agenda Mengajar',
+      icon: CalendarDays,
+      badge: null
+    },
+    {
+      id: 'upload-modul' as NavTab,
+      label: 'Upload Modul',
+      subtitle: 'Perangkat Ajar & ATP',
+      icon: FolderUp,
+      badge: null
+    },
+    {
+      id: 'attendance' as NavTab,
+      label: 'Presensi',
+      subtitle: 'Kehadiran Siswa',
+      icon: UserCheck,
+      badge: null
+    },
+    {
+      id: 'grades' as NavTab,
+      label: 'Kelola Nilai',
+      subtitle: 'Formatif & Sumatif',
+      icon: BookOpenCheck,
+      badge: null
+    },
+    settingsItem
+  ];
+
+  const allVisibleItems = isKesiswaanOnlyMode
+    ? [kesiswaanItem, presensiSiswaKesiswaanItem, settingsItem]
+    : isStudentRole
     ? studentNavItems
-    : isKurikulumOnlyMode
-    ? [kurikulumItem, settingsItem]
     : isTuOnlyMode
     ? [tuItem, settingsItem]
+    : isKurikulumOnlyMode
+    ? [kurikulumItem, validasiLokalItem, settingsItem]
+    : isGuruRole
+    ? guruNavItems
     : isSarprasOnlyMode
     ? [sarprasItem, settingsItem]
     : isPerpustakaanOnlyMode
@@ -518,13 +677,15 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           icon: ShieldCheck,
           badge: null
         },
-        ...mainNavItems,
+        ...displayedMainNavItems,
         settingsItem
       ];
 
   const renderDesktopItem = (item: any, isMobileDrawer: boolean = false) => {
     const Icon = item.icon;
-    const isActive = activeTab === item.id;
+    const isActive = activeTab === item.id || 
+      (item.id === 'validasi-dapodik' && (activeTab === 'validasi' || activeTab === 'validasi-dapodik')) ||
+      (item.id === 'system-kesiswaan' && (activeTab === 'system-kesiswaan' || (activeTab as string) === 'kesiswaan'));
     const health = menuHealthMap[item.id as NavTab] || {
       level: 'valid',
       badgeLabel: 'Valid',
@@ -536,12 +697,12 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
     return (
       <React.Fragment key={item.id}>
-        {!isStudentRole && !isKurikulumOnlyMode && !isTuOnlyMode && item.id === 'attendance' && (
+        {!isStudentRole && !isGuruRole && !isKurikulumOnlyMode && !isTuOnlyMode && !isKesiswaanOnlyMode && item.id === 'attendance' && (
           <div className="pt-3 pb-1 px-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
             <span>NAVIGASI SISWA</span>
           </div>
         )}
-        {!isStudentRole && !isKurikulumOnlyMode && !isTuOnlyMode && item.id === 'ai-assistant' && (
+        {!isStudentRole && !isGuruRole && !isKurikulumOnlyMode && !isTuOnlyMode && !isKesiswaanOnlyMode && item.id === 'ai-assistant' && (
           <div className="pt-3 pb-1 px-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
             <span>AI & Sistem</span>
           </div>
@@ -609,7 +770,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               <p className="text-[10px] font-semibold text-slate-400 truncate leading-tight mt-0.5">
                 {currentUser?.role || teacher?.subjectRole || 'Guru Pengampu'}
               </p>
-              {!isKurikulumOnlyMode && !isTuOnlyMode && !isStudentRole && (
+              {!isKurikulumOnlyMode && !isTuOnlyMode && !isKesiswaanOnlyMode && !isStudentRole && (
                 <div className="flex items-center gap-1.5 mt-2">
                   <div className={`w-1.5 h-1.5 rounded-full ${activeClasses.length > 0 ? 'bg-emerald-400' : 'bg-sky-400'}`}></div>
                   <p className="text-[9px] font-bold truncate text-slate-300">
@@ -622,29 +783,34 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         </div>
         
         <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-          <span>{isStudentRole ? 'LMS Siswa Merdeka' : isKurikulumOnlyMode ? 'Sistem Kurikulum' : isTuOnlyMode ? 'Sistem Tata Usaha' : isSarprasOnlyMode ? 'Sistem Sarpras' : isPerpustakaanOnlyMode ? 'Sistem Perpustakaan' : 'Navigasi Utama'}</span>
+          <span>{isKesiswaanOnlyMode ? 'Sistem Kesiswaan' : isStudentRole ? 'LMS Siswa Merdeka' : isTuOnlyMode ? 'Sistem Tata Usaha' : isKurikulumOnlyMode ? 'Sistem Kurikulum' : isGuruRole ? 'Sistem Guru & Akademik' : isSarprasOnlyMode ? 'Sistem Sarpras' : isPerpustakaanOnlyMode ? 'Sistem Perpustakaan' : isKepalaSekolah ? 'Sistem Kepala Sekolah' : 'Navigasi Utama'}</span>
         </div>
 
         <nav className="space-y-1 w-full max-w-full overflow-x-hidden">
-          {isStudentRole ? (
+          {isKesiswaanOnlyMode ? (
             <>
-              {studentNavItems.map(item => renderDesktopItem(item, isMobileDrawer))}
-            </>
-          ) : isKurikulumOnlyMode ? (
-            <>
-              {renderDesktopItem(kurikulumItem, isMobileDrawer)}
+              {renderDesktopItem(kesiswaanItem, isMobileDrawer)}
+              {renderDesktopItem(presensiSiswaKesiswaanItem, isMobileDrawer)}
               {renderDesktopItem(settingsItem, isMobileDrawer)}
-              <div className="pt-2 pb-1 px-1">
-                <div className="border-b border-[#35404e] w-full" />
-              </div>
             </>
           ) : isTuOnlyMode ? (
             <>
               {renderDesktopItem(tuItem, isMobileDrawer)}
               {renderDesktopItem(settingsItem, isMobileDrawer)}
-              <div className="pt-2 pb-1 px-1">
-                <div className="border-b border-[#35404e] w-full" />
-              </div>
+            </>
+          ) : isKurikulumOnlyMode ? (
+            <>
+              {renderDesktopItem(kurikulumItem, isMobileDrawer)}
+              {renderDesktopItem(validasiLokalItem, isMobileDrawer)}
+              {renderDesktopItem(settingsItem, isMobileDrawer)}
+            </>
+          ) : isStudentRole ? (
+            <>
+              {studentNavItems.map(item => renderDesktopItem(item, isMobileDrawer))}
+            </>
+          ) : isGuruRole ? (
+            <>
+              {guruNavItems.map(item => renderDesktopItem(item, isMobileDrawer))}
             </>
           ) : isSarprasOnlyMode ? (
             <>
@@ -679,7 +845,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                       <Database className="w-3.5 h-3.5 text-slate-400 group-hover:text-white shrink-0" />
                       <span className="truncate">Master Data</span>
                       <span className="bg-[#337ab7] text-white text-[9px] font-bold px-1.5 py-0.2 rounded-none shrink-0">
-                        {masterDataSubItems.length}
+                        {displayedMasterDataSubItems.length}
                       </span>
                     </div>
                     {isMasterDataOpen ? (
@@ -698,7 +864,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden mt-1 ml-2 mr-2 pl-2 space-y-0.5 py-0.5 bg-[#1a2027]/80 rounded-none border-l border-slate-700/60"
                       >
-                        {masterDataSubItems.map((subItem) => {
+                        {displayedMasterDataSubItems.map((subItem) => {
                           const SubIcon = subItem.icon;
                           const isSubActive = activeTab === subItem.id;
                           const subHealth = menuHealthMap[subItem.id as NavTab] || {
@@ -810,7 +976,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               )}
 
               {/* Main Navigation Items */}
-              {mainNavItems.map(item => renderDesktopItem(item, isMobileDrawer))}
+              {displayedMainNavItems.map(item => renderDesktopItem(item, isMobileDrawer))}
 
               {/* Settings Item */}
               {renderDesktopItem(settingsItem, isMobileDrawer)}
@@ -852,7 +1018,10 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           >
             {allVisibleItems.map((item) => {
               const Icon = item.icon;
-              const isActive = activeTab === item.id || (item.id === 'validasi' && (activeTab === 'validasi' || activeTab.startsWith('validasi')));
+              const isActive = activeTab === item.id || 
+                (item.id === 'validasi' && (activeTab === 'validasi' || activeTab.startsWith('validasi'))) ||
+                (item.id === 'validasi-dapodik' && (activeTab === 'validasi' || activeTab === 'validasi-dapodik')) ||
+                (item.id === 'system-kesiswaan' && (activeTab === 'system-kesiswaan' || (activeTab as string) === 'kesiswaan'));
               const itemHealth = menuHealthMap[item.id as NavTab];
               return (
                 <motion.button

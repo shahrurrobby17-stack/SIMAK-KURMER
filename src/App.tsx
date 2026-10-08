@@ -112,6 +112,10 @@ export default function App() {
       if (isLoggedOut === 'true') {
         return null;
       }
+      const savedUser = localStorage.getItem('simak_current_user');
+      if (savedUser) {
+        return JSON.parse(savedUser);
+      }
     } catch (e) {
       console.error('Failed to read login state from localStorage:', e);
     }
@@ -258,6 +262,19 @@ export default function App() {
   // Navigation and Filter States
   const [activeTab, setActiveTab] = useState<NavTab>(() => {
     try {
+      const isLoggedOut = localStorage.getItem('simak_is_logged_out');
+      if (isLoggedOut !== 'true') {
+        const savedUser = localStorage.getItem('simak_current_user');
+        if (savedUser) {
+          const u = JSON.parse(savedUser);
+          const r = (u.role || '').toLowerCase();
+          if (r.includes('tu') || r.includes('tata usaha') || r.includes('administrasi')) {
+            const savedTab = localStorage.getItem('simak_active_tab');
+            if (savedTab === 'settings') return 'settings';
+            return 'system-tu';
+          }
+        }
+      }
       const saved = localStorage.getItem('simak_active_tab');
       if (saved) return saved as NavTab;
     } catch (e) {}
@@ -1202,6 +1219,66 @@ export default function App() {
 
   const handleUpdateTeacherProfile = (newProfile: TeacherProfile): boolean => {
     if (checkIsDataLocked('settings')) return false;
+
+    // Strict validation: detail sekolah hanya bisa diedit oleh kepala sekolah sekolah tersebut
+    const isSchoolModified = Boolean(
+      (newProfile.schoolName && newProfile.schoolName !== teacher.schoolName) ||
+      (newProfile.npsn && newProfile.npsn !== teacher.npsn) ||
+      (newProfile.principalName && newProfile.principalName !== teacher.principalName) ||
+      (newProfile.principalNip && newProfile.principalNip !== teacher.principalNip) ||
+      (newProfile.city && newProfile.city !== teacher.city)
+    );
+
+    const isUserKepala = Boolean(
+      currentUser?.role && (
+        currentUser.role.toLowerCase().includes('kepala') ||
+        currentUser.role.toLowerCase().includes('principal')
+      )
+    );
+
+    const normalizeSchoolStr = (s?: string) => (s || '').trim().toLowerCase().replace(/[\s\-_.,/()]/g, '');
+    const userSchoolNorm = normalizeSchoolStr(currentUser?.schoolName);
+    const targetSchoolNorm = normalizeSchoolStr(teacher.schoolName || activeSchoolName);
+
+    const isPrincipalOfThisSchool = Boolean(
+      isUserKepala &&
+      userSchoolNorm &&
+      targetSchoolNorm &&
+      (
+        userSchoolNorm === targetSchoolNorm ||
+        userSchoolNorm.includes(targetSchoolNorm) ||
+        targetSchoolNorm.includes(userSchoolNorm)
+      )
+    );
+
+    if (isSchoolModified && !isPrincipalOfThisSchool) {
+      // Tolak perubahan detail sekolah dari akun selain Kepala Sekolah sekolah tersebut
+      newProfile = {
+        ...newProfile,
+        schoolName: teacher.schoolName,
+        npsn: teacher.npsn,
+        principalName: teacher.principalName,
+        principalNip: teacher.principalNip,
+        city: teacher.city
+      };
+    } else if (isSchoolModified && isPrincipalOfThisSchool) {
+      // Kepala Sekolah sekolah ini memperbarui detail sekolah: sinkronkan ke Firebase & context
+      const targetName = (newProfile.schoolName || teacher.schoolName).trim();
+      const sId = normalizeSchoolId(targetName);
+      registerSchoolToFirebase({
+        id: sId,
+        name: targetName,
+        npsn: newProfile.npsn || '20500000',
+        principalName: newProfile.principalName || 'Kepala Sekolah',
+        academicYear: newProfile.academicYear || '2026/2027',
+        semester: newProfile.semester || 'Ganjil'
+      });
+      if (newProfile.schoolName && newProfile.schoolName !== activeSchoolName) {
+        setSelectedSchoolName(newProfile.schoolName);
+        setActiveSchoolContext(newProfile.schoolName);
+      }
+    }
+
     // 1. Update active teacher in state & localStorage
     setTeacher(newProfile);
     try {
@@ -1732,6 +1809,84 @@ export default function App() {
     }
   }, [activeTab, isMasterUser, isAdminSystem]);
 
+  const isKepalaSekolah = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('kepala') ||
+      currentUser.role.toLowerCase().includes('principal')
+    )
+  );
+
+  const isTuRole = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('tu') ||
+      currentUser.role.toLowerCase().includes('tata usaha') ||
+      currentUser.role.toLowerCase().includes('administrasi')
+    )
+  );
+
+  const allowedTuTabs: NavTab[] = [
+    'system-tu',
+    'settings'
+  ];
+
+  useEffect(() => {
+    if (isTuRole && !allowedTuTabs.includes(activeTab)) {
+      setActiveTab('system-tu');
+    }
+  }, [isTuRole, activeTab]);
+
+  const isKurikulumRole = Boolean(
+    currentUser?.role && currentUser.role.toLowerCase().includes('kurikulum')
+  );
+
+  const allowedKurikulumTabs: NavTab[] = [
+    'system-kurikulum',
+    'validasi-dapodik',
+    'validasi',
+    'settings'
+  ];
+
+  useEffect(() => {
+    if (isKurikulumRole && !allowedKurikulumTabs.includes(activeTab)) {
+      setActiveTab('system-kurikulum');
+    }
+  }, [isKurikulumRole, activeTab]);
+
+  const isGuruRole = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('guru') ||
+      currentUser.role.toLowerCase().includes('pendidik') ||
+      currentUser.role.toLowerCase().includes('pengampu') ||
+      currentUser.role.toLowerCase().includes('wali kelas')
+    ) && (
+      !currentUser.role.toLowerCase().includes('admin') &&
+      !currentUser.role.toLowerCase().includes('master')
+    )
+  );
+
+  const allowedGuruTabs: NavTab[] = [
+    'dashboard',
+    'students',
+    'schedule',
+    'journal',
+    'upload-modul',
+    'attendance',
+    'grades',
+    'settings'
+  ];
+
+  useEffect(() => {
+    if (isGuruRole && !allowedGuruTabs.includes(activeTab)) {
+      setActiveTab('dashboard');
+    }
+  }, [isGuruRole, activeTab]);
+
+  useEffect(() => {
+    if (isKepalaSekolah && (activeTab === 'master-data' || activeTab === 'ai-assistant' || activeTab === 'residu')) {
+      setActiveTab('dashboard');
+    }
+  }, [isKepalaSekolah, activeTab]);
+
   useEffect(() => {
     const RESTRICTED_TABS: NavTab[] = ['sync', 'schedule', 'journal', 'upload-modul', 'students', 'attendance', 'extracurricular', 'grades'];
     if (isCurrentAccountDisabled && RESTRICTED_TABS.includes(activeTab)) {
@@ -1740,6 +1895,26 @@ export default function App() {
   }, [isCurrentAccountDisabled, activeTab]);
 
   const handleTabChange = (tab: NavTab) => {
+    if (isTuRole && !allowedTuTabs.includes(tab)) {
+      setActiveTab('system-tu');
+      return;
+    }
+
+    if (isKurikulumRole && !allowedKurikulumTabs.includes(tab)) {
+      setActiveTab('system-kurikulum');
+      return;
+    }
+
+    if (isGuruRole && !allowedGuruTabs.includes(tab)) {
+      setActiveTab('dashboard');
+      return;
+    }
+
+    if (isKepalaSekolah && (tab === 'master-data' || tab === 'ai-assistant' || tab === 'residu')) {
+      setActiveTab('dashboard');
+      return;
+    }
+
     const RESTRICTED_TABS: NavTab[] = ['sync', 'schedule', 'journal', 'upload-modul', 'students', 'attendance', 'extracurricular', 'grades'];
     if (isCurrentAccountDisabled && RESTRICTED_TABS.includes(tab)) {
       setShowRestrictedModal(true);
@@ -1791,9 +1966,35 @@ export default function App() {
             seedSchoolDataIfEmpty(normalizeSchoolId(user.schoolName), user.schoolName);
           }
 
-          if (targetTab) {
-            handleTabChange(targetTab as NavTab);
+          const isUserKepala = Boolean(
+            user.role && (
+              user.role.toLowerCase().includes('kepala') ||
+              user.role.toLowerCase().includes('principal')
+            )
+          );
+
+          let destinationTab: NavTab = 'dashboard';
+          if (isUserKepala) {
+            destinationTab = 'dashboard';
+          } else if (targetTab) {
+            destinationTab = targetTab as NavTab;
+          } else {
+            const roleNorm = (user.role || '').toLowerCase();
+            if (roleNorm.includes('kurikulum')) destinationTab = 'system-kurikulum';
+            else if (roleNorm.includes('tu') || roleNorm.includes('tata usaha') || roleNorm.includes('administrasi')) destinationTab = 'system-tu';
+            else if (roleNorm.includes('sarpras') || roleNorm.includes('sarana')) destinationTab = 'system-sarpras';
+            else if (roleNorm.includes('keuangan') || roleNorm.includes('bendahara')) destinationTab = 'system-keuangan';
+            else if (roleNorm.includes('kesiswaan')) destinationTab = 'system-kesiswaan';
+            else if (roleNorm.includes('perpustakaan') || roleNorm.includes('pustaka')) destinationTab = 'system-perpustakaan';
+            else if (roleNorm.includes('guru') || roleNorm.includes('pendidik') || roleNorm.includes('pengampu')) destinationTab = 'dashboard';
+            else if (roleNorm.includes('admin') || roleNorm.includes('master')) destinationTab = 'master-data';
+            else destinationTab = 'dashboard';
           }
+
+          setActiveTab(destinationTab);
+          try {
+            localStorage.setItem('simak_active_tab', destinationTab);
+          } catch (e) {}
 
           // Search in active state, saved localStorage, and initial defaults
           let savedProfilesJson: string | null = null;
@@ -1921,7 +2122,7 @@ export default function App() {
         {/* Content Pane */}
         <main className="flex-1 w-full p-3 md:p-4 lg:p-5 overflow-y-auto h-full pb-24 md:pb-10">
           {/* STUDENT ROLE DEDICATED LMS VIEWS (Persistent without animation on header/menu switch) */}
-          {currentUser?.role?.toLowerCase().includes('siswa') ? (
+          {(Boolean(currentUser?.role && (currentUser.role.toLowerCase().includes('siswa') || currentUser.role.toLowerCase().includes('murid')) && !currentUser.role.toLowerCase().includes('kesiswaan'))) ? (
             <div className="w-full h-full">
               <StudentLMSView 
                 teacher={teacher}
@@ -2071,6 +2272,7 @@ export default function App() {
                   {activeTab === 'system-guru' && (
                     <TeacherSystemView 
                       registeredUsers={registeredUsers}
+                      teacher={teacher}
                       onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
                     />
                   )}
@@ -2225,7 +2427,7 @@ export default function App() {
                 />
               )}
 
-              {activeTab === 'residu' && (
+              {activeTab === 'residu' && !isKepalaSekolah && (
                 <ResiduDataView
                   students={students}
                   onUpdateStudents={setStudents}
@@ -2239,7 +2441,7 @@ export default function App() {
                 />
               )}
 
-              {activeTab === 'ai-assistant' && (
+              {activeTab === 'ai-assistant' && !isKepalaSekolah && (
                 <GeminiAssistantView
                   teacher={teacher}
                   selectedClass={selectedClass}
@@ -2272,6 +2474,7 @@ export default function App() {
                   loginBackgroundConfig={loginBackgroundConfig}
                   onUpdateLoginBackgroundConfig={handleUpdateLoginBackgroundConfig}
                   currentUser={currentUser}
+                  activeSchoolName={activeSchoolName}
                   onOpenSchoolSelector={() => setShowSchoolStorageModal(true)}
                   onChangePassword={(newPass) => {
                     if (currentUser && currentUser.email) {
