@@ -15,6 +15,7 @@ import {
   saveStudentToFirebase, 
   deleteStudentFromFirebase, 
   saveStudentsBatchToFirebase, 
+  clearAllStudentsFromFirebase, 
   saveGradeToFirebase, 
   saveGradesBatchToFirebase,
   saveAttendanceRecordToFirebase, 
@@ -33,7 +34,8 @@ import {
   subscribeToInfoAnnouncement,
   subscribeToDataLockConfig,
   saveLoginBackgroundConfigToFirebase,
-  subscribeToLoginBackgroundConfig
+  subscribeToLoginBackgroundConfig,
+  deleteSchoolFromFirebase
 } from './lib/firebaseService';
 import { 
   Student, 
@@ -189,6 +191,55 @@ export default function App() {
     handleSelectSchoolStorage(created);
   };
 
+  const handleDeleteSchoolStorage = async (schoolId: string, schoolName?: string): Promise<boolean> => {
+    try {
+      // 1. Hapus dokumen sekolah dari Firebase Firestore
+      await deleteSchoolFromFirebase(schoolId);
+    } catch (err) {
+      console.warn('Firebase school delete note:', err);
+    }
+
+    // 2. Bersihkan seluruh penyimpanan cache lokal browser untuk sekolah ini
+    try {
+      if (typeof window !== 'undefined') {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const k = localStorage.key(i);
+          if (k) {
+            const lowerK = k.toLowerCase();
+            const lowerId = schoolId.toLowerCase();
+            const lowerName = (schoolName || '').toLowerCase().trim();
+            if (
+              lowerK.includes(lowerId) || 
+              (lowerName && lowerK.includes(lowerName))
+            ) {
+              keysToRemove.push(k);
+            }
+          }
+        }
+        keysToRemove.forEach(k => localStorage.removeItem(k));
+      }
+    } catch (e) {
+      console.warn('Error clearing school localStorage:', e);
+    }
+
+    // 3. Perbarui daftar sekolah terdaftar di state aplikasi
+    setRegisteredSchools(prev => {
+      const updated = prev.filter(s => s.id !== schoolId && s.name.toLowerCase().trim() !== (schoolName || '').toLowerCase().trim());
+      return updated.length > 0 ? updated : initialRegisteredSchools;
+    });
+
+    // 4. Jika sekolah yang dihapus sedang aktif digunakan, alihkan ke sekolah tersisa atau default
+    const currentName = (schoolName || '').toLowerCase().trim();
+    if (activeSchoolId === schoolId || activeSchoolName.toLowerCase().trim() === currentName) {
+      const remaining = registeredSchools.filter(s => s.id !== schoolId && s.name.toLowerCase().trim() !== currentName);
+      const fallback = remaining[0] || initialRegisteredSchools[0];
+      handleSelectSchoolStorage(fallback);
+    }
+
+    return true;
+  };
+
   const isDemoAdmin = !currentUser || 
     currentUser.uid === 'USER-ADMIN' || 
     currentUser.email?.toLowerCase() === 'shahrurrobby17@gmail.com' ||
@@ -201,8 +252,13 @@ export default function App() {
   });
 
   const [allStudents, setStudents] = useState<Student[]>(() => {
-    const saved = null;
-    const list: Student[] = saved ? JSON.parse(saved) : allDefaultStudents;
+    try {
+      const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_students_reset_cleared') === 'true';
+      if (isCleared) return [];
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('simak_students_data') : null;
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    const list: Student[] = allDefaultStudents;
     const map = new Map<string, Student>();
     allDefaultStudents.forEach(s => map.set(s.id, s));
     list.forEach(s => map.set(s.id, {
@@ -221,28 +277,34 @@ export default function App() {
   });
 
   const [allAttendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>(() => {
-    const saved = null;
-    if (!saved) return initialAttendanceRecords.map(r => ({ ...r, schoolName: r.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak' }));
     try {
+      const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_attendance_reset_cleared') === 'true';
+      if (isCleared) return [];
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('simak_attendance_records') : null;
+      if (!saved) return initialAttendanceRecords.map(r => ({ ...r, schoolName: r.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak' }));
       const parsed: AttendanceRecord[] = JSON.parse(saved);
-      const withSchool = parsed
-        .filter(r => !['ATT-201', 'ATT-202', 'ATT-203', 'ATT-204', 'ATT-205', 'ATT-206', 'ATT-207', 'ATT-208', 'ATT-209', 'ATT-210', 'ATT-211', 'ATT-212', 'ATT-213', 'ATT-214', 'ATT-215', 'ATT-216', 'ATT-SUR-201', 'ATT-SUR-202', 'ATT-SUR-203', 'ATT-SUR-204', 'ATT-SUR-205'].includes(r.id))
-        .map(r => ({ ...r, schoolName: r.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak' }));
-      
-      const map = new Map<string, AttendanceRecord>();
-      initialAttendanceRecords.forEach(r => {
-        const key = `${r.studentId}_M${r.meetingNo || 1}`;
-        map.set(key, { ...r, schoolName: r.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak' });
-      });
-      withSchool.forEach(r => {
-        const key = `${r.studentId}_M${r.meetingNo || 1}`;
-        map.set(key, r);
-      });
-      return Array.from(map.values());
+      return parsed;
     } catch (e) {
-      return initialAttendanceRecords.map(r => ({ ...r, schoolName: r.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak' }));
+      return [];
     }
   });
+
+  // Sync allAttendanceRecords to localStorage & listen for attendance reset
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('simak_attendance_records', JSON.stringify(allAttendanceRecords));
+      }
+    } catch (e) {}
+  }, [allAttendanceRecords]);
+
+  useEffect(() => {
+    const handleAttendanceReset = () => {
+      setAttendanceRecords([]);
+    };
+    window.addEventListener('simak_attendance_reset', handleAttendanceReset);
+    return () => window.removeEventListener('simak_attendance_reset', handleAttendanceReset);
+  }, []);
 
   const [allTeachingLogs, setTeachingLogs] = useState<TeachingLog[]>(() => {
     const saved = null;
@@ -268,10 +330,20 @@ export default function App() {
         if (savedUser) {
           const u = JSON.parse(savedUser);
           const r = (u.role || '').toLowerCase();
-          if (r.includes('tu') || r.includes('tata usaha') || r.includes('administrasi')) {
+          const isUserAdmin = r.includes('admin') || r.includes('master') || r.includes('super') || (u.email && (u.email.toLowerCase().includes('admin') || u.email.toLowerCase().includes('master')));
+          if (!isUserAdmin) {
             const savedTab = localStorage.getItem('simak_active_tab');
-            if (savedTab === 'settings') return 'settings';
-            return 'system-tu';
+            if (savedTab && savedTab !== 'dashboard') return savedTab as NavTab;
+            if (r.includes('tu') || r.includes('tata usaha') || r.includes('administrasi')) return 'system-tu';
+            if (r.includes('kurikulum')) return 'system-kurikulum';
+            if (r.includes('sarpras')) return 'system-sarpras';
+            if (r.includes('keuangan')) return 'system-keuangan';
+            if (r.includes('perpustakaan')) return 'system-perpustakaan';
+            if (r.includes('kesiswaan')) return 'system-kesiswaan';
+            if (r.includes('guru') || r.includes('pendidik')) return 'students';
+            if (r.includes('siswa') || r.includes('murid')) return 'system-kesiswaan';
+            if (r.includes('kepala') || r.includes('principal')) return 'validasi';
+            return 'settings';
           }
         }
       }
@@ -1012,6 +1084,11 @@ export default function App() {
 
     // 3. Listen to active school students collection
     const unsubStudents = onSnapshot(collection(db, 'schools', activeSchoolId, 'students'), (snapshot) => {
+      const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_students_reset_cleared') === 'true';
+      if (isCleared) {
+        setStudents([]);
+        return;
+      }
       const remoteList: Student[] = [];
       snapshot.forEach(d => {
         const data = d.data() as Student;
@@ -1024,10 +1101,19 @@ export default function App() {
         })).sort((a, b) => a.name.localeCompare(b.name));
         setStudents(formatted);
       } else if (!snapshot.metadata.hasPendingWrites && !snapshot.metadata.fromCache) {
-        // If empty, seed default data for this school
-        seedSchoolDataIfEmpty(activeSchoolId, activeSchoolName);
+        setStudents([]);
       }
     }, handleListenerError('students'));
+
+    const handleStudentsReset = async () => {
+      setStudents([]);
+      try {
+        localStorage.setItem('simak_students_reset_cleared', 'true');
+        localStorage.removeItem('simak_students_data');
+      } catch (e) {}
+      await clearAllStudentsFromFirebase(activeSchoolId);
+    };
+    window.addEventListener('simak_students_reset', handleStudentsReset);
 
     // 4. Listen to active school grades collection
     const unsubGrades = onSnapshot(collection(db, 'schools', activeSchoolId, 'grades'), (snapshot) => {
@@ -1149,6 +1235,7 @@ export default function App() {
     });
 
     return () => {
+      window.removeEventListener('simak_students_reset', handleStudentsReset);
       unsubClasses();
       unsubSubjects();
       unsubStudents();
@@ -1220,7 +1307,7 @@ export default function App() {
   const handleUpdateTeacherProfile = (newProfile: TeacherProfile): boolean => {
     if (checkIsDataLocked('settings')) return false;
 
-    // Strict validation: detail sekolah hanya bisa diedit oleh kepala sekolah sekolah tersebut
+    // Validasi wewenang: detail sekolah hanya bisa diedit oleh Administrator dan Kepala Sekolah
     const isSchoolModified = Boolean(
       (newProfile.schoolName && newProfile.schoolName !== teacher.schoolName) ||
       (newProfile.npsn && newProfile.npsn !== teacher.npsn) ||
@@ -1229,30 +1316,39 @@ export default function App() {
       (newProfile.city && newProfile.city !== teacher.city)
     );
 
+    const isUserAdmin = Boolean(
+      isAdministrator ||
+      isAdminSystem ||
+      isMasterUser ||
+      teacher?.id === 'PROF-ADMIN' ||
+      (currentUser?.role && (
+        currentUser.role.toLowerCase().includes('admin') ||
+        currentUser.role.toLowerCase().includes('master') ||
+        currentUser.role.toLowerCase().includes('super')
+      )) ||
+      (currentUser?.email && (
+        currentUser.email.toLowerCase().includes('admin') ||
+        currentUser.email.toLowerCase().includes('master') ||
+        currentUser.email.toLowerCase() === 'shahrurrobby17@gmail.com'
+      ))
+    );
+
     const isUserKepala = Boolean(
       currentUser?.role && (
         currentUser.role.toLowerCase().includes('kepala') ||
         currentUser.role.toLowerCase().includes('principal')
+      ) && (
+        !currentUser.role.toLowerCase().includes('wakil') &&
+        !currentUser.role.toLowerCase().includes('wakasek') &&
+        !currentUser.role.toLowerCase().includes('waka') &&
+        !currentUser.role.toLowerCase().includes('wakasis')
       )
     );
 
-    const normalizeSchoolStr = (s?: string) => (s || '').trim().toLowerCase().replace(/[\s\-_.,/()]/g, '');
-    const userSchoolNorm = normalizeSchoolStr(currentUser?.schoolName);
-    const targetSchoolNorm = normalizeSchoolStr(teacher.schoolName || activeSchoolName);
+    const canEditSchool = isUserAdmin || isUserKepala;
 
-    const isPrincipalOfThisSchool = Boolean(
-      isUserKepala &&
-      userSchoolNorm &&
-      targetSchoolNorm &&
-      (
-        userSchoolNorm === targetSchoolNorm ||
-        userSchoolNorm.includes(targetSchoolNorm) ||
-        targetSchoolNorm.includes(userSchoolNorm)
-      )
-    );
-
-    if (isSchoolModified && !isPrincipalOfThisSchool) {
-      // Tolak perubahan detail sekolah dari akun selain Kepala Sekolah sekolah tersebut
+    if (isSchoolModified && !canEditSchool) {
+      // Tolak perubahan detail sekolah dari akun selain Administrator dan Kepala Sekolah
       newProfile = {
         ...newProfile,
         schoolName: teacher.schoolName,
@@ -1261,8 +1357,8 @@ export default function App() {
         principalNip: teacher.principalNip,
         city: teacher.city
       };
-    } else if (isSchoolModified && isPrincipalOfThisSchool) {
-      // Kepala Sekolah sekolah ini memperbarui detail sekolah: sinkronkan ke Firebase & context
+    } else if (isSchoolModified && canEditSchool) {
+      // Administrator atau Kepala Sekolah memperbarui detail sekolah: sinkronkan ke Firebase & context
       const targetName = (newProfile.schoolName || teacher.schoolName).trim();
       const sId = normalizeSchoolId(targetName);
       registerSchoolToFirebase({
@@ -1270,8 +1366,20 @@ export default function App() {
         name: targetName,
         npsn: newProfile.npsn || '20500000',
         principalName: newProfile.principalName || 'Kepala Sekolah',
+        principalNip: newProfile.principalNip || '',
         academicYear: newProfile.academicYear || '2026/2027',
-        semester: newProfile.semester || 'Ganjil'
+        semester: newProfile.semester || 'Ganjil',
+        city: newProfile.city || 'Indonesia',
+        address: newProfile.address || '',
+        province: newProfile.province || '',
+        postalCode: newProfile.postalCode || '',
+        phone: newProfile.phone || '',
+        email: newProfile.email || '',
+        website: newProfile.website || '',
+        jenjang: newProfile.jenjang || 'SMA',
+        statusSekolah: newProfile.statusSekolah || 'Negeri',
+        akreditasi: newProfile.akreditasi || 'A (Unggul)',
+        kurikulum: newProfile.kurikulum || 'Kurikulum Merdeka'
       });
       if (newProfile.schoolName && newProfile.schoolName !== activeSchoolName) {
         setSelectedSchoolName(newProfile.schoolName);
@@ -1612,6 +1720,9 @@ export default function App() {
   // Add Student Handler
   const handleAddStudent = (newStudent: Student): boolean => { 
     if (checkIsDataLocked('students')) return false;
+    try {
+      localStorage.removeItem('simak_students_reset_cleared');
+    } catch (e) {}
     newStudent = injectSchool(newStudent);
     setStudents(prev => [...prev, newStudent].sort((a, b) => a.name.localeCompare(b.name)));
     saveStudentToFirebase(newStudent);
@@ -1631,6 +1742,11 @@ export default function App() {
   // Update Students Batch Handler
   const handleUpdateStudents = (updatedStudents: Student[]): boolean => {
     if (checkIsDataLocked('students')) return false;
+    if (updatedStudents.length > 0) {
+      try {
+        localStorage.removeItem('simak_students_reset_cleared');
+      } catch (e) {}
+    }
     const injected = updatedStudents.map(injectSchool);
     setStudents(prevAll => {
       const activeIds = new Set(injected.map(s => s.id));
@@ -1748,20 +1864,13 @@ export default function App() {
     teacher?.id === 'PROF-ADMIN' ||
     (currentUser?.role && (
       currentUser.role.toLowerCase().includes('admin') ||
-      currentUser.role.toLowerCase().includes('kepala') ||
-      currentUser.role.toLowerCase().includes('master')
+      currentUser.role.toLowerCase().includes('master') ||
+      currentUser.role.toLowerCase().includes('super')
     )) ||
     (currentUser?.email && (
       currentUser.email.toLowerCase().includes('admin') ||
       currentUser.email.toLowerCase().includes('master')
-    )) ||
-    activeTab === 'master-data' ||
-    activeTab === 'maintenance' ||
-    activeTab === 'system-tu' ||
-    activeTab === 'system-sarpras' ||
-    activeTab === 'system-keuangan' ||
-    activeTab === 'system-perpustakaan' ||
-    activeTab === 'system-kurikulum'
+    ))
   );
 
   // Data Lock Prevention Check & Alert Modal
@@ -1821,7 +1930,7 @@ export default function App() {
       currentUser.role.toLowerCase().includes('tu') ||
       currentUser.role.toLowerCase().includes('tata usaha') ||
       currentUser.role.toLowerCase().includes('administrasi')
-    )
+    ) && !isKepalaSekolah
   );
 
   const allowedTuTabs: NavTab[] = [
@@ -1836,7 +1945,7 @@ export default function App() {
   }, [isTuRole, activeTab]);
 
   const isKurikulumRole = Boolean(
-    currentUser?.role && currentUser.role.toLowerCase().includes('kurikulum')
+    currentUser?.role && currentUser.role.toLowerCase().includes('kurikulum') && !isKepalaSekolah
   );
 
   const allowedKurikulumTabs: NavTab[] = [
@@ -1860,12 +1969,43 @@ export default function App() {
       currentUser.role.toLowerCase().includes('wali kelas')
     ) && (
       !currentUser.role.toLowerCase().includes('admin') &&
-      !currentUser.role.toLowerCase().includes('master')
+      !currentUser.role.toLowerCase().includes('master') &&
+      !currentUser.role.toLowerCase().includes('kepala')
+    ) && !isKepalaSekolah
+  );
+
+  const isKesiswaanRole = Boolean(
+    currentUser?.role && currentUser.role.toLowerCase().includes('kesiswaan') && !isKepalaSekolah
+  );
+
+  const isKeuanganRole = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('keuangan') ||
+      currentUser.role.toLowerCase().includes('bendahara')
+    ) && !isKepalaSekolah
+  );
+
+  const allowedKeuanganTabs: NavTab[] = [
+    'system-keuangan',
+    'students',
+    'settings'
+  ];
+
+  useEffect(() => {
+    if (isKeuanganRole && !allowedKeuanganTabs.includes(activeTab)) {
+      setActiveTab('system-keuangan');
+    }
+  }, [isKeuanganRole, activeTab]);
+
+  const isStudentRole = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('siswa') ||
+      currentUser.role.toLowerCase().includes('murid')
     )
   );
 
   const allowedGuruTabs: NavTab[] = [
-    'dashboard',
+    'system-guru',
     'students',
     'schedule',
     'journal',
@@ -1875,26 +2015,58 @@ export default function App() {
     'settings'
   ];
 
+  // Restrict dashboard access for non-administrators
+  useEffect(() => {
+    if (!isAdministrator && activeTab === 'dashboard') {
+      if (isKepalaSekolah) {
+        setActiveTab('validasi');
+      } else if (isGuruRole) {
+        setActiveTab('students');
+      } else if (isKurikulumRole) {
+        setActiveTab('system-kurikulum');
+      } else if (isTuRole) {
+        setActiveTab('system-tu');
+      } else if (isKesiswaanRole) {
+        setActiveTab('system-kesiswaan');
+      } else if (isKeuanganRole) {
+        setActiveTab('system-keuangan');
+      } else {
+        setActiveTab('settings');
+      }
+    }
+  }, [isAdministrator, activeTab, isKepalaSekolah, isGuruRole, isKurikulumRole, isTuRole, isKesiswaanRole, isKeuanganRole]);
+
   useEffect(() => {
     if (isGuruRole && !allowedGuruTabs.includes(activeTab)) {
-      setActiveTab('dashboard');
+      setActiveTab('students');
     }
   }, [isGuruRole, activeTab]);
 
   useEffect(() => {
     if (isKepalaSekolah && (activeTab === 'master-data' || activeTab === 'ai-assistant' || activeTab === 'residu')) {
-      setActiveTab('dashboard');
+      setActiveTab('validasi');
     }
   }, [isKepalaSekolah, activeTab]);
 
   useEffect(() => {
     const RESTRICTED_TABS: NavTab[] = ['sync', 'schedule', 'journal', 'upload-modul', 'students', 'attendance', 'extracurricular', 'grades'];
     if (isCurrentAccountDisabled && RESTRICTED_TABS.includes(activeTab)) {
-      setActiveTab('dashboard');
+      setActiveTab(isAdministrator ? 'dashboard' : 'settings');
     }
-  }, [isCurrentAccountDisabled, activeTab]);
+  }, [isCurrentAccountDisabled, activeTab, isAdministrator]);
 
   const handleTabChange = (tab: NavTab) => {
+    if (!isAdministrator && tab === 'dashboard') {
+      if (isKepalaSekolah) setActiveTab('validasi');
+      else if (isGuruRole) setActiveTab('students');
+      else if (isKurikulumRole) setActiveTab('system-kurikulum');
+      else if (isTuRole) setActiveTab('system-tu');
+      else if (isKesiswaanRole) setActiveTab('system-kesiswaan');
+      else if (isKeuanganRole) setActiveTab('system-keuangan');
+      else setActiveTab('settings');
+      return;
+    }
+
     if (isTuRole && !allowedTuTabs.includes(tab)) {
       setActiveTab('system-tu');
       return;
@@ -1906,12 +2078,17 @@ export default function App() {
     }
 
     if (isGuruRole && !allowedGuruTabs.includes(tab)) {
-      setActiveTab('dashboard');
+      setActiveTab('students');
+      return;
+    }
+
+    if (isKeuanganRole && !allowedKeuanganTabs.includes(tab)) {
+      setActiveTab('system-keuangan');
       return;
     }
 
     if (isKepalaSekolah && (tab === 'master-data' || tab === 'ai-assistant' || tab === 'residu')) {
-      setActiveTab('dashboard');
+      setActiveTab('validasi');
       return;
     }
 
@@ -1973,10 +2150,25 @@ export default function App() {
             )
           );
 
+          const isUserAdmin = Boolean(
+            isMasterUser ||
+            (user.role && (
+              user.role.toLowerCase().includes('admin') ||
+              user.role.toLowerCase().includes('master') ||
+              user.role.toLowerCase().includes('super')
+            )) ||
+            (user.email && (
+              user.email.toLowerCase().includes('admin') ||
+              user.email.toLowerCase().includes('master')
+            ))
+          );
+
           let destinationTab: NavTab = 'dashboard';
-          if (isUserKepala) {
-            destinationTab = 'dashboard';
-          } else if (targetTab) {
+          if (isUserAdmin) {
+            destinationTab = (targetTab && targetTab === 'master-data') ? 'master-data' : 'dashboard';
+          } else if (isUserKepala) {
+            destinationTab = 'validasi';
+          } else if (targetTab && targetTab !== 'dashboard') {
             destinationTab = targetTab as NavTab;
           } else {
             const roleNorm = (user.role || '').toLowerCase();
@@ -1986,9 +2178,9 @@ export default function App() {
             else if (roleNorm.includes('keuangan') || roleNorm.includes('bendahara')) destinationTab = 'system-keuangan';
             else if (roleNorm.includes('kesiswaan')) destinationTab = 'system-kesiswaan';
             else if (roleNorm.includes('perpustakaan') || roleNorm.includes('pustaka')) destinationTab = 'system-perpustakaan';
-            else if (roleNorm.includes('guru') || roleNorm.includes('pendidik') || roleNorm.includes('pengampu')) destinationTab = 'dashboard';
-            else if (roleNorm.includes('admin') || roleNorm.includes('master')) destinationTab = 'master-data';
-            else destinationTab = 'dashboard';
+            else if (roleNorm.includes('guru') || roleNorm.includes('pendidik') || roleNorm.includes('pengampu')) destinationTab = 'students';
+            else if (roleNorm.includes('siswa') || roleNorm.includes('murid')) destinationTab = 'system-kesiswaan';
+            else destinationTab = 'settings';
           }
 
           setActiveTab(destinationTab);
@@ -2156,7 +2348,7 @@ export default function App() {
                 transition={{ duration: 0.2, ease: [0.25, 1, 0.5, 1] }}
                 className="w-full h-full"
               >
-                {activeTab === 'dashboard' && (
+                {activeTab === 'dashboard' && isAdministrator && (
                     <DashboardAnalytics 
                       students={allStudents && allStudents.length > 0 ? allStudents : students}
                       grades={allGrades && allGrades.length > 0 ? allGrades : grades}
@@ -2230,8 +2422,10 @@ export default function App() {
                       classList={classList}
                       onSelectClass={setSelectedClass}
                       onAddStudent={handleAddStudent}
+                      onUpdateStudents={handleUpdateStudents}
                       onDeleteStudent={handleDeleteStudent}
                       onOpenReportCard={(st) => setActiveReportCardStudent(st)}
+                      teacher={teacher}
                     />
                   )}
 
@@ -2329,28 +2523,23 @@ export default function App() {
                     />
                   )}
 
-              {activeTab === 'master-data' && (isMasterUser || isAdminSystem) && (
+              {activeTab === 'master-data' && (isMasterUser || isAdminSystem || isAdministrator || isKepalaSekolah) && (
                 <MasterDataView 
                   registeredUsers={registeredUsers}
                   onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
                   teacherProfiles={teacherProfiles}
                   currentUser={currentUser}
+                  teacher={teacher}
+                  onUpdateTeacherProfile={handleUpdateTeacherProfile}
+                  registeredSchools={registeredSchools}
+                  onRegisterSchool={handleRegisterNewSchool}
+                  onDeleteSchoolStorage={handleDeleteSchoolStorage}
+                  activeSchoolName={activeSchoolName}
                   classList={classList}
                   infoAnnouncement={infoAnnouncement}
                   onUpdateInfoAnnouncement={handleUpdateInfoAnnouncement}
                   renderUserModule={renderUserModule}
                   onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
-                  activeCategory="Semua"
-                  onCategoryChange={(cat) => {
-                    if (cat === 'Kurikulum') handleTabChange('system-kurikulum');
-                    else if (cat === 'Guru') handleTabChange('system-guru');
-                    else if (cat === 'TU') handleTabChange('system-tu');
-                    else if (cat === 'Sarpras') handleTabChange('system-sarpras');
-                    else if (cat === 'Keuangan') handleTabChange('system-keuangan');
-                    else if (cat === 'Perpustakaan') handleTabChange('system-perpustakaan');
-                    else if (cat === 'Siswa') handleTabChange('system-kesiswaan');
-                    else handleTabChange('master-data');
-                  }}
                 />
               )}
 
@@ -2475,6 +2664,8 @@ export default function App() {
                   onUpdateLoginBackgroundConfig={handleUpdateLoginBackgroundConfig}
                   currentUser={currentUser}
                   activeSchoolName={activeSchoolName}
+                  registeredSchools={registeredSchools}
+                  onDeleteSchoolStorage={handleDeleteSchoolStorage}
                   onOpenSchoolSelector={() => setShowSchoolStorageModal(true)}
                   onChangePassword={(newPass) => {
                     if (currentUser && currentUser.email) {
@@ -2488,30 +2679,6 @@ export default function App() {
         )}
       </main>
       </div>
-
-      {/* Official High Density Footer (Hidden on Administrator page) */}
-      {!isAdministrator && (
-        <footer className="min-h-8 py-2 md:py-1 bg-slate-100 border-t border-slate-200 px-4 sm:px-6 flex flex-col sm:flex-row items-center justify-between gap-1.5 sm:gap-4 text-xs font-semibold text-slate-700 shrink-0 select-none pb-[calc(4.5rem+env(safe-area-inset-bottom,0px))] md:pb-0 subpixel-antialiased">
-          <div className="text-center sm:text-left">SIMAK Merdeka Versi 3.7.0 © 2026</div>
-          <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 font-semibold">
-            <button 
-              type="button"
-              onClick={() => setActiveFooterModal('guide')}
-              className="hover:text-cyan-700 hover:underline cursor-pointer transition-colors px-1 py-0.5 rounded active:bg-slate-200"
-            >
-              Panduan Pengguna
-            </button>
-            <span className="text-slate-300 hidden sm:inline">•</span>
-            <button 
-              type="button"
-              onClick={() => setActiveFooterModal('terms')}
-              className="text-cyan-600 font-bold hover:text-cyan-800 hover:underline cursor-pointer transition-colors px-1 py-0.5 rounded active:bg-slate-200"
-            >
-              Syarat & Ketentuan
-            </button>
-          </div>
-        </footer>
-      )}
 
       {/* Footer Help & Support Modals */}
       <FooterHelpModals 

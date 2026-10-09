@@ -124,6 +124,17 @@ export const registerSchoolToFirebase = async (school: Partial<RegisteredSchool>
   return payload;
 };
 
+export const deleteSchoolFromFirebase = async (schoolId: string) => {
+  try {
+    const docRef = doc(db, 'schools', schoolId);
+    await deleteDoc(docRef);
+    return true;
+  } catch (err) {
+    console.error('Error deleting school from Firebase:', err);
+    throw err;
+  }
+};
+
 /**
  * Seed initial data for a specific school into its own /schools/{schoolId}/... path
  */
@@ -254,8 +265,31 @@ export const saveStudentToFirebase = async (item: any, explicitSchoolId?: string
   }
 };
 
+export const clearAllStudentsFromFirebase = async (explicitSchoolId?: string) => {
+  try {
+    const sId = explicitSchoolId || currentActiveSchoolId;
+    const schoolStudentsRef = collection(db, 'schools', sId, 'students');
+    const snap = await getDocs(schoolStudentsRef);
+    const batch = writeBatch(db);
+    snap.forEach(d => {
+      batch.delete(doc(db, 'schools', sId, 'students', d.id));
+      batch.delete(doc(db, 'students', d.id));
+    });
+    const rootSnap = await getDocs(collection(db, 'students'));
+    rootSnap.forEach(d => {
+      batch.delete(doc(db, 'students', d.id));
+    });
+    await batch.commit();
+  } catch (err) {
+    console.warn('Error clearing all students from Firebase:', err);
+  }
+};
+
 export const saveStudentsBatchToFirebase = async (items: any[], explicitSchoolId?: string) => {
-  if (!items || items.length === 0) return;
+  if (!items || items.length === 0) {
+    await clearAllStudentsFromFirebase(explicitSchoolId);
+    return;
+  }
   const sId = explicitSchoolId || (items[0]?.schoolName ? normalizeSchoolId(items[0].schoolName) : currentActiveSchoolId);
   const sName = items[0]?.schoolName || currentActiveSchoolName;
   const batch = writeBatch(db);
@@ -441,11 +475,16 @@ export const saveDataLockConfigToFirebase = async (data: any, scope: string = ''
   await setDoc(doc(db, 'settings', 'dataLockConfig' + scope), cleanPayload, { merge: true });
 };
 
-export const saveEncryptionCodeToFirebase = async (data: any, scope: string = '') => {
+export const saveEncryptionCodeToFirebase = async (code: any, previousCode?: string, scope: string = '') => {
   const docId = 'encryptionCode' + scope;
-  const payload = Array.isArray(data) ? { items: data } : data;
-  const cleanPayload = JSON.parse(JSON.stringify(payload));
-  await setDoc(doc(db, 'settings', docId), cleanPayload, { merge: true });
+  const newCode = typeof code === 'string' ? code : (code?.code || '');
+  const prevCode = previousCode || (typeof code === 'object' ? code?.previousCode : null);
+  const payload = { 
+    code: newCode, 
+    previousCode: prevCode || null,
+    updatedAt: new Date().toISOString() 
+  };
+  await setDoc(doc(db, 'settings', docId), payload, { merge: true });
 };
 
 export const saveExtraRecordsToFirebase = async (data: any, scope: string = '', explicitSchoolId?: string) => {

@@ -24,7 +24,8 @@ import {
   BadgeAlert,
   Sparkles,
   Building2,
-  GraduationCap
+  GraduationCap,
+  RotateCcw
 } from 'lucide-react';
 import { UserAccount, TeacherProfile, Student, AttendanceRecord, StudentGrade, StudentTask, Subject } from '../../types';
 import { allDefaultStudents } from '../../data/initialData';
@@ -455,10 +456,12 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
   // Violations State
   const [violations, setViolations] = useState<DisciplineViolation[]>(() => {
     try {
+      const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_kesiswaan_reset_cleared') === 'true';
+      if (isCleared) return [];
       const saved = localStorage.getItem('simak_kesiswaan_violations');
       return saved ? JSON.parse(saved) : initialViolations;
     } catch {
-      return initialViolations;
+      return [];
     }
   });
 
@@ -466,16 +469,19 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
     setViolations(newList);
     try {
       localStorage.setItem('simak_kesiswaan_violations', JSON.stringify(newList));
+      localStorage.removeItem('simak_kesiswaan_reset_cleared');
     } catch {}
   };
 
   // Ekskul State
   const [ekskuls, setEkskuls] = useState<EkskulItem[]>(() => {
     try {
+      const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_kesiswaan_reset_cleared') === 'true';
+      if (isCleared) return [];
       const saved = localStorage.getItem('simak_kesiswaan_ekskul');
       return saved ? JSON.parse(saved) : initialEkskuls;
     } catch {
-      return initialEkskuls;
+      return [];
     }
   });
 
@@ -483,16 +489,39 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
     setEkskuls(newList);
     try {
       localStorage.setItem('simak_kesiswaan_ekskul', JSON.stringify(newList));
+      localStorage.removeItem('simak_kesiswaan_reset_cleared');
+    } catch {}
+  };
+
+  // OSIS State
+  const [osisMembers, setOsisMembers] = useState<OsisMember[]>(() => {
+    try {
+      const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_kesiswaan_reset_cleared') === 'true';
+      if (isCleared) return [];
+      const saved = localStorage.getItem('simak_kesiswaan_osis');
+      return saved ? JSON.parse(saved) : initialOsis;
+    } catch {
+      return [];
+    }
+  });
+
+  const saveOsisMembers = (newList: OsisMember[]) => {
+    setOsisMembers(newList);
+    try {
+      localStorage.setItem('simak_kesiswaan_osis', JSON.stringify(newList));
+      localStorage.removeItem('simak_kesiswaan_reset_cleared');
     } catch {}
   };
 
   // Achievements State
   const [achievements, setAchievements] = useState<StudentAchievement[]>(() => {
     try {
+      const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_kesiswaan_reset_cleared') === 'true';
+      if (isCleared) return [];
       const saved = localStorage.getItem('simak_kesiswaan_achievements');
       return saved ? JSON.parse(saved) : initialAchievements;
     } catch {
-      return initialAchievements;
+      return [];
     }
   });
 
@@ -500,16 +529,19 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
     setAchievements(newList);
     try {
       localStorage.setItem('simak_kesiswaan_achievements', JSON.stringify(newList));
+      localStorage.removeItem('simak_kesiswaan_reset_cleared');
     } catch {}
   };
 
   // Scholarships State
   const [scholarships, setScholarships] = useState<ScholarshipRecord[]>(() => {
     try {
+      const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_kesiswaan_reset_cleared') === 'true';
+      if (isCleared) return [];
       const saved = localStorage.getItem('simak_kesiswaan_scholarships');
       return saved ? JSON.parse(saved) : initialScholarships;
     } catch {
-      return initialScholarships;
+      return [];
     }
   });
 
@@ -517,8 +549,27 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
     setScholarships(newList);
     try {
       localStorage.setItem('simak_kesiswaan_scholarships', JSON.stringify(newList));
+      localStorage.removeItem('simak_kesiswaan_reset_cleared');
     } catch {}
   };
+
+  // Listen for Kesiswaan Reset Event
+  useEffect(() => {
+    const handleReset = () => {
+      setLocalStudents([]);
+      setViolations([]);
+      setEkskuls([]);
+      setOsisMembers([]);
+      setAchievements([]);
+      setScholarships([]);
+    };
+    window.addEventListener('simak_kesiswaan_reset', handleReset);
+    window.addEventListener('simak_students_reset', handleReset);
+    return () => {
+      window.removeEventListener('simak_kesiswaan_reset', handleReset);
+      window.removeEventListener('simak_students_reset', handleReset);
+    };
+  }, []);
 
   // Classes list
   const localClasses = Array.from(new Set(localStudents.map(s => s.className))).filter(Boolean);
@@ -834,6 +885,30 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
     if (fileInputRef.current) fileInputRef.current.value = '';
   };
 
+  const handleResetAllStudents = () => {
+    if (window.confirm('Apakah Anda yakin ingin mereset/mengosongkan seluruh data siswa? Setelah diklik, seluruh data siswa pada halaman Kesiswaan dan menu Data Siswa akan menjadi kosong.')) {
+      try {
+        localStorage.setItem('simak_students_reset_cleared', 'true');
+        localStorage.removeItem('simak_students_data');
+        localStorage.setItem('simak_kesiswaan_reset_cleared', 'true');
+        localStorage.removeItem('simak_kesiswaan_violations');
+        localStorage.removeItem('simak_kesiswaan_ekskuls');
+        localStorage.removeItem('simak_kesiswaan_osis');
+        localStorage.removeItem('simak_kesiswaan_achievements');
+        localStorage.removeItem('simak_kesiswaan_scholarships');
+      } catch (e) {}
+      setLocalStudents([]);
+      setViolations([]);
+      setEkskuls([]);
+      setOsisMembers([]);
+      setAchievements([]);
+      setScholarships([]);
+      window.dispatchEvent(new CustomEvent('simak_students_reset'));
+      window.dispatchEvent(new CustomEvent('simak_kesiswaan_reset'));
+      setNotificationMsg('Seluruh data siswa telah berhasil direset / dikosongkan.');
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* HEADER BANNER: SISTEM KESISWAAN */}
@@ -858,6 +933,15 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            <button
+              type="button"
+              onClick={handleResetAllStudents}
+              className="px-3.5 py-2 bg-rose-600 hover:bg-rose-500 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-sm transition-all"
+              title="Reset seluruh data siswa"
+            >
+              <RotateCcw className="w-4 h-4 text-white" />
+              <span>Reset Data Siswa</span>
+            </button>
             <button
               type="button"
               onClick={() => setShowAddViolationModal(true)}
@@ -1022,7 +1106,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
           }`}
         >
           <Users className="w-4 h-4 text-cyan-700" />
-          <span>Direktori Siswa & Rombel</span>
+          <span>Data Siswa & Rombel</span>
         </button>
 
         <button
@@ -1216,22 +1300,28 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-              {initialOsis.map(o => (
-                <div key={o.id} className="p-3.5 border border-slate-200 bg-slate-50/60 rounded-none space-y-1.5">
-                  <span className="text-[10px] font-black uppercase text-[#164e63] bg-cyan-100 px-1.5 py-0.5">
-                    {o.position}
-                  </span>
-                  <div className="text-sm font-bold text-slate-900">{o.studentName}</div>
-                  <div className="text-xs text-slate-600 font-medium">Kelas: {o.className}</div>
-                  <div className="text-[11px] text-slate-500">{o.division}</div>
-                  <div className="text-[11px] font-mono text-cyan-800 pt-1 flex items-center gap-1">
-                    <Phone className="w-3 h-3 text-slate-400" />
-                    <span>{o.contact}</span>
+            {osisMembers.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                {osisMembers.map(o => (
+                  <div key={o.id} className="p-3.5 border border-slate-200 bg-slate-50/60 rounded-none space-y-1.5">
+                    <span className="text-[10px] font-black uppercase text-[#164e63] bg-cyan-100 px-1.5 py-0.5">
+                      {o.position}
+                    </span>
+                    <div className="text-sm font-bold text-slate-900">{o.studentName}</div>
+                    <div className="text-xs text-slate-600 font-medium">Kelas: {o.className}</div>
+                    <div className="text-[11px] text-slate-500">{o.division}</div>
+                    <div className="text-[11px] font-mono text-cyan-800 pt-1 flex items-center gap-1">
+                      <Phone className="w-3 h-3 text-slate-400" />
+                      <span>{o.contact}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
-            </div>
+                ))}
+              </div>
+            ) : (
+              <div className="p-6 text-center text-slate-500 bg-slate-50 border border-slate-200 text-xs italic">
+                Belum ada data pengurus OSIS & MPK (Data telah direset).
+              </div>
+            )}
           </div>
 
           {/* Ekskul Section */}
@@ -1462,6 +1552,15 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
             </div>
 
             <div className="flex items-center gap-2 flex-wrap">
+              <button
+                type="button"
+                onClick={handleResetAllStudents}
+                className="px-3 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
+                title="Reset seluruh data siswa"
+              >
+                <RotateCcw className="w-3.5 h-3.5 text-white" />
+                <span>Reset Data Siswa</span>
+              </button>
               <button
                 type="button"
                 onClick={() => setShowAddStudentModal(true)}

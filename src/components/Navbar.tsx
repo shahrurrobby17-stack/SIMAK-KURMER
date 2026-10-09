@@ -144,10 +144,10 @@ const MENU_CATALOG: SearchMenuItem[] = [
   },
   {
     id: 'system-guru',
-    title: 'Sistem Guru',
-    subtitle: 'Manajemen pendidik & administrasi guru terpadu',
+    title: 'Daftar GTK / Sistem Guru',
+    subtitle: 'Manajemen pendidik, GTK & administrasi guru terpadu',
     category: 'Sistem Terpadu',
-    keywords: ['guru', 'sistem guru', 'pendidik', 'pengajar', 'administrasi guru', 'kepegawaian', 'sertifikasi'],
+    keywords: ['gtk', 'daftar gtk', 'guru', 'sistem guru', 'pendidik', 'pengajar', 'administrasi guru', 'kepegawaian', 'sertifikasi', 'ptk'],
     icon: Users,
     studentAccessible: false
   },
@@ -366,16 +366,13 @@ export const Navbar: React.FC<NavbarProps> = ({
     isMaster || 
     (currentUser?.role && (
       currentUser.role.toLowerCase().includes('admin') ||
-      currentUser.role.toLowerCase().includes('kepala') ||
-      currentUser.role.toLowerCase().includes('master')
+      currentUser.role.toLowerCase().includes('master') ||
+      currentUser.role.toLowerCase().includes('super')
     )) ||
     (currentUser?.email && (
       currentUser.email.toLowerCase().includes('admin') ||
       currentUser.email.toLowerCase().includes('master')
-    )) ||
-    activeTab === 'master-data' ||
-    activeTab === 'maintenance' ||
-    activeTab === 'system-validation'
+    ))
   );
 
   // Live active teaching schedule data from Teaching Schedule menu
@@ -396,12 +393,16 @@ export const Navbar: React.FC<NavbarProps> = ({
   const isTuPage = isTuRole || activeTab === 'system-tu' || (activeTab as string) === 'tu';
 
   const isSarprasRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('sarpras') || currentUser.role.toLowerCase().includes('sarana')) : false;
-  const isSarprasPage = activeTab === 'system-sarpras' || (isSarprasRole && activeTab === 'settings');
+  const isSarprasPage = isSarprasRole || activeTab === 'system-sarpras' || (activeTab as string) === 'sarpras' || (isSarprasRole && activeTab === 'settings');
 
   const isPerpustakaanRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('perpustakaan') || currentUser.role.toLowerCase().includes('pustaka') || currentUser.role.toLowerCase().includes('pustakawan')) : false;
   const isPerpustakaanPage = activeTab === 'system-perpustakaan' || (isPerpustakaanRole && activeTab === 'settings');
 
-  const isKeuanganPage = activeTab === 'system-keuangan';
+  const isKeuanganRole = currentUser?.role ? (
+    currentUser.role.toLowerCase().includes('keuangan') ||
+    currentUser.role.toLowerCase().includes('bendahara')
+  ) : false;
+  const isKeuanganPage = isKeuanganRole || activeTab === 'system-keuangan' || (activeTab as string) === 'keuangan';
 
   const isKurikulumRole = currentUser?.role ? currentUser.role.toLowerCase().includes('kurikulum') : false;
   const isKurikulumPage = isKurikulumRole || activeTab === 'system-kurikulum' || (activeTab as string) === 'kurikulum';
@@ -434,8 +435,9 @@ export const Navbar: React.FC<NavbarProps> = ({
       currentUser.role.toLowerCase().includes('wali kelas')
     ) && (
       !currentUser.role.toLowerCase().includes('admin') &&
-      !currentUser.role.toLowerCase().includes('master')
-    )
+      !currentUser.role.toLowerCase().includes('master') &&
+      !currentUser.role.toLowerCase().includes('kepala')
+    ) && !isKepalaSekolah
   );
 
   // Filter menu catalog based on role & search query
@@ -448,8 +450,10 @@ export const Navbar: React.FC<NavbarProps> = ({
       list = list.filter(m => m.id !== 'master-data' && m.id !== 'ai-assistant' && m.id !== 'residu');
     }
     if (!isAdministrator) {
+      // Menu dashboard dihilangkan untuk semua peran selain administrator
+      list = list.filter(m => m.id !== 'dashboard');
       if (isGuruRole) {
-        const allowedGuru = ['dashboard', 'students', 'schedule', 'journal', 'upload-modul', 'attendance', 'grades', 'settings'];
+        const allowedGuru = ['students', 'schedule', 'journal', 'upload-modul', 'attendance', 'grades', 'settings'];
         list = list.filter(m => allowedGuru.includes(m.id));
       }
       if (isTuPage) {
@@ -547,12 +551,12 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* School Emblem Title & App Brand */}
           <div 
             onClick={() => {
-              if (!isStudentUser && !isTuRole && !isKurikulumRole && onTabChange) {
+              if (isAdministrator && onTabChange) {
                 onTabChange('dashboard');
               }
             }}
-            className={`flex items-center space-x-2 md:space-x-2.5 shrink-0 ${!isStudentUser && !isTuRole && !isKurikulumRole && !isKesiswaanRole ? 'cursor-pointer hover:opacity-95' : ''}`}
-            title={!isStudentUser && !isTuRole && !isKurikulumRole && !isKesiswaanRole ? "Kembali ke Dashboard Utama" : undefined}
+            className={`flex items-center space-x-2 md:space-x-2.5 shrink-0 ${isAdministrator ? 'cursor-pointer hover:opacity-95' : ''}`}
+            title={isAdministrator ? "Kembali ke Dashboard Utama" : undefined}
           >
             <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white rounded-none shadow-xs shrink-0 flex items-center justify-center p-0.5 sm:p-1 border border-white/25">
               <TutWuriHandayaniLogo className="w-full h-full" />
@@ -591,7 +595,7 @@ export const Navbar: React.FC<NavbarProps> = ({
               </div>
             </motion.button>
             <div className="flex items-center gap-1.5 min-w-0">
-              {isKepalaSekolah || isGuruRole || isKurikulumPage ? (
+              {isKepalaSekolah || isGuruRole || isKurikulumPage || isSarprasPage || isKesiswaanPage || isKeuanganPage ? (
                 <div className="flex items-center gap-1.5 text-left px-1.5 py-0.5 max-w-[280px] sm:max-w-xs md:max-w-md select-none">
                   <div className="min-w-0">
                     <p className="text-[11px] sm:text-xs md:text-sm text-white font-bold tracking-tight truncate leading-tight">
@@ -635,7 +639,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Action Buttons (Logout on HP) */}
         <div className="md:hidden flex items-center gap-1.5 shrink-0">
-          {onOpenSchoolSelector && !isKepalaSekolah && !isGuruRole && !isKurikulumPage && (
+          {onOpenSchoolSelector && !isKepalaSekolah && !isGuruRole && !isKurikulumPage && !isSarprasPage && !isKesiswaanPage && !isKeuanganPage && (
             <button
               type="button"
               onClick={onOpenSchoolSelector}
@@ -661,7 +665,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Right Side: Filter Kelas & Kolom Cari Menu */}
         <div className="flex items-center justify-end gap-2 md:gap-2.5 shrink-0 ml-auto">
           {/* Quick Switch School Storage button on Desktop */}
-          {onOpenSchoolSelector && !isKepalaSekolah && !isGuruRole && !isKurikulumPage && (
+          {onOpenSchoolSelector && !isKepalaSekolah && !isGuruRole && !isKurikulumPage && !isSarprasPage && !isKesiswaanPage && !isKeuanganPage && (
             <button
               type="button"
               onClick={onOpenSchoolSelector}
@@ -699,8 +703,8 @@ export const Navbar: React.FC<NavbarProps> = ({
             </div>
           )}
 
-          {/* Kolom Cari Menu di Pojok Kanan Atas - Disembunyikan pada halaman Administrator dan halaman Guru */}
-          {!isAdministrator && !isGuruRole && (
+          {/* Kolom Cari Menu di Pojok Kanan Atas */}
+          {!isAdministrator && !isGuruRole && !isSarprasPage && !isKurikulumPage && !isKesiswaanPage && !isKeuanganPage && (
             <div ref={searchContainerRef} className="relative w-36 sm:w-48 md:w-56 lg:w-64 xl:w-72 shrink-0 z-40">
               <div className="relative flex items-center">
                 <div className="absolute inset-y-0 left-0 pl-2.5 flex items-center pointer-events-none text-slate-300">

@@ -60,6 +60,15 @@ interface ExpenseRecord {
   notes: string;
 }
 
+interface BosReceiptRecord {
+  id: string;
+  date: string;
+  stage: string;
+  amount: number;
+  description: string;
+  recordedBy: string;
+}
+
 export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
   registeredUsers = [],
   teacher,
@@ -77,6 +86,16 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
 
   // Initial SPP Data state
   const [sppRecords, setSppRecords] = useState<SppRecord[]>(() => {
+    if (typeof window !== 'undefined') {
+      const isCleared = localStorage.getItem('simak_keuangan_reset_cleared') === 'true';
+      if (isCleared) return [];
+      const saved = localStorage.getItem('simak_keuangan_spp');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {}
+      }
+    }
     const months = ['Agustus 2026', 'Juli 2026', 'Juni 2026'];
     const sample: SppRecord[] = [];
     
@@ -106,19 +125,88 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
   });
 
   // Initial Expenses Data state (Dana BOS & Operasional)
-  const [expenseRecords, setExpenseRecords] = useState<ExpenseRecord[]>([
-    { id: 'EXP-101', date: '2026-08-05', title: 'Honorarium Guru GTT & PTT Bulan Juli', category: 'Gaji & Honor', source: 'Dana BOS', amount: 18500000, recordedBy: 'Bendahara Sekolah', notes: 'Gaji 12 Pegawai Honorer' },
-    { id: 'EXP-102', date: '2026-08-08', title: 'Pembelian Modul Ajar & Buku Kurikulum Merdeka', category: 'Modul & Kurikulum', source: 'Dana BOS', amount: 7200000, recordedBy: 'Operator Keuangan', notes: 'Buku Siswa Kelas X & XI' },
-    { id: 'EXP-103', date: '2026-08-12', title: 'Pembayaran Tagihan Listrik & Internet Fiber 100Mbps', category: 'Operasional & Listrik', source: 'Komite / SPP', amount: 3400000, recordedBy: 'Bendahara Sekolah', notes: 'Tagihan Rutin Bulan Agustus' },
-    { id: 'EXP-104', date: '2026-08-18', title: 'Pemeliharaan AC Laboratorium Komputer & WiFi', category: 'Sarana & Prasarana', source: 'Dana BOS', amount: 2800000, recordedBy: 'Pengelola Sarpras', notes: 'Service 4 Unit AC' },
-    { id: 'EXP-105', date: '2026-08-20', title: 'Dukungan Dana Lomba Paskibra & Pramuka Siswa', category: 'Kegiatan Siswa', source: 'Komite / SPP', amount: 4500000, recordedBy: 'Pembina OSIS', notes: 'Akomodasi & Transportasi' }
-  ]);
+  const [expenseRecords, setExpenseRecords] = useState<ExpenseRecord[]>(() => {
+    if (typeof window !== 'undefined') {
+      const isCleared = localStorage.getItem('simak_keuangan_reset_cleared') === 'true';
+      if (isCleared) return [];
+      const saved = localStorage.getItem('simak_keuangan_expenses');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {}
+      }
+    }
+    return [
+      { id: 'EXP-101', date: '2026-08-05', title: 'Honorarium Guru GTT & PTT Bulan Juli', category: 'Gaji & Honor', source: 'Dana BOS', amount: 18500000, recordedBy: 'Bendahara Sekolah', notes: 'Gaji 12 Pegawai Honorer' },
+      { id: 'EXP-102', date: '2026-08-08', title: 'Pembelian Modul Ajar & Buku Kurikulum Merdeka', category: 'Modul & Kurikulum', source: 'Dana BOS', amount: 7200000, recordedBy: 'Operator Keuangan', notes: 'Buku Siswa Kelas X & XI' },
+      { id: 'EXP-103', date: '2026-08-12', title: 'Pembayaran Tagihan Listrik & Internet Fiber 100Mbps', category: 'Operasional & Listrik', source: 'Komite / SPP', amount: 3400000, recordedBy: 'Bendahara Sekolah', notes: 'Tagihan Rutin Bulan Agustus' },
+      { id: 'EXP-104', date: '2026-08-18', title: 'Pemeliharaan AC Laboratorium Komputer & WiFi', category: 'Sarana & Prasarana', source: 'Dana BOS', amount: 2800000, recordedBy: 'Pengelola Sarpras', notes: 'Service 4 Unit AC' },
+      { id: 'EXP-105', date: '2026-08-20', title: 'Dukungan Dana Lomba Paskibra & Pramuka Siswa', category: 'Kegiatan Siswa', source: 'Komite / SPP', amount: 4500000, recordedBy: 'Pembina OSIS', notes: 'Akomodasi & Transportasi' }
+    ];
+  });
+
+  // Initial BOS Receipts Data state
+  const [bosRecords, setBosRecords] = useState<BosReceiptRecord[]>(() => {
+    if (typeof window !== 'undefined') {
+      const isCleared = localStorage.getItem('simak_keuangan_reset_cleared') === 'true';
+      if (isCleared) return [];
+      const saved = localStorage.getItem('simak_keuangan_bos_receipts');
+      if (saved) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {}
+      }
+    }
+    return [
+      {
+        id: 'BOS-2026-01',
+        date: '2026-08-01',
+        stage: 'Dana BOS Reguler Tahap II (100%)',
+        amount: 120000000,
+        description: 'Pencairan Dana BOS Reguler Tahap II TA 2026/2027',
+        recordedBy: 'Bendahara Sekolah'
+      }
+    ];
+  });
+
+  // Listen for Keuangan Reset Event & Persist State
+  React.useEffect(() => {
+    const handleReset = () => {
+      setSppRecords([]);
+      setExpenseRecords([]);
+      setBosRecords([]);
+    };
+    window.addEventListener('simak_keuangan_reset', handleReset);
+    return () => window.removeEventListener('simak_keuangan_reset', handleReset);
+  }, []);
+
+  React.useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (sppRecords.length > 0 || expenseRecords.length > 0 || bosRecords.length > 0) {
+        if (localStorage.getItem('simak_keuangan_reset_cleared') === 'true') {
+          localStorage.removeItem('simak_keuangan_reset_cleared');
+        }
+      }
+      localStorage.setItem('simak_keuangan_spp', JSON.stringify(sppRecords));
+      localStorage.setItem('simak_keuangan_expenses', JSON.stringify(expenseRecords));
+      localStorage.setItem('simak_keuangan_bos_receipts', JSON.stringify(bosRecords));
+    }
+  }, [sppRecords, expenseRecords, bosRecords]);
 
   // Modal States
   const [showPayModal, setShowPayModal] = useState<boolean>(false);
   const [selectedPaySpp, setSelectedPaySpp] = useState<SppRecord | null>(null);
   const [showAddExpenseModal, setShowAddExpenseModal] = useState<boolean>(false);
+  const [showAddBosModal, setShowAddBosModal] = useState<boolean>(false);
   const [notification, setNotification] = useState<string | null>(null);
+
+  // New BOS Form State
+  const [newBos, setNewBos] = useState({
+    stage: 'Dana BOS Reguler Tahap I (50%)',
+    amount: '',
+    date: new Date().toISOString().split('T')[0],
+    description: ''
+  });
 
   // New Expense Form State
   const [newExpense, setNewExpense] = useState({
@@ -169,7 +257,34 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
   const totalBosExpense = expenseRecords.filter(r => r.source === 'Dana BOS').reduce((acc, r) => acc + r.amount, 0);
   const totalKomiteExpense = expenseRecords.filter(r => r.source === 'Komite / SPP').reduce((acc, r) => acc + r.amount, 0);
 
-  const saldoKasEst = totalSppLunas + 120000000 - totalExpense;
+  const totalBosIncome = bosRecords.reduce((acc, r) => acc + r.amount, 0);
+  const isResetCleared = sppRecords.length === 0 && expenseRecords.length === 0 && bosRecords.length === 0;
+  const saldoKasEst = totalSppLunas + totalBosIncome - totalExpense;
+
+  // Handlers
+  const handleSaveAddBos = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newBos.amount || Number(newBos.amount) <= 0) return;
+
+    const record: BosReceiptRecord = {
+      id: `BOS-${Date.now().toString().slice(-6)}`,
+      date: newBos.date || new Date().toISOString().split('T')[0],
+      stage: newBos.stage.trim() || 'Dana BOS Reguler',
+      amount: Number(newBos.amount),
+      description: newBos.description.trim() || 'Penerimaan Dana BOS Resmi',
+      recordedBy: teacher?.name || 'Bendahara Sekolah'
+    };
+
+    setBosRecords(prev => [record, ...prev]);
+    setNotification(`Penerimaan Dana BOS (${record.stage}) sebesar Rp ${record.amount.toLocaleString('id-ID')} berhasil dicatat!`);
+    setShowAddBosModal(false);
+    setNewBos({
+      stage: 'Dana BOS Reguler Tahap I (50%)',
+      amount: '',
+      date: new Date().toISOString().split('T')[0],
+      description: ''
+    });
+  };
 
   // Handlers
   const handleConfirmPayment = (e: React.FormEvent) => {
@@ -242,15 +357,28 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
           </div>
         </div>
 
-        <div className="bg-white p-4 rounded-none border border-slate-200 shadow-xs flex items-center gap-3.5 border-l-4 border-l-blue-600">
-          <div className="p-3 bg-cyan-50 text-cyan-700 shrink-0">
-            <TrendingUp className="w-6 h-6" />
+        <div className="bg-white p-4 rounded-none border border-slate-200 shadow-xs flex items-center justify-between gap-3 border-l-4 border-l-blue-600">
+          <div className="flex items-center gap-3.5">
+            <div className="p-3 bg-cyan-50 text-cyan-700 shrink-0">
+              <TrendingUp className="w-6 h-6" />
+            </div>
+            <div>
+              <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Penerimaan Dana BOS</div>
+              <div className="text-lg font-black text-cyan-800">{formatRupiah(totalBosIncome)}</div>
+              <div className={`text-[10px] font-bold ${totalBosIncome === 0 ? 'text-slate-400' : 'text-emerald-600'}`}>
+                {totalBosIncome === 0 ? 'Belum Ada Transaksi' : `${bosRecords.length} Kali Pencairan`}
+              </div>
+            </div>
           </div>
-          <div>
-            <div className="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Penerimaan Dana BOS</div>
-            <div className="text-lg font-black text-cyan-800">Rp 120.000.000</div>
-            <div className="text-[10px] text-emerald-600 font-bold">Pencairan Tahap II (100%)</div>
-          </div>
+          <button
+            type="button"
+            onClick={() => setShowAddBosModal(true)}
+            className="px-2.5 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-[11px] shrink-0 flex items-center gap-1 cursor-pointer transition-all shadow-2xs"
+            title="Input Penerimaan Dana BOS"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span className="hidden sm:inline">Input BOS</span>
+          </button>
         </div>
 
         <div className="bg-white p-4 rounded-none border border-slate-200 shadow-xs flex items-center gap-3.5 border-l-4 border-l-rose-600">
@@ -470,64 +598,141 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
 
         {/* TAB 2: PENGELUARAN DANA BOS & OPERASIONAL */}
         {activeTab === 'bos' && (
-          <div className="p-5 space-y-4">
+          <div className="p-5 space-y-5">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
               <div>
                 <h3 className="text-sm font-bold text-slate-800">Catatan Pengeluaran Operasional & Dana BOS (RKAS)</h3>
                 <p className="text-xs text-slate-500">Pencatatan realisasi belanja sekolah untuk sarpras, honorarium, modul, dan operasional.</p>
               </div>
 
-              <button
-                type="button"
-                onClick={() => setShowAddExpenseModal(true)}
-                className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
-              >
-                <Plus className="w-4 h-4" />
-                <span>Tambah Catatan Pengeluaran</span>
-              </button>
+              <div className="flex items-center gap-2 flex-wrap">
+                <button
+                  type="button"
+                  onClick={() => setShowAddBosModal(true)}
+                  className="px-3.5 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+                >
+                  <TrendingUp className="w-4 h-4" />
+                  <span>Input Penerimaan Dana BOS</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setShowAddExpenseModal(true)}
+                  className="px-3.5 py-2 bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs transition-all"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span>Tambah Catatan Pengeluaran</span>
+                </button>
+              </div>
             </div>
 
-            {/* Expenses Table */}
-            <div className="overflow-x-auto border border-slate-200">
-              <table className="w-full text-left text-xs">
-                <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                  <tr>
-                    <th className="p-3">ID Transaksi</th>
-                    <th className="p-3">Tanggal</th>
-                    <th className="p-3">Uraian / Deskripsi Pengeluaran</th>
-                    <th className="p-3">Kategori RKAS</th>
-                    <th className="p-3">Sumber Dana</th>
-                    <th className="p-3">Jumlah (Rp)</th>
-                    <th className="p-3">Pencatat</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-100">
-                  {expenseRecords.map(exp => (
-                    <tr key={exp.id} className="hover:bg-slate-50">
-                      <td className="p-3 font-mono font-bold text-slate-700">{exp.id}</td>
-                      <td className="p-3 font-mono text-slate-600">{exp.date}</td>
-                      <td className="p-3 font-bold text-slate-800">
-                        <div>{exp.title}</div>
-                        <div className="text-[10px] text-slate-500 font-normal">{exp.notes}</div>
-                      </td>
-                      <td className="p-3">
-                        <span className="px-2 py-0.5 bg-slate-100 text-slate-800 font-bold text-[10px]">
-                          {exp.category}
-                        </span>
-                      </td>
-                      <td className="p-3">
-                        <span className={`px-2 py-0.5 font-bold text-[10px] ${
-                          exp.source === 'Dana BOS' ? 'bg-cyan-100 text-cyan-800' : 'bg-emerald-100 text-emerald-800'
-                        }`}>
-                          {exp.source}
-                        </span>
-                      </td>
-                      <td className="p-3 font-mono font-bold text-rose-700">{formatRupiah(exp.amount)}</td>
-                      <td className="p-3 text-slate-600">{exp.recordedBy}</td>
+            {/* Riwayat Penerimaan Dana BOS Section */}
+            <div className="bg-cyan-50/50 border border-cyan-200 p-4 space-y-3">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <div className="flex items-center gap-2">
+                  <TrendingUp className="w-4 h-4 text-cyan-800" />
+                  <h4 className="text-xs font-bold text-cyan-950 uppercase tracking-wider">
+                    Riwayat Penerimaan Dana BOS ({bosRecords.length} Transaksi)
+                  </h4>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowAddBosModal(true)}
+                  className="px-2.5 py-1 bg-cyan-700 hover:bg-cyan-800 text-white font-bold text-[11px] flex items-center gap-1 cursor-pointer transition-all shadow-2xs"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span>Input Penerimaan Dana BOS</span>
+                </button>
+              </div>
+
+              {bosRecords.length > 0 ? (
+                <div className="overflow-x-auto border border-cyan-200">
+                  <table className="w-full text-left text-xs bg-white">
+                    <thead className="bg-cyan-100/70 text-cyan-950 font-bold border-b border-cyan-200">
+                      <tr>
+                        <th className="p-2.5">ID Transaksi</th>
+                        <th className="p-2.5">Tanggal</th>
+                        <th className="p-2.5">Tahap / Jenis Pencairan</th>
+                        <th className="p-2.5">Keterangan</th>
+                        <th className="p-2.5">Nominal (Rp)</th>
+                        <th className="p-2.5">Pencatat</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-100">
+                      {bosRecords.map(bos => (
+                        <tr key={bos.id} className="hover:bg-cyan-50/40">
+                          <td className="p-2.5 font-mono font-bold text-slate-700">{bos.id}</td>
+                          <td className="p-2.5 font-mono text-slate-600">{bos.date}</td>
+                          <td className="p-2.5 font-bold text-cyan-900">{bos.stage}</td>
+                          <td className="p-2.5 text-slate-600">{bos.description}</td>
+                          <td className="p-2.5 font-mono font-bold text-emerald-700">{formatRupiah(bos.amount)}</td>
+                          <td className="p-2.5 text-slate-600">{bos.recordedBy}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-500 italic p-3 bg-white border border-cyan-100 text-center">
+                  Belum ada catatan penerimaan Dana BOS. Klik tombol di atas untuk menginput pencairan Dana BOS.
+                </p>
+              )}
+            </div>
+
+            {/* Expenses Table Section */}
+            <div className="space-y-2">
+              <h4 className="text-xs font-bold text-slate-700 uppercase tracking-wider">
+                Catatan Pengeluaran & Realisasi Belanja ({expenseRecords.length} Transaksi)
+              </h4>
+              <div className="overflow-x-auto border border-slate-200">
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
+                    <tr>
+                      <th className="p-3">ID Transaksi</th>
+                      <th className="p-3">Tanggal</th>
+                      <th className="p-3">Uraian / Deskripsi Pengeluaran</th>
+                      <th className="p-3">Kategori RKAS</th>
+                      <th className="p-3">Sumber Dana</th>
+                      <th className="p-3">Jumlah (Rp)</th>
+                      <th className="p-3">Pencatat</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100">
+                    {expenseRecords.length > 0 ? (
+                      expenseRecords.map(exp => (
+                        <tr key={exp.id} className="hover:bg-slate-50">
+                          <td className="p-3 font-mono font-bold text-slate-700">{exp.id}</td>
+                          <td className="p-3 font-mono text-slate-600">{exp.date}</td>
+                          <td className="p-3 font-bold text-slate-800">
+                            <div>{exp.title}</div>
+                            <div className="text-[10px] text-slate-500 font-normal">{exp.notes}</div>
+                          </td>
+                          <td className="p-3">
+                            <span className="px-2 py-0.5 bg-slate-100 text-slate-800 font-bold text-[10px]">
+                              {exp.category}
+                            </span>
+                          </td>
+                          <td className="p-3">
+                            <span className={`px-2 py-0.5 font-bold text-[10px] ${
+                              exp.source === 'Dana BOS' ? 'bg-cyan-100 text-cyan-800' : 'bg-emerald-100 text-emerald-800'
+                            }`}>
+                              {exp.source}
+                            </span>
+                          </td>
+                          <td className="p-3 font-mono font-bold text-rose-700">{formatRupiah(exp.amount)}</td>
+                          <td className="p-3 text-slate-600">{exp.recordedBy}</td>
+                        </tr>
+                      ))
+                    ) : (
+                      <tr>
+                        <td colSpan={7} className="p-6 text-center text-slate-500 font-semibold">
+                          Belum ada catatan pengeluaran (Data telah direset).
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </div>
         )}
@@ -559,8 +764,8 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
                 </h4>
                 <div className="space-y-2 text-xs">
                   <div className="flex justify-between p-2 bg-white border border-slate-200 font-medium">
-                    <span>1. Penerimaan Dana BOS Tahap II</span>
-                    <span className="font-bold font-mono text-emerald-700">Rp 120.000.000</span>
+                    <span>1. Total Penerimaan Dana BOS</span>
+                    <span className="font-bold font-mono text-emerald-700">{formatRupiah(totalBosIncome)}</span>
                   </div>
                   <div className="flex justify-between p-2 bg-white border border-slate-200 font-medium">
                     <span>2. Penerimaan SPP & Komite Terbayar</span>
@@ -568,7 +773,7 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
                   </div>
                   <div className="flex justify-between p-2 bg-emerald-100 text-emerald-900 font-bold border border-emerald-300">
                     <span>TOTAL PENERIMAAN KAS</span>
-                    <span className="font-mono">{formatRupiah(120000000 + totalSppLunas)}</span>
+                    <span className="font-mono">{formatRupiah(totalBosIncome + totalSppLunas)}</span>
                   </div>
                 </div>
               </div>
@@ -760,6 +965,92 @@ export const FinanceSystemView: React.FC<FinanceSystemViewProps> = ({
                 >
                   <Save className="w-3.5 h-3.5" />
                   <span>Simpan Transaksi Pengeluaran</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: INPUT PENERIMAAN DANA BOS */}
+      {showAddBosModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center z-50 p-4">
+          <div className="bg-white border border-slate-300 w-full max-w-lg shadow-2xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            <div className="bg-[#164e63] text-white p-4 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <TrendingUp className="w-5 h-5 text-cyan-200" />
+                <h3 className="font-bold text-sm">Input Penerimaan Dana BOS Sekolah</h3>
+              </div>
+              <button type="button" onClick={() => setShowAddBosModal(false)} className="text-white/80 hover:text-white cursor-pointer">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveAddBos} className="p-5 space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Tahap / Jenis Pencairan Dana BOS *</label>
+                <select
+                  value={newBos.stage}
+                  onChange={(e) => setNewBos({ ...newBos, stage: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 font-bold cursor-pointer"
+                >
+                  <option value="Dana BOS Reguler Tahap I (50%)">Dana BOS Reguler Tahap I (50%)</option>
+                  <option value="Dana BOS Reguler Tahap II (100%)">Dana BOS Reguler Tahap II (100%)</option>
+                  <option value="Dana BOS Kinerja / Afirmasi">Dana BOS Kinerja / Afirmasi</option>
+                  <option value="Bantuan Operasional Daerah (BOSDA)">Bantuan Operasional Daerah (BOSDA)</option>
+                  <option value="Hibah / Bantuan Pemerintah Lainnya">Hibah / Bantuan Pemerintah Lainnya</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Nominal Penerimaan (Rp) *</label>
+                <input
+                  type="number"
+                  required
+                  min="1"
+                  value={newBos.amount}
+                  onChange={(e) => setNewBos({ ...newBos, amount: e.target.value })}
+                  placeholder="Contoh: 120000000"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 font-mono font-bold text-sm"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Tanggal Penerimaan / Pencairan *</label>
+                <input
+                  type="date"
+                  required
+                  value={newBos.date}
+                  onChange={(e) => setNewBos({ ...newBos, date: e.target.value })}
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-600 font-medium"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Keterangan / Catatan Transaksi</label>
+                <input
+                  type="text"
+                  value={newBos.description}
+                  onChange={(e) => setNewBos({ ...newBos, description: e.target.value })}
+                  placeholder="Contoh: Pencairan Tahap I TA 2026/2027 ke Rekening Bank Jatim Sekolah"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 focus:outline-none focus:ring-2 focus:ring-cyan-600"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddBosModal(false)}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold cursor-pointer flex items-center gap-1.5"
+                >
+                  <Save className="w-3.5 h-3.5" />
+                  <span>Simpan Penerimaan BOS</span>
                 </button>
               </div>
             </form>

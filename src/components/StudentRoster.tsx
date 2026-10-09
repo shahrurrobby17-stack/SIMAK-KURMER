@@ -18,7 +18,8 @@ import {
   Eye,
   Users,
   Upload,
-  FileSpreadsheet
+  FileSpreadsheet,
+  RotateCcw
 } from 'lucide-react';
 import { generatePdfReport } from '../utils/pdfExport';
 
@@ -227,6 +228,27 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
     });
   };
 
+  const handleResetAllStudents = () => {
+    if (window.confirm('Apakah Anda yakin ingin mereset/mengosongkan seluruh data siswa? Seluruh data siswa pada menu Data Siswa dan Halaman Kesiswaan akan menjadi kosong.')) {
+      try {
+        localStorage.setItem('simak_students_reset_cleared', 'true');
+        localStorage.removeItem('simak_students_data');
+        localStorage.setItem('simak_kesiswaan_reset_cleared', 'true');
+        localStorage.removeItem('simak_kesiswaan_violations');
+        localStorage.removeItem('simak_kesiswaan_ekskuls');
+        localStorage.removeItem('simak_kesiswaan_osis');
+        localStorage.removeItem('simak_kesiswaan_achievements');
+        localStorage.removeItem('simak_kesiswaan_scholarships');
+      } catch (e) {}
+      if (onUpdateStudents) {
+        onUpdateStudents([]);
+      }
+      window.dispatchEvent(new CustomEvent('simak_students_reset'));
+      window.dispatchEvent(new CustomEvent('simak_kesiswaan_reset'));
+      setSaveSuccess(true);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Search & Actions Bar */}
@@ -298,6 +320,17 @@ export const StudentRoster: React.FC<StudentRosterProps> = ({
           >
             <FileDown className="w-4 h-4 text-amber-600" />
             <span>Unduh PDF</span>
+          </button>
+
+          {/* Reset Data Siswa Button */}
+          <button
+            type="button"
+            onClick={handleResetAllStudents}
+            className="h-9 px-3.5 inline-flex items-center justify-center space-x-1.5 bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 rounded-none text-xs font-bold transition-all active:scale-95 cursor-pointer shadow-xs shrink-0"
+            title="Reset / Kosongkan Seluruh Data Siswa"
+          >
+            <RotateCcw className="w-4 h-4 text-rose-600" />
+            <span>Reset Data Siswa</span>
           </button>
 
           {/* Tambah Siswa Baru Button */}

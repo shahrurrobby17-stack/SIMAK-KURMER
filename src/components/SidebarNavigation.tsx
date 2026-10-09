@@ -156,6 +156,18 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     isMasterUser
   });
 
+  const isKepalaSekolah = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('kepala') ||
+      currentUser.role.toLowerCase().includes('principal')
+    ) && (
+      !currentUser.role.toLowerCase().includes('wakil') &&
+      !currentUser.role.toLowerCase().includes('wakasek') &&
+      !currentUser.role.toLowerCase().includes('waka') &&
+      !currentUser.role.toLowerCase().includes('wakasis')
+    )
+  );
+
   const isGuruRole = Boolean(
     currentUser?.role && (
       currentUser.role.toLowerCase().includes('guru') ||
@@ -164,7 +176,10 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       currentUser.role.toLowerCase().includes('wali kelas')
     ) && (
       !currentUser.role.toLowerCase().includes('admin') &&
-      !currentUser.role.toLowerCase().includes('master')
+      !currentUser.role.toLowerCase().includes('master') &&
+      !currentUser.role.toLowerCase().includes('kepala') &&
+      !currentUser.role.toLowerCase().includes('kesiswaan') &&
+      !currentUser.role.toLowerCase().includes('wakasis')
     )
   );
 
@@ -181,34 +196,35 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       currentUser.email.toLowerCase().includes('admin') ||
       currentUser.email.toLowerCase().includes('master')
     )) ||
-    activeTab === 'master-data' ||
     teacher?.id === 'PROF-ADMIN'
   );
 
-  // Jika pernah berada di halaman Administrator atau memiliki peran admin, sesi admin tetap aktif
-  const [isAdminSession, setIsAdminSession] = useState<boolean>(() => {
-    return isAdministrator || activeTab === 'master-data';
-  });
+  const hasAdminAccess = isAdministrator;
 
-  useEffect(() => {
-    if (isAdministrator || activeTab === 'master-data') {
-      setIsAdminSession(true);
-    }
-  }, [isAdministrator, activeTab]);
-
-  const hasAdminAccess = isAdministrator || isAdminSession;
-
-  const isKurikulumRole = currentUser?.role ? currentUser.role.toLowerCase().includes('kurikulum') : false;
+  const isKurikulumRole = currentUser?.role ? currentUser.role.toLowerCase().includes('kurikulum') && !isKepalaSekolah : false;
 
   const isTuRole = currentUser?.role ? (
-    currentUser.role.toLowerCase().includes('tu') || 
+    (currentUser.role.toLowerCase().includes('tu') || 
     currentUser.role.toLowerCase().includes('tata usaha') ||
-    currentUser.role.toLowerCase().includes('administrasi')
+    currentUser.role.toLowerCase().includes('administrasi')) &&
+    !isKepalaSekolah
   ) : false;
 
   const isKesiswaanRole = currentUser?.role ? (
-    currentUser.role.toLowerCase().includes('kesiswaan') ||
-    currentUser.role.toLowerCase().includes('wakasek kesiswaan')
+    (currentUser.role.toLowerCase().includes('kesiswaan') ||
+    currentUser.role.toLowerCase().includes('wakasek kesiswaan') ||
+    currentUser.role.toLowerCase().includes('wakasis') ||
+    currentUser.role.toLowerCase().includes('waka kesiswaan') ||
+    currentUser.role.toLowerCase().includes('wakil kesiswaan') ||
+    currentUser.role.toLowerCase().includes('wakil kepala sekolah kesiswaan') ||
+    currentUser.role.toLowerCase().includes('tim kesiswaan')) &&
+    !isKepalaSekolah
+  ) : false;
+
+  const isKeuanganRole = currentUser?.role ? (
+    (currentUser.role.toLowerCase().includes('keuangan') ||
+    currentUser.role.toLowerCase().includes('bendahara')) &&
+    !isKepalaSekolah
   ) : false;
 
   const [lastSystemMode, setLastSystemMode] = useState<string | null>(null);
@@ -220,6 +236,8 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       setLastSystemMode('kurikulum');
     } else if (activeTab === 'system-kesiswaan') {
       setLastSystemMode('kesiswaan');
+    } else if (activeTab === 'system-keuangan') {
+      setLastSystemMode('keuangan');
     } else if (activeTab === 'system-sarpras') {
       setLastSystemMode('sarpras');
     } else if (activeTab === 'system-perpustakaan') {
@@ -236,52 +254,75 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       } else {
         setLastSystemMode(null);
       }
+    } else if (activeTab === 'students') {
+      if (lastSystemMode === 'keuangan' || isKeuanganRole) {
+        setLastSystemMode('keuangan');
+      } else if (lastSystemMode === 'kesiswaan' || isKesiswaanRole) {
+        setLastSystemMode('kesiswaan');
+      } else {
+        setLastSystemMode(null);
+      }
     } else if (activeTab !== 'settings') {
       setLastSystemMode(null);
     }
-  }, [activeTab, isKurikulumRole, isKesiswaanRole, lastSystemMode]);
+  }, [activeTab, isKurikulumRole, isKesiswaanRole, isKeuanganRole, lastSystemMode]);
 
-  // Halaman Kurikulum hanya membatasi menu jika BUKAN Administrator / BUKAN sesi Administrator
-  const isKurikulumOnlyMode = !hasAdminAccess && (
+  // Halaman Keuangan hanya membatasi menu jika BUKAN Kepala Sekolah
+  const isKeuanganOnlyMode = !isKepalaSekolah && (
+    isKeuanganRole || 
+    activeTab === 'system-keuangan' || 
+    (activeTab as string) === 'keuangan' || 
+    (lastSystemMode === 'keuangan' && (activeTab === 'settings' || activeTab === 'students'))
+  );
+
+  // Halaman Kurikulum hanya membatasi menu jika BUKAN Administrator / BUKAN Kepala Sekolah
+  const isKurikulumOnlyMode = !hasAdminAccess && !isKepalaSekolah && (
     isKurikulumRole || 
     activeTab === 'system-kurikulum' || 
     (activeTab as string) === 'kurikulum' || 
     (lastSystemMode === 'kurikulum' && (activeTab === 'settings' || activeTab === 'validasi-dapodik' || activeTab === 'validasi'))
   );
 
-  // Halaman TU hanya membatasi menu jika BUKAN Administrator / BUKAN sesi Administrator
-  const isTuOnlyMode = !hasAdminAccess && (
+  // Halaman TU hanya membatasi menu jika BUKAN Administrator / BUKAN Kepala Sekolah
+  const isTuOnlyMode = !hasAdminAccess && !isKepalaSekolah && (
     isTuRole || 
     activeTab === 'system-tu' || 
     (activeTab as string) === 'tu' || 
     (lastSystemMode === 'tu' && activeTab === 'settings')
   );
 
-  // Halaman Kesiswaan hanya membatasi menu jika BUKAN Administrator / BUKAN sesi Administrator
-  const isKesiswaanOnlyMode = !hasAdminAccess && (
+  // Halaman Kesiswaan hanya membatasi menu jika BUKAN Kepala Sekolah
+  const isKesiswaanOnlyMode = !isKepalaSekolah && (
     isKesiswaanRole || 
     activeTab === 'system-kesiswaan' || 
     (activeTab as string) === 'kesiswaan' || 
-    (lastSystemMode === 'kesiswaan' && (activeTab === 'settings' || activeTab === 'attendance'))
+    (lastSystemMode === 'kesiswaan' && (activeTab === 'settings' || activeTab === 'attendance' || activeTab === 'students'))
   );
 
-  const isSarprasRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('sarpras') || currentUser.role.toLowerCase().includes('sarana')) : false;
-  const isSarprasOnlyMode = !hasAdminAccess && (activeTab === 'system-sarpras' || (isSarprasRole && activeTab === 'settings'));
+  const isSarprasRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('sarpras') || currentUser.role.toLowerCase().includes('sarana')) && !isKepalaSekolah : false;
+  const isSarprasOnlyMode = !hasAdminAccess && !isKepalaSekolah && (activeTab === 'system-sarpras' || (isSarprasRole && activeTab === 'settings'));
 
-  const isPerpustakaanRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('perpustakaan') || currentUser.role.toLowerCase().includes('pustaka') || currentUser.role.toLowerCase().includes('pustakawan')) : false;
-  const isPerpustakaanOnlyMode = !hasAdminAccess && (activeTab === 'system-perpustakaan' || (isPerpustakaanRole && activeTab === 'settings'));
+  const isPerpustakaanRole = currentUser?.role ? (currentUser.role.toLowerCase().includes('perpustakaan') || currentUser.role.toLowerCase().includes('pustaka') || currentUser.role.toLowerCase().includes('pustakawan')) && !isKepalaSekolah : false;
+  const isPerpustakaanOnlyMode = !hasAdminAccess && !isKepalaSekolah && (activeTab === 'system-perpustakaan' || (isPerpustakaanRole && activeTab === 'settings'));
 
-  const isStudentRole = !hasAdminAccess && currentUser?.role ? (
+  const isStudentRole = !hasAdminAccess && !isKepalaSekolah && currentUser?.role ? (
     (currentUser.role.toLowerCase().includes('siswa') || currentUser.role.toLowerCase().includes('murid')) &&
     !currentUser.role.toLowerCase().includes('kesiswaan')
   ) : false;
 
-  const isGuruOnlyMode = !hasAdminAccess && isGuruRole;
+  const isGuruTabsActive = [
+    'system-guru',
+    'students',
+    'schedule',
+    'journal',
+    'upload-modul',
+    'attendance',
+    'grades'
+  ].includes(activeTab as string);
 
-  const isKepalaSekolah = Boolean(
-    currentUser?.role && (
-      currentUser.role.toLowerCase().includes('kepala') ||
-      currentUser.role.toLowerCase().includes('principal')
+  const isGuruOnlyMode = !hasAdminAccess && !isKepalaSekolah && (
+    isGuruRole || (
+      isGuruTabsActive && activeTab !== 'master-data' && activeTab !== 'sync'
     )
   );
 
@@ -334,6 +375,22 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     badge: null
   };
 
+  const keuanganItem = {
+    id: 'system-keuangan' as NavTab,
+    label: 'Keuangan',
+    subtitle: 'Sistem Keuangan',
+    icon: Wallet,
+    badge: null
+  };
+
+  const dataSiswaKeuanganItem = {
+    id: 'students' as NavTab,
+    label: 'Data Siswa',
+    subtitle: 'Data Siswa & Rombel',
+    icon: Users,
+    badge: null
+  };
+
   const kesiswaanItem = {
     id: 'system-kesiswaan' as NavTab,
     label: 'Kesiswaan',
@@ -366,6 +423,14 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     badge: null
   };
 
+  const gtkItem = {
+    id: 'system-guru' as NavTab,
+    label: 'Daftar GTK',
+    subtitle: 'Data Pendidik & PTK',
+    icon: Users,
+    badge: null
+  };
+
   const masterDataSubItems = [
     {
       id: 'sync' as NavTab,
@@ -390,7 +455,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     },
     {
       id: 'system-guru' as NavTab,
-      label: 'Guru',
+      label: 'Daftar GTK',
       subtitle: 'Sistem Manajemen Pendidik & PTK',
       icon: Users,
       badge: null
@@ -432,7 +497,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     }
   ];
 
-  // Pada halaman/akses Kepala Sekolah, sembunyikan menu Monitoring Akun
+  // Master data sub items dapat diakses oleh Administrator dan Kepala Sekolah
   const displayedMasterDataSubItems = masterDataSubItems.filter(item => {
     if (isKepalaSekolah && item.id === 'master-data') return false;
     return true;
@@ -574,20 +639,16 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     }
   ];
 
-  // Pada halaman/akses Kepala Sekolah, sembunyikan menu Asisten AI dan Residu
-  const displayedMainNavItems = mainNavItems.filter(item => {
-    if (isKepalaSekolah && (item.id === 'ai-assistant' || item.id === 'residu')) return false;
-    return true;
-  });
+  // Pada halaman/akses Kepala Sekolah, sembunyikan menu Asisten AI dan Residu, dan sertakan menu Daftar GTK
+  const displayedMainNavItems = [
+    ...(isKepalaSekolah ? [gtkItem] : []),
+    ...mainNavItems.filter(item => {
+      if (isKepalaSekolah && (item.id === 'ai-assistant' || item.id === 'residu')) return false;
+      return true;
+    })
+  ];
 
   const studentNavItems = [
-    {
-      id: 'dashboard' as NavTab,
-      label: 'Dashboard',
-      subtitle: 'Ringkasan Belajar',
-      icon: Sparkles,
-      badge: null
-    },
     {
       id: 'system-kesiswaan' as NavTab,
       label: 'LMS',
@@ -640,7 +701,13 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   ];
 
   const guruNavItems = [
-    dashboardItem,
+    {
+      id: 'system-guru' as NavTab,
+      label: 'Menu Guru',
+      subtitle: 'Sistem Manajemen Pendidik & PTK',
+      icon: Users,
+      badge: null
+    },
     {
       id: 'students' as NavTab,
       label: 'Data Siswa',
@@ -664,7 +731,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     },
     {
       id: 'upload-modul' as NavTab,
-      label: 'Upload Modul',
+      label: 'Modul Unggah/ATP',
       subtitle: 'Perangkat Ajar & ATP',
       icon: FolderUp,
       badge: null
@@ -686,8 +753,10 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     settingsItem
   ];
 
-  const allVisibleItems = isKesiswaanOnlyMode
-    ? [kesiswaanItem, presensiSiswaKesiswaanItem, settingsItem]
+  const allVisibleItems = isKeuanganOnlyMode
+    ? [keuanganItem, dataSiswaKeuanganItem, settingsItem]
+    : isKesiswaanOnlyMode
+    ? [kesiswaanItem, dataSiswaKeuanganItem, presensiSiswaKesiswaanItem, settingsItem]
     : isStudentRole
     ? studentNavItems
     : isTuOnlyMode
@@ -701,7 +770,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     : isPerpustakaanOnlyMode
     ? [perpustakaanItem, settingsItem]
     : [
-        dashboardItem, 
+        ...(isAdministrator ? [dashboardItem] : []), 
         {
           id: 'validasi' as NavTab,
           label: 'Validasi',
@@ -729,12 +798,12 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
     return (
       <React.Fragment key={item.id}>
-        {!isStudentRole && !isGuruRole && !isKurikulumOnlyMode && !isTuOnlyMode && !isKesiswaanOnlyMode && item.id === 'attendance' && (
+        {!isStudentRole && !isGuruRole && !isGuruOnlyMode && !isKurikulumOnlyMode && !isTuOnlyMode && !isKesiswaanOnlyMode && item.id === 'attendance' && (
           <div className="pt-3 pb-1 px-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
             <span>NAVIGASI SISWA</span>
           </div>
         )}
-        {!isStudentRole && !isGuruRole && !isKurikulumOnlyMode && !isTuOnlyMode && !isKesiswaanOnlyMode && item.id === 'ai-assistant' && (
+        {!isStudentRole && !isGuruRole && !isGuruOnlyMode && !isKurikulumOnlyMode && !isTuOnlyMode && !isKesiswaanOnlyMode && item.id === 'ai-assistant' && (
           <div className="pt-3 pb-1 px-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
             <span>AI & Sistem</span>
           </div>
@@ -802,7 +871,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               <p className="text-[10px] font-semibold text-slate-400 truncate leading-tight mt-0.5">
                 {currentUser?.role || teacher?.subjectRole || 'Guru Pengampu'}
               </p>
-              {!isKurikulumOnlyMode && !isTuOnlyMode && !isKesiswaanOnlyMode && !isStudentRole && (
+              {!isKurikulumOnlyMode && !isTuOnlyMode && !isKesiswaanOnlyMode && !isKeuanganOnlyMode && !isStudentRole && (
                 <div className="flex items-center gap-1.5 mt-2">
                   <div className={`w-1.5 h-1.5 rounded-full ${activeClasses.length > 0 ? 'bg-emerald-400' : 'bg-sky-400'}`}></div>
                   <p className="text-[9px] font-bold truncate text-slate-300">
@@ -815,13 +884,20 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
         </div>
         
         <div className="px-3 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center justify-between">
-          <span>{isKesiswaanOnlyMode ? 'Sistem Kesiswaan' : isStudentRole ? 'LMS Siswa Merdeka' : isTuOnlyMode ? 'Sistem Tata Usaha' : isKurikulumOnlyMode ? 'Sistem Kurikulum' : isGuruOnlyMode ? 'Sistem Guru & Akademik' : isSarprasOnlyMode ? 'Sistem Sarpras' : isPerpustakaanOnlyMode ? 'Sistem Perpustakaan' : isKepalaSekolah ? 'Sistem Kepala Sekolah' : 'Navigasi Utama'}</span>
+          <span>{isKeuanganOnlyMode ? 'Sistem Keuangan' : isKesiswaanOnlyMode ? 'Sistem Kesiswaan' : isStudentRole ? 'LMS Siswa Merdeka' : isTuOnlyMode ? 'Sistem Tata Usaha' : isKurikulumOnlyMode ? 'Sistem Kurikulum' : isGuruOnlyMode ? 'Sistem Guru & Akademik' : isSarprasOnlyMode ? 'Sistem Sarpras' : isPerpustakaanOnlyMode ? 'Sistem Perpustakaan' : isKepalaSekolah ? 'Sistem Kepala Sekolah' : 'Navigasi Utama'}</span>
         </div>
 
         <nav className="space-y-1 w-full max-w-full overflow-x-hidden">
-          {isKesiswaanOnlyMode ? (
+          {isKeuanganOnlyMode ? (
+            <>
+              {renderDesktopItem(keuanganItem, isMobileDrawer)}
+              {renderDesktopItem(dataSiswaKeuanganItem, isMobileDrawer)}
+              {renderDesktopItem(settingsItem, isMobileDrawer)}
+            </>
+          ) : isKesiswaanOnlyMode ? (
             <>
               {renderDesktopItem(kesiswaanItem, isMobileDrawer)}
+              {renderDesktopItem(dataSiswaKeuanganItem, isMobileDrawer)}
               {renderDesktopItem(presensiSiswaKesiswaanItem, isMobileDrawer)}
               {renderDesktopItem(settingsItem, isMobileDrawer)}
             </>
@@ -862,8 +938,8 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             </>
           ) : (
             <>
-              {/* Dashboard Item */}
-              {renderDesktopItem(dashboardItem, isMobileDrawer)}
+              {/* Dashboard Item - Khusus Administrator */}
+              {isAdministrator && renderDesktopItem(dashboardItem, isMobileDrawer)}
 
               {/* Master Data Section */}
               {!isStudentRole && (

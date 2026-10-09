@@ -195,7 +195,9 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
   registeredUsers = []
 }) => {
   const [moduleList, setModuleList] = useState<TeacherModuleDocument[]>(() => {
-    const saved = ((k: string) => null as any)('simak_teacher_modules');
+    const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_curriculum_reset_cleared') === 'true';
+    if (isCleared) return [];
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('simak_teacher_modules') : null;
     if (saved) {
       try {
         return JSON.parse(saved);
@@ -267,8 +269,19 @@ export const TeacherModuleUploadView: React.FC<TeacherModuleUploadViewProps> = (
   // Sync to localStorage
   const saveModules = (newList: TeacherModuleDocument[]) => {
     setModuleList(newList);
-    ((k: string, v: string) => void 0)('simak_teacher_modules', JSON.stringify(newList));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_teacher_modules', JSON.stringify(newList));
+      localStorage.removeItem('simak_curriculum_reset_cleared');
+    }
   };
+
+  useEffect(() => {
+    const handleReset = () => {
+      setModuleList([]);
+    };
+    window.addEventListener('simak_kurikulum_reset', handleReset);
+    return () => window.removeEventListener('simak_kurikulum_reset', handleReset);
+  }, []);
 
   // Stats Calculations
   const totalCount = moduleList.length;

@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { 
   Package, 
   Building2, 
@@ -27,7 +27,8 @@ import {
   Trash2,
   Eye,
   ShieldCheck,
-  Barcode
+  Barcode,
+  Settings
 } from 'lucide-react';
 import { UserAccount, TeacherProfile } from '../../types';
 
@@ -130,12 +131,14 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
 
   // State 1: Inventaris Barang (with localStorage)
   const [items, setItems] = useState<SarprasItem[]>(() => {
-    const saved = ((k: string) => null as any)('simak_sarpras_items');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse sarpras items', e);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('simak_sarpras_items');
+      if (saved !== null) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse sarpras items', e);
+        }
       }
     }
     return [
@@ -256,12 +259,14 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
 
   // State 2: Ruangan & Gedung
   const [rooms, setRooms] = useState<SarprasRuang[]>(() => {
-    const saved = ((k: string) => null as any)('simak_sarpras_rooms');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse sarpras rooms', e);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('simak_sarpras_rooms');
+      if (saved !== null) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse sarpras rooms', e);
+        }
       }
     }
     return [
@@ -348,12 +353,14 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
 
   // State 3: Peminjaman Barang
   const [loans, setLoans] = useState<PeminjamanBarang[]>(() => {
-    const saved = ((k: string) => null as any)('simak_sarpras_loans');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse sarpras loans', e);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('simak_sarpras_loans');
+      if (saved !== null) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse sarpras loans', e);
+        }
       }
     }
     return [
@@ -406,12 +413,14 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
 
   // State 4: Tiket Perawatan & Pemeliharaan
   const [tickets, setTickets] = useState<PemeliharaanTiket[]>(() => {
-    const saved = ((k: string) => null as any)('simak_sarpras_tickets');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error('Failed to parse sarpras tickets', e);
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('simak_sarpras_tickets');
+      if (saved !== null) {
+        try {
+          return JSON.parse(saved);
+        } catch (e) {
+          console.error('Failed to parse sarpras tickets', e);
+        }
       }
     }
     return [
@@ -458,20 +467,59 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
     ];
   });
 
+  // Listen to reset and storage events to sync Sarpras data immediately
+  useEffect(() => {
+    const syncSarprasData = () => {
+      if (typeof window === 'undefined') return;
+      
+      const savedItems = localStorage.getItem('simak_sarpras_items');
+      if (savedItems !== null) {
+        try { setItems(JSON.parse(savedItems)); } catch (e) {}
+      }
+
+      const savedRooms = localStorage.getItem('simak_sarpras_rooms');
+      if (savedRooms !== null) {
+        try { setRooms(JSON.parse(savedRooms)); } catch (e) {}
+      }
+
+      const savedLoans = localStorage.getItem('simak_sarpras_loans');
+      if (savedLoans !== null) {
+        try { setLoans(JSON.parse(savedLoans)); } catch (e) {}
+      }
+
+      const savedTickets = localStorage.getItem('simak_sarpras_tickets');
+      if (savedTickets !== null) {
+        try { setTickets(JSON.parse(savedTickets)); } catch (e) {}
+      }
+    };
+
+    window.addEventListener('simak_sarpras_reset', syncSarprasData);
+    window.addEventListener('storage', syncSarprasData);
+    return () => {
+      window.removeEventListener('simak_sarpras_reset', syncSarprasData);
+      window.removeEventListener('storage', syncSarprasData);
+    };
+  }, []);
+
   // Save to localStorage when state changes
   const saveItems = (newItems: SarprasItem[]) => {
     setItems(newItems);
-    ((k: string, v: string) => void 0)('simak_sarpras_items', JSON.stringify(newItems));
+    localStorage.setItem('simak_sarpras_items', JSON.stringify(newItems));
+  };
+
+  const saveRooms = (newRooms: SarprasRuang[]) => {
+    setRooms(newRooms);
+    localStorage.setItem('simak_sarpras_rooms', JSON.stringify(newRooms));
   };
 
   const saveLoans = (newLoans: PeminjamanBarang[]) => {
     setLoans(newLoans);
-    ((k: string, v: string) => void 0)('simak_sarpras_loans', JSON.stringify(newLoans));
+    localStorage.setItem('simak_sarpras_loans', JSON.stringify(newLoans));
   };
 
   const saveTickets = (newTickets: PemeliharaanTiket[]) => {
     setTickets(newTickets);
-    ((k: string, v: string) => void 0)('simak_sarpras_tickets', JSON.stringify(newTickets));
+    localStorage.setItem('simak_sarpras_tickets', JSON.stringify(newTickets));
   };
 
   // Form states for adding new asset
@@ -734,6 +782,19 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
           </div>
 
           <div className="flex items-center gap-2 self-start md:self-auto shrink-0 flex-wrap">
+            <button
+              type="button"
+              onClick={() => {
+                if (onNavigateTab) {
+                  onNavigateTab('settings');
+                }
+              }}
+              className="bg-white/10 hover:bg-white/20 text-white border border-white/25 px-3 py-1.5 rounded-none text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              title="Kelola Pengaturan Halaman Sarpras"
+            >
+              <Settings className="w-3.5 h-3.5 text-cyan-200" />
+              <span>Pengaturan Sarpras</span>
+            </button>
             <button
               type="button"
               onClick={handlePrintKIR}

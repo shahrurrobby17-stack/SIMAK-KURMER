@@ -37,7 +37,7 @@ import {
   Edit3,
   Sparkles
 } from 'lucide-react';
-import { TeacherProfile, DataLockConfig, InfoAnnouncement, InfoAnnouncementItem, getAnnouncementItems, UserAccount, LoginBackgroundConfig } from '../types';
+import { TeacherProfile, DataLockConfig, InfoAnnouncement, InfoAnnouncementItem, getAnnouncementItems, UserAccount, LoginBackgroundConfig, RegisteredSchool } from '../types';
 import { LoginBackgroundSettings } from './LoginBackgroundSettings';
 import { generatePdfReport } from '../utils/pdfExport';
 import { 
@@ -46,7 +46,9 @@ import {
   saveEncryptionCodeToFirebase,
   subscribeToEncryptionCode,
   saveDataLockConfigToFirebase,
-  subscribeToDataLockConfig
+  subscribeToDataLockConfig,
+  normalizeSchoolId,
+  deleteSchoolFromFirebase
 } from '../lib/firebaseService';
 
 interface SettingsViewProps {
@@ -77,6 +79,8 @@ interface SettingsViewProps {
   currentUser?: UserAccount | null;
   onOpenSchoolSelector?: () => void;
   activeSchoolName?: string;
+  registeredSchools?: RegisteredSchool[];
+  onDeleteSchoolStorage?: (schoolId: string, schoolName?: string) => Promise<boolean> | void;
 }
 
 export const SettingsView: React.FC<SettingsViewProps> = ({
@@ -106,9 +110,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   onUpdateLoginBackgroundConfig,
   currentUser,
   onOpenSchoolSelector,
-  activeSchoolName
+  activeSchoolName,
+  registeredSchools = [],
+  onDeleteSchoolStorage
 }) => {
-  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'school' | 'academic' | 'dataLock' | 'systemAnnouncement' | 'notifications' | 'system' | 'loginBackground'>('profile');
+  const [activeSubTab, setActiveSubTab] = useState<'profile' | 'school' | 'academic' | 'dataLock' | 'storage' | 'systemAnnouncement' | 'notifications' | 'system' | 'loginBackground'>('profile');
   
   const isKepalaSekolah = Boolean(
     currentUser?.role && (
@@ -121,7 +127,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const userSchoolNorm = normalizeSchoolStr(currentUser?.schoolName);
   const currentSchoolNorm = normalizeSchoolStr(teacher?.schoolName || activeSchoolName);
 
-  // Detail sekolah HANYA bisa diedit oleh kepala sekolah sekolah tersebut
+  // Detail sekolah HANYA bisa diedit oleh Administrator dan Kepala Sekolah
   const isPrincipalOfThisSchool = Boolean(
     isKepalaSekolah &&
     userSchoolNorm &&
@@ -131,6 +137,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       userSchoolNorm.includes(currentSchoolNorm) ||
       currentSchoolNorm.includes(userSchoolNorm)
     )
+  );
+
+  const isActualAdmin = Boolean(
+    isAdmin ||
+    teacher?.id === 'PROF-ADMIN' ||
+    teacher?.nip === '199001012015011001' ||
+    currentUser?.email?.toLowerCase() === 'shahrurrobby17@gmail.com' ||
+    (currentUser?.role && (
+      currentUser.role.toLowerCase().includes('admin') ||
+      currentUser.role.toLowerCase().includes('master') ||
+      currentUser.role.toLowerCase().includes('super')
+    )) ||
+    (currentUser?.email && (
+      currentUser.email.toLowerCase().includes('admin') ||
+      currentUser.email.toLowerCase().includes('master')
+    ))
   );
 
   const isGuruRole = Boolean(
@@ -145,11 +167,42 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     )
   );
 
+  const isSarprasRole = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('sarpras') ||
+      currentUser.role.toLowerCase().includes('sarana') ||
+      currentUser.role.toLowerCase().includes('prasarana')
+    )
+  );
+
+  const isKurikulumRole = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('kurikulum') ||
+      currentUser.role.toLowerCase().includes('ksp')
+    )
+  );
+
+  const isKesiswaanRole = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('kesiswaan') ||
+      currentUser.role.toLowerCase().includes('siswa')
+    )
+  );
+
+  const isKeuanganRole = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('keuangan') ||
+      currentUser.role.toLowerCase().includes('bendahara')
+    )
+  );
+
+  const canEditSchoolDetails = Boolean((isPrincipalOfThisSchool || isActualAdmin) && !isGuruRole);
+
   useEffect(() => {
-    if (isKepalaSekolah && (activeSubTab === 'system' || activeSubTab === 'loginBackground' || activeSubTab === 'dataLock' || activeSubTab === 'systemAnnouncement')) {
+    if ((isKepalaSekolah || isGuruRole || isSarprasRole || isKurikulumRole) && (activeSubTab === 'system' || activeSubTab === 'loginBackground' || activeSubTab === 'dataLock' || activeSubTab === 'systemAnnouncement' || activeSubTab === 'storage')) {
       setActiveSubTab('profile');
     }
-  }, [isKepalaSekolah, activeSubTab]);
+  }, [isKepalaSekolah, isGuruRole, isSarprasRole, isKurikulumRole, activeSubTab]);
 
   const isAdministratorUser = Boolean(
     isAdmin ||
@@ -159,9 +212,124 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     teacher?.name?.toLowerCase().includes('admin') ||
     currentUser?.role?.toLowerCase().includes('admin') ||
     currentUser?.role?.toLowerCase().includes('kepala') ||
-    currentUser?.role?.toLowerCase().includes('kurikulum') ||
     currentUser?.email?.toLowerCase() === 'shahrurrobby17@gmail.com'
   );
+
+  // Storage State for "Penyimpanan"
+  const [showDeleteSchoolStorageModal, setShowDeleteSchoolStorageModal] = useState<boolean>(false);
+  const [selectedSchoolToDelete, setSelectedSchoolToDelete] = useState<string>('');
+  const [isDeletingSchoolStorage, setIsDeletingSchoolStorage] = useState<boolean>(false);
+  const [storageFeedback, setStorageFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Reset Sarpras State
+  const [showResetSarprasModal, setShowResetSarprasModal] = useState<boolean>(false);
+  const [sarprasResetSuccess, setSarprasResetSuccess] = useState<boolean>(false);
+
+  // Reset All Data State
+  const [showResetAllDataModal, setShowResetAllDataModal] = useState<boolean>(false);
+  const [allDataResetSuccess, setAllDataResetSuccess] = useState<boolean>(false);
+
+  const handleResetAllData = () => {
+    try {
+      localStorage.setItem('simak_weekly_class_schedules_cleared', 'true');
+      localStorage.setItem('simak_weekly_class_schedules', JSON.stringify([]));
+      localStorage.setItem('simak_teacher_modules', JSON.stringify([]));
+      localStorage.setItem('simak_curriculum_jjm', JSON.stringify([]));
+      localStorage.setItem('simak_curriculum_p5', JSON.stringify([]));
+      localStorage.setItem('simak_curriculum_events', JSON.stringify([]));
+      localStorage.setItem('simak_curriculum_reset_cleared', 'true');
+      localStorage.removeItem('simak_berita_acara_custom');
+      localStorage.removeItem('simak_active_classes');
+      localStorage.removeItem('simak_all_registered_classes');
+      localStorage.setItem('simak_sarpras_items', JSON.stringify([]));
+      localStorage.setItem('simak_sarpras_rooms', JSON.stringify([]));
+      localStorage.setItem('simak_sarpras_loans', JSON.stringify([]));
+      localStorage.setItem('simak_sarpras_tickets', JSON.stringify([]));
+      
+      // Kesiswaan reset keys
+      localStorage.setItem('simak_kesiswaan_reset_cleared', 'true');
+      localStorage.setItem('simak_kesiswaan_violations', JSON.stringify([]));
+      localStorage.setItem('simak_kesiswaan_ekskul', JSON.stringify([]));
+      localStorage.setItem('simak_kesiswaan_achievements', JSON.stringify([]));
+      localStorage.setItem('simak_kesiswaan_scholarships', JSON.stringify([]));
+      localStorage.setItem('simak_kesiswaan_osis', JSON.stringify([]));
+      localStorage.setItem('simak_extra_records', JSON.stringify({}));
+      localStorage.setItem('simak_extra_members', JSON.stringify({}));
+      localStorage.setItem('simak_extra_list', JSON.stringify([]));
+      localStorage.setItem('simak_extra_instructors', JSON.stringify({}));
+
+      // Attendance (Presensi Siswa) reset keys
+      localStorage.setItem('simak_attendance_reset_cleared', 'true');
+      localStorage.setItem('simak_attendance_records', JSON.stringify([]));
+
+      // Keuangan (Finance) reset keys
+      localStorage.setItem('simak_keuangan_reset_cleared', 'true');
+      localStorage.setItem('simak_keuangan_spp', JSON.stringify([]));
+      localStorage.setItem('simak_keuangan_expenses', JSON.stringify([]));
+
+      setShowResetAllDataModal(false);
+      setAllDataResetSuccess(true);
+      window.dispatchEvent(new Event('simak_sarpras_reset'));
+      window.dispatchEvent(new Event('simak_kurikulum_reset'));
+      window.dispatchEvent(new Event('simak_kesiswaan_reset'));
+      window.dispatchEvent(new Event('simak_attendance_reset'));
+      window.dispatchEvent(new Event('simak_keuangan_reset'));
+      window.dispatchEvent(new CustomEvent('simak_schedules_updated', { detail: [] }));
+      window.dispatchEvent(new Event('storage'));
+    } catch (e) {
+      console.error('Failed to reset all data:', e);
+    }
+  };
+
+  const handleResetSarprasData = () => {
+    try {
+      localStorage.setItem('simak_sarpras_items', JSON.stringify([]));
+      localStorage.setItem('simak_sarpras_rooms', JSON.stringify([]));
+      localStorage.setItem('simak_sarpras_loans', JSON.stringify([]));
+      localStorage.setItem('simak_sarpras_tickets', JSON.stringify([]));
+      setShowResetSarprasModal(false);
+      setSarprasResetSuccess(true);
+      window.dispatchEvent(new Event('simak_sarpras_reset'));
+      window.dispatchEvent(new Event('storage'));
+    } catch (e) {
+      console.error('Failed to reset sarpras data:', e);
+    }
+  };
+
+  const handleExecuteDeleteSchoolStorage = async () => {
+    if (!selectedSchoolToDelete) return;
+    const schoolObj = (registeredSchools || []).find(s => 
+      s.name.toLowerCase().trim() === selectedSchoolToDelete.toLowerCase().trim() ||
+      s.id.toLowerCase() === selectedSchoolToDelete.toLowerCase()
+    ) || {
+      id: normalizeSchoolId(selectedSchoolToDelete),
+      name: selectedSchoolToDelete
+    };
+
+    setIsDeletingSchoolStorage(true);
+    setStorageFeedback(null);
+    try {
+      if (onDeleteSchoolStorage) {
+        await onDeleteSchoolStorage(schoolObj.id, schoolObj.name);
+      } else {
+        await deleteSchoolFromFirebase(schoolObj.id);
+      }
+
+      setStorageFeedback({
+        type: 'success',
+        message: `Penyimpanan sekolah "${schoolObj.name}" berhasil dihapus dan dibersihkan dari server cloud serta cache lokal browser!`
+      });
+      setShowDeleteSchoolStorageModal(false);
+    } catch (err: any) {
+      console.error('Error deleting school storage:', err);
+      setStorageFeedback({
+        type: 'error',
+        message: `Terjadi kendala saat menghapus penyimpanan: ${err?.message || 'Gagal menghapus'}`
+      });
+    } finally {
+      setIsDeletingSchoolStorage(false);
+    }
+  };
 
   // System Announcement (Running Text) Settings State
   const [announcementItems, setAnnouncementItems] = useState<InfoAnnouncementItem[]>(() => {
@@ -287,7 +455,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
 
   // Encryption code states
   const [currentEncryptionCode, setCurrentEncryptionCode] = useState<string>(() => {
-    return ((k: string) => null as any)('simak_encryption_code') || '292001';
+    try {
+      return localStorage.getItem('simak_encryption_code') || '292001';
+    } catch {
+      return '292001';
+    }
   });
   const [newEncryptionCode, setNewEncryptionCode] = useState<string>('');
   const [confirmEncryptionCode, setConfirmEncryptionCode] = useState<string>('');
@@ -356,10 +528,13 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [showEncSaveSuccess, setShowEncSaveSuccess] = useState<boolean>(false);
 
   useEffect(() => {
-    const unsub = subscribeToEncryptionCode((code) => {
-      if (code) {
-        setCurrentEncryptionCode(code);
-        ((k: string, v: string) => void 0)('simak_encryption_code', code);
+    const unsub = subscribeToEncryptionCode((remote) => {
+      if (remote) {
+        const code = typeof remote === 'string' ? remote : (remote.code || '');
+        if (code) {
+          setCurrentEncryptionCode(code);
+          try { localStorage.setItem('simak_encryption_code', code); } catch {}
+        }
       }
     });
     return () => unsub();
@@ -382,9 +557,22 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       return;
     }
 
+    const oldCode = currentEncryptionCode;
     setCurrentEncryptionCode(trimmedNew);
-    ((k: string, v: string) => void 0)('simak_encryption_code', trimmedNew);
-    saveEncryptionCodeToFirebase(trimmedNew);
+    try {
+      localStorage.setItem('simak_encryption_code', trimmedNew);
+      const prevCodesJson = localStorage.getItem('simak_encryption_code_history');
+      const prevCodes: string[] = prevCodesJson ? JSON.parse(prevCodesJson) : [];
+      if (oldCode && oldCode !== trimmedNew && !prevCodes.includes(oldCode)) {
+        prevCodes.push(oldCode);
+      }
+      if (!prevCodes.includes('292001') && trimmedNew !== '292001') {
+        prevCodes.push('292001');
+      }
+      localStorage.setItem('simak_encryption_code_history', JSON.stringify(prevCodes));
+    } catch {}
+
+    saveEncryptionCodeToFirebase(trimmedNew, oldCode);
 
     setShowEncSaveSuccess(true);
     setNewEncryptionCode('');
@@ -654,10 +842,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
     e.preventDefault();
     setSchoolEditFeedback(null);
 
-    if (!isPrincipalOfThisSchool) {
+    if (!canEditSchoolDetails) {
       setSchoolEditFeedback({
         type: 'error',
-        message: `Akses ditolak: Detail sekolah hanya dapat diedit oleh Kepala Sekolah dari ${schoolName || teacher?.schoolName || 'sekolah tersebut'}.`
+        message: `Akses ditolak: Detail sekolah hanya dapat diedit oleh Administrator dan Kepala Sekolah dari ${schoolName || teacher?.schoolName || 'sekolah tersebut'}.`
       });
       return;
     }
@@ -703,16 +891,16 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       name: teacherName,
       title: teacherTitle,
       nip: nip,
-      // Lindungi detail sekolah: jika bukan Kepala Sekolah sekolah ini, pertahankan data sekolah yang sudah ada
-      npsn: isPrincipalOfThisSchool ? npsn : (teacher?.npsn || npsn),
+      // Lindungi detail sekolah: jika bukan Administrator / Kepala Sekolah, pertahankan data sekolah yang sudah ada
+      npsn: canEditSchoolDetails ? npsn : (teacher?.npsn || npsn),
       subjectRole: subject,
-      schoolName: isPrincipalOfThisSchool ? schoolName : (teacher?.schoolName || schoolName),
+      schoolName: canEditSchoolDetails ? schoolName : (teacher?.schoolName || schoolName),
       academicYear: academicYear,
       semester: semester,
       kkm: defaultKkm,
-      principalName: isPrincipalOfThisSchool ? principalName : (teacher?.principalName || principalName),
-      principalNip: isPrincipalOfThisSchool ? principalNip : (teacher?.principalNip || principalNip),
-      city: isPrincipalOfThisSchool ? city : (teacher?.city || city),
+      principalName: canEditSchoolDetails ? principalName : (teacher?.principalName || principalName),
+      principalNip: canEditSchoolDetails ? principalNip : (teacher?.principalNip || principalNip),
+      city: canEditSchoolDetails ? city : (teacher?.city || city),
       avatarUrl: ''
     });
     if (res !== false) {
@@ -807,7 +995,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
           </div>
         </div>
 
-        {onOpenSchoolSelector && !isKepalaSekolah && !isGuruRole && (
+        {onOpenSchoolSelector && !isKepalaSekolah && !isGuruRole && !isSarprasRole && !isKurikulumRole && (
           <button
             type="button"
             onClick={onOpenSchoolSelector}
@@ -901,8 +1089,20 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <span className="block font-bold">Tahun Ajaran & Kelas</span>
           </button>
 
-          {/* Tombol Kunci Data (Diatas Menu Pengumuman Sistem - Khusus Administrator, disembunyikan untuk Kepala Sekolah) */}
-          {isAdministratorUser && !isKepalaSekolah && (
+          {/* Tombol Reset Semua Data (Dibawah Menu Tahun Ajaran dan Kelas) */}
+          <button
+            type="button"
+            onClick={() => setShowResetAllDataModal(true)}
+            className="w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 mt-2"
+          >
+            <div className="p-1.5 rounded-none bg-rose-100 text-rose-700">
+              <Trash2 className="w-4 h-4" />
+            </div>
+            <span className="block font-bold">Reset Semua Data</span>
+          </button>
+
+          {/* Tombol Kunci Data */}
+          {isAdministratorUser && !isKepalaSekolah && !isGuruRole && !isSarprasRole && !isKurikulumRole && (
             <button
               onClick={() => setActiveSubTab('dataLock')}
               className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
@@ -918,8 +1118,28 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </button>
           )}
 
-          {/* Menu Pengumuman Sistem - Di Bawah Menu Kunci Data (Khusus Administrator, disembunyikan untuk Kepala Sekolah) */}
-          {isAdministratorUser && !isKepalaSekolah && (
+          {/* Menu Penyimpanan Sekolah */}
+          {isAdministratorUser && !isKepalaSekolah && !isGuruRole && !isSarprasRole && !isKurikulumRole && (
+            <button
+              onClick={() => {
+                setActiveSubTab('storage');
+                setStorageFeedback(null);
+              }}
+              className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
+                activeSubTab === 'storage' 
+                  ? 'bg-[#164e63] text-white shadow-sm border-l-4 border-white' 
+                  : 'bg-white hover:bg-slate-100 text-slate-700 border border-slate-200'
+              }`}
+            >
+              <div className={`p-1.5 rounded-none transition-colors duration-200 ${activeSubTab === 'storage' ? 'bg-white/20 text-white' : 'bg-cyan-100 text-[#164e63]'}`}>
+                <Database className="w-4 h-4" />
+              </div>
+              <span className="block font-bold">Penyimpanan</span>
+            </button>
+          )}
+
+          {/* Menu Pengumuman Sistem */}
+          {isAdministratorUser && !isKepalaSekolah && !isGuruRole && !isSarprasRole && !isKurikulumRole && (
             <button
               onClick={() => setActiveSubTab('systemAnnouncement')}
               className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
@@ -935,7 +1155,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </button>
           )}
 
-          {!isKepalaSekolah && (
+          {!isKepalaSekolah && !isGuruRole && !isSarprasRole && !isKurikulumRole && (
             <button
               onClick={() => setActiveSubTab('system')}
               className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
@@ -951,8 +1171,8 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             </button>
           )}
 
-          {/* Menu Background Latar Belakang Login - Di Bawah Menu Keamanan & Data */}
-          {isAdministratorUser && !isKepalaSekolah && (
+          {/* Menu Background Latar Belakang Login */}
+          {isAdministratorUser && !isKepalaSekolah && !isGuruRole && !isSarprasRole && !isKurikulumRole && (
             <button
               onClick={() => setActiveSubTab('loginBackground')}
               className={`w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer ${
@@ -1198,7 +1418,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
 
                 {/* Banner Status Otoritas Akses Edit */}
-                {!isPrincipalOfThisSchool && !isKepalaSekolah && (
+                {!canEditSchoolDetails && (
                   <div className="p-3.5 bg-amber-50 border border-amber-300 text-amber-900 rounded-none text-xs flex items-start gap-3 shadow-xs">
                     <div className="p-1.5 bg-amber-200/80 rounded-none text-amber-900 shrink-0 mt-0.5">
                       <Lock className="w-4 h-4" />
@@ -1207,44 +1427,32 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-bold text-amber-950">Mode Hanya-Lihat: Detail Sekolah Terkunci</span>
                         <span className="text-[10px] bg-amber-200 text-amber-900 font-bold px-2 py-0.5 uppercase tracking-wider">
-                          Khusus Kepala Sekolah
+                          Khusus Administrator & Kepala Sekolah
                         </span>
                       </div>
                       <p className="text-[11px] text-amber-800 leading-relaxed">
-                        Data identitas satuan pendidikan (Nama Sekolah, NPSN, Kota Pengesahan, Nama & NIP Kepala Sekolah) hanya dapat diedit oleh <strong>Kepala Sekolah</strong> dari <strong>{schoolName || teacher?.schoolName || 'sekolah ini'}</strong>. Akun Anda saat ini memiliki hak akses <strong>{currentUser?.role || 'Guru'}</strong> dan hanya diperbolehkan membaca data ini.
+                        Data identitas satuan pendidikan (Nama Sekolah, NPSN, Kota Pengesahan, Nama & NIP Kepala Sekolah) hanya dapat diedit oleh <strong>Administrator SIMAK</strong> dan <strong>Kepala Sekolah</strong> dari <strong>{schoolName || teacher?.schoolName || 'sekolah ini'}</strong>. Akun Anda saat ini memiliki hak akses <strong>{currentUser?.role || 'Guru'}</strong> dan hanya diperbolehkan membaca data ini.
                       </p>
                     </div>
                   </div>
                 )}
 
-                {!isPrincipalOfThisSchool && isKepalaSekolah && (
-                  <div className="p-3.5 bg-rose-50 border border-rose-300 text-rose-900 rounded-none text-xs flex items-start gap-3 shadow-xs">
-                    <div className="p-1.5 bg-rose-200/80 rounded-none text-rose-900 shrink-0 mt-0.5">
-                      <Lock className="w-4 h-4" />
-                    </div>
-                    <div className="space-y-1">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="font-bold text-rose-950">Akses Dibatasi: Bukan Kepala Sekolah Sekolah Ini</span>
-                        <span className="text-[10px] bg-rose-200 text-rose-900 font-bold px-2 py-0.5 uppercase tracking-wider">
-                          Akses Ditolak
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-rose-800 leading-relaxed">
-                        Anda tercatat sebagai Kepala Sekolah untuk <strong>{currentUser?.schoolName}</strong>. Detail satuan pendidikan <strong>{schoolName || teacher?.schoolName}</strong> hanya dapat diedit oleh Kepala Sekolah dari sekolah tersebut.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {isPrincipalOfThisSchool && (
+                {canEditSchoolDetails && (
                   <div className="p-3.5 bg-emerald-50 border border-emerald-300 text-emerald-900 rounded-none text-xs flex items-center justify-between shadow-xs">
                     <div className="flex items-center gap-3">
                       <div className="p-1.5 bg-emerald-200/80 rounded-none text-emerald-800 shrink-0">
                         <ShieldCheck className="w-4 h-4" />
                       </div>
                       <div>
-                        <p className="font-bold text-emerald-950">Otorisasi Terverifikasi: Kepala Sekolah Satuan Pendidikan Ini</p>
-                        <p className="text-[11px] text-emerald-700">Anda adalah Kepala Sekolah resmi dari {schoolName || teacher?.schoolName}. Anda memiliki izin penuh untuk mengedit detail sekolah ini.</p>
+                        <p className="font-bold text-emerald-950">
+                          Otorisasi Terverifikasi: {isActualAdmin ? 'Administrator SIMAK' : 'Kepala Sekolah Satuan Pendidikan Ini'}
+                        </p>
+                        <p className="text-[11px] text-emerald-700">
+                          {isActualAdmin 
+                            ? `Anda masuk sebagai Administrator SIMAK dengan wewenang penuh untuk mengelola dan memperbarui detail ${schoolName || teacher?.schoolName}.`
+                            : `Anda adalah Kepala Sekolah resmi dari ${schoolName || teacher?.schoolName}. Anda memiliki izin penuh untuk mengedit detail sekolah ini.`
+                          }
+                        </p>
                       </div>
                     </div>
                     <span className="px-2.5 py-1 bg-emerald-700 text-white text-[10px] font-bold uppercase tracking-wider shrink-0">
@@ -1273,21 +1481,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-slate-600 font-semibold">Nama Satuan Pendidikan (Sekolah)</label>
-                      {!isPrincipalOfThisSchool && (
+                      {!canEditSchoolDetails && (
                         <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 flex items-center gap-1">
                           <Lock className="w-2.5 h-2.5 text-amber-600" />
-                          Hanya Kepala Sekolah
+                          Hanya Administrator & KS
                         </span>
                       )}
                     </div>
                     <input 
                       type="text" 
                       value={schoolName}
-                      disabled={!isPrincipalOfThisSchool}
-                      readOnly={!isPrincipalOfThisSchool}
+                      disabled={!canEditSchoolDetails}
+                      readOnly={!canEditSchoolDetails}
                       onChange={(e) => setSchoolName(e.target.value)}
                       className={`w-full px-3 py-2 border rounded-none font-medium ${
-                        isPrincipalOfThisSchool 
+                        canEditSchoolDetails 
                           ? 'bg-slate-50 border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-800' 
                           : 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed select-none'
                       }`}
@@ -1298,21 +1506,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-slate-600 font-semibold">NPSN (Nomor Pokok Sekolah Nasional)</label>
-                      {!isPrincipalOfThisSchool && (
+                      {!canEditSchoolDetails && (
                         <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 flex items-center gap-1">
                           <Lock className="w-2.5 h-2.5 text-amber-600" />
-                          Hanya Kepala Sekolah
+                          Hanya Administrator & KS
                         </span>
                       )}
                     </div>
                     <input 
                       type="text" 
                       value={npsn}
-                      disabled={!isPrincipalOfThisSchool}
-                      readOnly={!isPrincipalOfThisSchool}
+                      disabled={!canEditSchoolDetails}
+                      readOnly={!canEditSchoolDetails}
                       onChange={(e) => setNpsn(e.target.value)}
                       className={`w-full px-3 py-2 border rounded-none font-mono font-bold ${
-                        isPrincipalOfThisSchool 
+                        canEditSchoolDetails 
                           ? 'bg-slate-50 border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-[#164e63]' 
                           : 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed select-none'
                       }`}
@@ -1324,21 +1532,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <div>
                     <div className="flex items-center justify-between mb-1">
                       <label className="block text-slate-600 font-semibold">Kota / Kabupaten (Lokasi Pengesahan di Atas TTD)</label>
-                      {!isPrincipalOfThisSchool && (
+                      {!canEditSchoolDetails && (
                         <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 flex items-center gap-1">
                           <Lock className="w-2.5 h-2.5 text-amber-600" />
-                          Hanya Kepala Sekolah
+                          Hanya Administrator & KS
                         </span>
                       )}
                     </div>
                     <input 
                       type="text" 
                       value={city}
-                      disabled={!isPrincipalOfThisSchool}
-                      readOnly={!isPrincipalOfThisSchool}
+                      disabled={!canEditSchoolDetails}
+                      readOnly={!canEditSchoolDetails}
                       onChange={(e) => setCity(e.target.value)}
                       className={`w-full px-3 py-2 border rounded-none font-medium ${
-                        isPrincipalOfThisSchool 
+                        canEditSchoolDetails 
                           ? 'bg-slate-50 border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-800' 
                           : 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed select-none'
                       }`}
@@ -1350,10 +1558,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <div className="pt-2 border-t border-slate-200 space-y-3">
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-bold text-slate-700 block">Identitas Kepala Sekolah (Pengesahan)</span>
-                      {!isPrincipalOfThisSchool && (
+                      {!canEditSchoolDetails && (
                         <span className="text-[10px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 flex items-center gap-1">
                           <Lock className="w-2.5 h-2.5 text-amber-600" />
-                          Hanya Kepala Sekolah
+                          Hanya Administrator & KS
                         </span>
                       )}
                     </div>
@@ -1362,11 +1570,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       <input 
                         type="text" 
                         value={principalName}
-                        disabled={!isPrincipalOfThisSchool}
-                        readOnly={!isPrincipalOfThisSchool}
+                        disabled={!canEditSchoolDetails}
+                        readOnly={!canEditSchoolDetails}
                         onChange={(e) => setPrincipalName(e.target.value)}
                         className={`w-full px-3 py-2 border rounded-none font-medium ${
-                          isPrincipalOfThisSchool 
+                          canEditSchoolDetails 
                             ? 'bg-slate-50 border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-800' 
                             : 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed select-none'
                         }`}
@@ -1379,11 +1587,11 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       <input 
                         type="text" 
                         value={principalNip}
-                        disabled={!isPrincipalOfThisSchool}
-                        readOnly={!isPrincipalOfThisSchool}
+                        disabled={!canEditSchoolDetails}
+                        readOnly={!canEditSchoolDetails}
                         onChange={(e) => setPrincipalNip(e.target.value)}
                         className={`w-full px-3 py-2 border rounded-none font-mono ${
-                          isPrincipalOfThisSchool 
+                          canEditSchoolDetails 
                             ? 'bg-slate-50 border-slate-200 focus:outline-none focus:ring-2 focus:ring-cyan-500 text-slate-800' 
                             : 'bg-slate-100 border-slate-200 text-slate-500 cursor-not-allowed select-none'
                         }`}
@@ -1394,7 +1602,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
 
                 <div className="pt-2">
-                  {isPrincipalOfThisSchool ? (
+                  {canEditSchoolDetails ? (
                     <button
                       type="submit"
                       className="px-4 py-2 bg-[#164e63] hover:bg-[#003d6d] text-white font-semibold rounded-none text-xs shadow-sm flex items-center gap-2 cursor-pointer transition-colors"
@@ -1407,10 +1615,10 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                       type="button"
                       disabled
                       className="px-4 py-2 bg-slate-100 border border-slate-300 text-slate-400 font-semibold rounded-none text-xs flex items-center gap-2 cursor-not-allowed select-none"
-                      title={`Hanya Kepala Sekolah ${schoolName || teacher?.schoolName} yang dapat mengubah data`}
+                      title={`Hanya Administrator dan Kepala Sekolah ${schoolName || teacher?.schoolName} yang dapat mengubah data`}
                     >
                       <Lock className="w-3.5 h-3.5 text-slate-400" />
-                      Detail Sekolah Terkunci (Khusus Kepala Sekolah {schoolName || teacher?.schoolName})
+                      Detail Sekolah Terkunci (Khusus Administrator & Kepala Sekolah {schoolName || teacher?.schoolName})
                     </button>
                   )}
                 </div>
@@ -1591,6 +1799,29 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                         })}
                     </tbody>
                   </table>
+                </div>
+              </div>
+
+              {/* Section Reset Semua Data (Dibawah Tahun Ajaran dan Kelas) */}
+              <div className="p-4 bg-rose-50 border border-rose-200 rounded-none shadow-xs space-y-3 mt-4">
+                <div className="flex items-center gap-2 pb-2 border-b border-rose-200 text-rose-800">
+                  <Trash2 className="w-4 h-4 text-rose-600" />
+                  <h3 className="text-xs font-bold text-rose-900">Reset Semua Data</h3>
+                </div>
+
+                <p className="text-[11px] text-rose-800 leading-relaxed">
+                  Tindakan ini akan menghapus dan mengembalikan seluruh data akademik, rombel/kelas, serta jadwal mengajar dan data terkait ke kondisi awal (default).
+                </p>
+
+                <div className="pt-1 flex items-center justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setShowResetAllDataModal(true)}
+                    className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-none flex items-center gap-2 cursor-pointer shadow-xs transition-all text-xs"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Reset Semua Data</span>
+                  </button>
                 </div>
               </div>
 
@@ -1855,6 +2086,193 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     Perubahan terakhir: {activeLockConfig.lockedAt} oleh {activeLockConfig.lockedBy || 'Administrator'}
                   </div>
                 )}
+              </div>
+            </div>
+          )}
+
+          {/* Panel Menu Penyimpanan Sekolah (Khusus Administrator - Di Atas Menu Pengumuman Sistem) */}
+          {!isKepalaSekolah && activeSubTab === 'storage' && isAdministratorUser && (
+            <div className="space-y-6 max-w-2xl animate-fadeIn">
+              {/* Header Info Banner */}
+              <div className="flex items-center gap-3 p-4 bg-gradient-to-r from-[#002f54] via-[#164e63] to-[#003d6d] text-white border border-cyan-800/40 rounded-none shadow-md">
+                <div className="p-2.5 bg-white/20 text-white rounded-none shrink-0 font-bold border border-white/20">
+                  <Database className="w-6 h-6" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h2 className="text-sm font-bold text-white uppercase tracking-tight">Penyimpanan Partisi Sekolah</h2>
+                    <span className="bg-cyan-500/30 text-cyan-100 text-[10px] font-bold px-2 py-0.5 border border-cyan-300/30">
+                      Multi-Tenant Cloud
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-cyan-100 mt-1 leading-relaxed">
+                    Kelola partisi data penyimpanan sekolah, pemantauan partisi multi-tenant, dan opsi penghapusan penyimpanan satuan pendidikan.
+                  </p>
+                </div>
+              </div>
+
+              {/* Feedback Alert */}
+              {storageFeedback && (
+                <div className={`p-3.5 text-xs font-semibold flex items-center gap-3 border shadow-xs animate-fadeIn ${
+                  storageFeedback.type === 'success' 
+                    ? 'bg-emerald-50 border-emerald-300 text-emerald-900' 
+                    : 'bg-rose-50 border-rose-300 text-rose-900'
+                }`}>
+                  {storageFeedback.type === 'success' ? (
+                    <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+                  ) : (
+                    <AlertCircle className="w-5 h-5 text-rose-600 shrink-0" />
+                  )}
+                  <span>{storageFeedback.message}</span>
+                </div>
+              )}
+
+              {/* Status Penyimpanan Satuan Pendidikan Aktif */}
+              <div className="bg-white border border-slate-200 p-4 sm:p-5 shadow-xs space-y-3">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <School className="w-4 h-4 text-[#164e63]" />
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider">
+                      Partisi Penyimpanan Aktif
+                    </h3>
+                  </div>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5">
+                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                    Tersambung
+                  </span>
+                </div>
+
+                <div className="p-3.5 bg-cyan-50/70 border border-cyan-200/80 rounded-none space-y-2">
+                  <div className="flex items-start justify-between gap-3 flex-wrap">
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-500 uppercase tracking-wider block">Satuan Pendidikan:</span>
+                      <h4 className="text-sm font-extrabold text-[#164e63]">
+                        {activeSchoolName || teacher?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak'}
+                      </h4>
+                    </div>
+                    {onOpenSchoolSelector && (
+                      <button
+                        type="button"
+                        onClick={onOpenSchoolSelector}
+                        className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                        <span>Ganti Partisi Sekolah</span>
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-cyan-200/60 text-xs">
+                    <div>
+                      <span className="text-slate-500 font-semibold text-[11px]">NPSN: </span>
+                      <span className="font-mono font-bold text-slate-800">{teacher?.npsn || '20500000'}</span>
+                    </div>
+                    <div>
+                      <span className="text-slate-500 font-semibold text-[11px]">Path Database: </span>
+                      <span className="font-mono text-cyan-800 text-[11px]">
+                        /schools/{normalizeSchoolId(activeSchoolName || teacher?.schoolName || '')}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Daftar Satuan Pendidikan Terdaftar */}
+              <div className="bg-white border border-slate-200 p-4 sm:p-5 shadow-xs space-y-3">
+                <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+                  <div className="flex items-center gap-2">
+                    <Database className="w-4 h-4 text-[#164e63]" />
+                    <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider">
+                      Daftar Partisi Sekolah ({registeredSchools?.length || 1} Partisi)
+                    </h3>
+                  </div>
+                  {onOpenSchoolSelector && (
+                    <button
+                      type="button"
+                      onClick={onOpenSchoolSelector}
+                      className="text-xs font-bold text-[#164e63] hover:underline cursor-pointer"
+                    >
+                      + Tambah Sekolah Baru
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  {(registeredSchools || []).map((s) => {
+                    const isActive = s.name.toLowerCase().trim() === (activeSchoolName || teacher?.schoolName || '').toLowerCase().trim();
+                    return (
+                      <div
+                        key={s.id}
+                        className={`p-3 border flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2.5 transition-all ${
+                          isActive 
+                            ? 'bg-cyan-50/70 border-[#164e63] shadow-xs ring-1 ring-[#164e63]' 
+                            : 'bg-slate-50 border-slate-200 hover:border-slate-300'
+                        }`}
+                      >
+                        <div className="min-w-0">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-bold text-slate-800">{s.name}</span>
+                            {isActive && (
+                              <span className="bg-[#164e63] text-white text-[9px] font-bold px-1.5 py-0.2">
+                                AKTIF
+                              </span>
+                            )}
+                          </div>
+                          <p className="text-[11px] text-slate-500 mt-0.5">
+                            NPSN: <span className="font-semibold text-slate-700">{s.npsn || '20500000'}</span> • Path: <span className="font-mono text-cyan-800">/schools/{s.id}</span>
+                          </p>
+                        </div>
+
+                        <div className="flex items-center gap-2 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSelectedSchoolToDelete(s.name);
+                              setShowDeleteSchoolStorageModal(true);
+                            }}
+                            className="px-2.5 py-1 text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 text-xs font-bold flex items-center gap-1 cursor-pointer transition-colors"
+                            title={`Hapus partisi penyimpanan ${s.name}`}
+                          >
+                            <Trash2 className="w-3 h-3 text-rose-600" />
+                            <span>Hapus Partisi</span>
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* ZONA BAHAYA: HAPUS PENYIMPANAN SEKOLAH */}
+              <div className="p-4 sm:p-5 bg-rose-50/70 border border-rose-300 rounded-none shadow-xs space-y-3">
+                <div className="flex items-center gap-2 text-rose-900 pb-2 border-b border-rose-200">
+                  <Trash2 className="w-4 h-4 text-rose-600" />
+                  <h3 className="text-xs sm:text-sm font-bold uppercase tracking-wider">
+                    Pembersihan Partisi & Hapus Penyimpanan Sekolah
+                  </h3>
+                </div>
+
+                <p className="text-xs text-rose-800 leading-relaxed">
+                  Menghapus partisi penyimpanan sekolah akan membersihkan seluruh dokumen sekolah di cloud database Firebase (/schools/{'{id}'}) serta menghapus seluruh data cache lokal peramban untuk satuan pendidikan tersebut.
+                </p>
+
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pt-2">
+                  <div className="text-[11px] text-rose-700 font-medium">
+                    Tindakan ini memerlukan konfirmasi dan hanya dapat dijalankan oleh Administrator SIMAK.
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedSchoolToDelete(activeSchoolName || teacher?.schoolName || registeredSchools?.[0]?.name || '');
+                      setShowDeleteSchoolStorageModal(true);
+                    }}
+                    className="px-4 py-2 bg-rose-700 hover:bg-rose-800 active:scale-95 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-xs transition-all cursor-pointer shrink-0"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Hapus Penyimpanan Sekolah</span>
+                  </button>
+                </div>
               </div>
             </div>
           )}
@@ -2154,90 +2572,117 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
               </div>
 
-              {/* Form Ubah Kode Enkripsi Keamanan Sistem (Administrator & Kurikulum) */}
-              <div className="p-4 bg-white border border-slate-200 rounded-none shadow-xs space-y-3 mt-4">
-                <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
-                  <Key className="w-4 h-4 text-[#164e63]" />
-                  <h3 className="text-xs font-bold text-slate-800">Ubah Kode Enkripsi Keamanan Sistem</h3>
-                </div>
-
-                <p className="text-[11px] text-slate-600">
-                  Kode enkripsi digunakan untuk otorisasi kunci data, proteksi kurikulum, dan verifikasi login akun Administrator / Master Data.
-                </p>
-
-                {encErrorMsg && (
-                  <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2 animate-fadeIn">
-                    <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
-                    <span>{encErrorMsg}</span>
+              {/* Form Ubah Kode Enkripsi Keamanan Sistem (Disembunyikan di Halaman Sarpras, Kesiswaan, dan Keuangan) */}
+              {!isSarprasRole && !isKesiswaanRole && !isKeuanganRole && (
+                <div className="p-4 bg-white border border-slate-200 rounded-none shadow-xs space-y-3 mt-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-slate-100">
+                    <Key className="w-4 h-4 text-[#164e63]" />
+                    <h3 className="text-xs font-bold text-slate-800">Ubah Kode Enkripsi Keamanan Sistem</h3>
                   </div>
-                )}
 
-                <form onSubmit={handleSaveEncryptionCode} className="space-y-3 text-xs">
-                  <div>
-                    <label className="block text-slate-700 font-semibold mb-1">Kode Enkripsi Aktif Saat Ini</label>
-                    <div className="relative">
-                      <input
-                        type={showCurrentCode ? 'text' : 'password'}
-                        readOnly
-                        value={currentEncryptionCode}
-                        className="w-full px-3 py-2 bg-slate-100 border border-slate-200 text-slate-700 rounded-none font-mono font-bold"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => setShowCurrentCode(!showCurrentCode)}
-                        className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
-                        title={showCurrentCode ? "Sembunyikan Kode" : "Tampilkan Kode"}
-                      >
-                        {showCurrentCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
+                  <p className="text-[11px] text-slate-600">
+                    Kode enkripsi digunakan untuk otorisasi kunci data, proteksi kurikulum, dan verifikasi login akun Administrator / Master Data.
+                  </p>
+
+                  {encErrorMsg && (
+                    <div className="p-2.5 bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-center gap-2 animate-fadeIn">
+                      <AlertCircle className="w-4 h-4 text-rose-600 shrink-0" />
+                      <span>{encErrorMsg}</span>
                     </div>
-                  </div>
+                  )}
 
-                  <div>
-                    <label className="block text-slate-700 font-semibold mb-1">Kode Enkripsi Baru *</label>
-                    <div className="relative">
+                  <form onSubmit={handleSaveEncryptionCode} className="space-y-3 text-xs">
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">Kode Enkripsi Aktif Saat Ini</label>
+                      <div className="relative">
+                        <input
+                          type={showCurrentCode ? 'text' : 'password'}
+                          readOnly
+                          value={currentEncryptionCode}
+                          className="w-full px-3 py-2 bg-slate-100 border border-slate-200 text-slate-700 rounded-none font-mono font-bold"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowCurrentCode(!showCurrentCode)}
+                          className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                          title={showCurrentCode ? "Sembunyikan Kode" : "Tampilkan Kode"}
+                        >
+                          {showCurrentCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">Kode Enkripsi Baru *</label>
+                      <div className="relative">
+                        <input
+                          type={showNewCode ? 'text' : 'password'}
+                          required
+                          value={newEncryptionCode}
+                          onChange={(e) => setNewEncryptionCode(e.target.value)}
+                          placeholder="Masukkan kode enkripsi baru (min. 4 karakter)"
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono font-medium"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowNewCode(!showNewCode)}
+                          className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                          title={showNewCode ? "Sembunyikan Kode" : "Tampilkan Kode"}
+                        >
+                          {showNewCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-slate-700 font-semibold mb-1">Konfirmasi Kode Enkripsi Baru *</label>
                       <input
                         type={showNewCode ? 'text' : 'password'}
                         required
-                        value={newEncryptionCode}
-                        onChange={(e) => setNewEncryptionCode(e.target.value)}
-                        placeholder="Masukkan kode enkripsi baru (min. 4 karakter)"
+                        value={confirmEncryptionCode}
+                        onChange={(e) => setConfirmEncryptionCode(e.target.value)}
+                        placeholder="Ketik ulang kode enkripsi baru"
                         className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono font-medium"
                       />
+                    </div>
+
+                    <div className="pt-1 flex items-center justify-end gap-2">
                       <button
-                        type="button"
-                        onClick={() => setShowNewCode(!showNewCode)}
-                        className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
-                        title={showNewCode ? "Sembunyikan Kode" : "Tampilkan Kode"}
+                        type="submit"
+                        className="px-4 py-2 bg-[#164e63] hover:bg-[#003865] text-white font-bold rounded-none flex items-center gap-2 cursor-pointer shadow-xs transition-all text-xs"
                       >
-                        {showNewCode ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        <Save className="w-3.5 h-3.5" />
+                        <span>Simpan Kode Enkripsi</span>
                       </button>
                     </div>
+                  </form>
+                </div>
+              )}
+
+              {/* Section Reset Semua Data Sarpras (Tampil Khusus Halaman / Pengelola Sarpras) */}
+              {isSarprasRole && (
+                <div className="p-4 bg-rose-50 border border-rose-200 rounded-none shadow-xs space-y-3 mt-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-rose-200 text-rose-800">
+                    <Trash2 className="w-4 h-4 text-rose-600" />
+                    <h3 className="text-xs font-bold text-rose-900">Reset Semua Data Sarpras</h3>
                   </div>
 
-                  <div>
-                    <label className="block text-slate-700 font-semibold mb-1">Konfirmasi Kode Enkripsi Baru *</label>
-                    <input
-                      type={showNewCode ? 'text' : 'password'}
-                      required
-                      value={confirmEncryptionCode}
-                      onChange={(e) => setConfirmEncryptionCode(e.target.value)}
-                      placeholder="Ketik ulang kode enkripsi baru"
-                      className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-none focus:outline-none focus:ring-2 focus:ring-cyan-500 font-mono font-medium"
-                    />
-                  </div>
+                  <p className="text-[11px] text-rose-800 leading-relaxed">
+                    Tindakan ini akan menghapus seluruh data inventaris barang, fasilitas gedung/ruangan, riwayat peminjaman barang KBM, dan tiket pemeliharaan sarpras dari penyimpanan lokal dan mengembalikannya ke kondisi awal (default).
+                  </p>
 
-                  <div className="pt-1 flex items-center justify-end gap-2">
+                  <div className="pt-1 flex items-center justify-end">
                     <button
-                      type="submit"
-                      className="px-4 py-2 bg-[#164e63] hover:bg-[#003865] text-white font-bold rounded-none flex items-center gap-2 cursor-pointer shadow-xs transition-all text-xs"
+                      type="button"
+                      onClick={() => setShowResetSarprasModal(true)}
+                      className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-none flex items-center gap-2 cursor-pointer shadow-xs transition-all text-xs"
                     >
-                      <Save className="w-3.5 h-3.5" />
-                      <span>Simpan Kode Enkripsi</span>
+                      <Trash2 className="w-3.5 h-3.5" />
+                      <span>Reset Semua Data Sarpras</span>
                     </button>
                   </div>
-                </form>
-              </div>
+                </div>
+              )}
             </div>
           )}
 
@@ -2512,6 +2957,217 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Hapus Penyimpanan Sekolah (Multi-Tenant Partition Cleanup) */}
+      {showDeleteSchoolStorageModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white border border-slate-200 shadow-2xl rounded-none w-full max-w-lg overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="bg-rose-700 text-white px-5 py-3.5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 bg-white/20 flex items-center justify-center rounded-none">
+                  <Trash2 className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black tracking-tight text-white uppercase">
+                    Hapus Penyimpanan Sekolah
+                  </h3>
+                  <p className="text-[11px] text-rose-100">
+                    Pembersihan Partisi Data Multi-Tenant Satuan Pendidikan
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isDeletingSchoolStorage) {
+                    setShowDeleteSchoolStorageModal(false);
+                  }
+                }}
+                className="text-white/80 hover:text-white p-1 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Pilih Partisi Satuan Pendidikan yang Ingin Dihapus *
+                </label>
+                <select
+                  value={selectedSchoolToDelete}
+                  onChange={(e) => setSelectedSchoolToDelete(e.target.value)}
+                  disabled={isDeletingSchoolStorage}
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer"
+                >
+                  {(registeredSchools || []).map((s) => (
+                    <option key={s.id} value={s.name}>
+                      {s.name} {s.npsn ? `(NPSN: ${s.npsn})` : ''} {s.name === (activeSchoolName || teacher?.schoolName) ? '— [Sedang Aktif]' : ''}
+                    </option>
+                  ))}
+                  {(!registeredSchools || registeredSchools.length === 0) && (
+                    <option value={activeSchoolName || teacher?.schoolName || 'Sekolah Utama'}>
+                      {activeSchoolName || teacher?.schoolName || 'Sekolah Utama'}
+                    </option>
+                  )}
+                </select>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Penyimpanan untuk sekolah yang dipilih akan dibersihkan dari server dan peramban.
+                </p>
+              </div>
+
+              {/* Data Summary Card */}
+              <div className="p-3 bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 font-semibold">Satuan Pendidikan:</span>
+                  <span className="font-bold text-slate-800 truncate max-w-[240px]">{selectedSchoolToDelete || 'Belum dipilih'}</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 font-semibold">Path Database:</span>
+                  <span className="font-mono text-cyan-800 text-[10px]">/schools/{normalizeSchoolId(selectedSchoolToDelete || '')}</span>
+                </div>
+              </div>
+
+              {/* Warning Notice */}
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-1 text-[11px]">
+                  <p className="font-bold">Peringatan Penghapusan Data Permanen:</p>
+                  <p className="text-rose-800 leading-relaxed">
+                    Tindakan ini akan menghapus dokumen partisi penyimpanan sekolah di cloud dan membersihkan cache lokal untuk sekolah <strong>"{selectedSchoolToDelete}"</strong>. Pastikan Anda telah mengarsipkan data penting jika diperlukan.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowDeleteSchoolStorageModal(false)}
+                disabled={isDeletingSchoolStorage}
+                className="px-4 py-2 border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteDeleteSchoolStorage}
+                disabled={isDeletingSchoolStorage || !selectedSchoolToDelete}
+                className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+              >
+                {isDeletingSchoolStorage ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Menghapus Penyimpanan...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Hapus Penyimpanan Sekarang</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Animated Save Success Modal for Reset Sarpras */}
+      <SaveSuccessModal 
+        isOpen={sarprasResetSuccess} 
+        onClose={() => setSarprasResetSuccess(false)} 
+        title="Data Sarpras Berhasil Direset"
+        message="Seluruh data inventaris barang, ruang kelas, peminjaman, dan tiket pemeliharaan sarpras telah dikembalikan ke kondisi awal (default)!"
+      />
+
+      {/* Modal Konfirmasi Reset Data Sarpras */}
+      {showResetSarprasModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-none border border-slate-300 shadow-2xl max-w-md w-full p-6 space-y-4 animate-scaleUp">
+            <div className="flex items-center gap-3 text-rose-600 border-b border-slate-100 pb-3">
+              <div className="p-2 bg-rose-100 rounded-none">
+                <AlertCircle className="w-6 h-6 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Konfirmasi Reset Data Sarpras</h3>
+                <p className="text-[11px] text-slate-500">Tindakan menghapus seluruh data Sarpras</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              Apakah Anda yakin ingin mereset seluruh data <strong>Sarana & Prasarana</strong>? Seluruh data inventaris, gedung/ruangan, riwayat peminjaman, dan tiket pemeliharaan akan dikembalikan ke data default awal.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowResetSarprasModal(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-none text-xs cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleResetSarprasData}
+                className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-none text-xs flex items-center gap-2 cursor-pointer shadow-xs"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Ya, Reset Semua Data</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Animated Save Success Modal for Reset Semua Data */}
+      <SaveSuccessModal 
+        isOpen={allDataResetSuccess} 
+        onClose={() => setAllDataResetSuccess(false)} 
+        title="Semua Data Berhasil Direset"
+        message="Seluruh data akademik, rombel/kelas, serta jadwal mengajar dan sistem telah dikembalikan ke kondisi awal (default)!"
+      />
+
+      {/* Modal Konfirmasi Reset Semua Data */}
+      {showResetAllDataModal && (
+        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-none border border-slate-300 shadow-2xl max-w-md w-full p-6 space-y-4 animate-scaleUp">
+            <div className="flex items-center gap-3 text-rose-600 border-b border-slate-100 pb-3">
+              <div className="p-2 bg-rose-100 rounded-none">
+                <AlertCircle className="w-6 h-6 text-rose-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 text-sm">Konfirmasi Reset Semua Data</h3>
+                <p className="text-[11px] text-slate-500">Tindakan menghapus seluruh data sistem</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed bg-rose-50/50 p-3 rounded-none border border-rose-100">
+              Apakah Anda yakin ingin mereset <strong>semua data</strong>? Seluruh data jadwal, kelas, rombel, dan konfigurasi terkait akan dikembalikan ke data default awal.
+            </p>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setShowResetAllDataModal(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-none text-xs cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleResetAllData}
+                className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-none text-xs flex items-center gap-2 cursor-pointer shadow-xs"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Ya, Reset Semua Data</span>
+              </button>
+            </div>
           </div>
         </div>
       )}

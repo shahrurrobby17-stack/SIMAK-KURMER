@@ -59,7 +59,11 @@ import {
   QrCode,
   BookmarkCheck,
   SearchCode,
-  FolderLock
+  FolderLock,
+  Package,
+  ShieldAlert,
+  Award,
+  Zap
 } from 'lucide-react';
 import { UserAccount, TeacherProfile, TeachingScheduleItem, Student, StudentGrade, Subject, AttendanceRecord, TeachingLog, InfoAnnouncement, LoginBackgroundConfig, defaultLoginBackgroundConfig } from '../types';
 import { PRESET_THEMES } from './LoginBackgroundSettings';
@@ -674,11 +678,48 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successNotification, setSuccessNotification] = useState<string | null>(null);
 
-  // Sync encryption code on mount
+  // Encryption Code State & Listener
+  const [activeEncryptionCode, setActiveEncryptionCode] = useState<string>(() => {
+    try {
+      return localStorage.getItem('simak_encryption_code') || '292001';
+    } catch {
+      return '292001';
+    }
+  });
+
+  const [previousEncryptionCodes, setPreviousEncryptionCodes] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('simak_encryption_code_history');
+      if (saved) return JSON.parse(saved);
+    } catch {}
+    return ['292001'];
+  });
+
   useEffect(() => {
-    const unsubEnc = subscribeToEncryptionCode((code) => {
-      if (code) {
-        ((k: string, v: string) => void 0)('simak_encryption_code', code);
+    const unsubEnc = subscribeToEncryptionCode((remote) => {
+      if (remote) {
+        let code = '';
+        let prevCode: string | null = null;
+        if (typeof remote === 'string') {
+          code = remote;
+        } else if (typeof remote === 'object') {
+          code = remote.code || '';
+          prevCode = remote.previousCode || null;
+        }
+
+        if (code) {
+          setActiveEncryptionCode(code);
+          try { localStorage.setItem('simak_encryption_code', code); } catch {}
+        }
+
+        setPreviousEncryptionCodes(prev => {
+          const list = new Set(prev);
+          if (prevCode) list.add(prevCode);
+          if (code && code !== '292001') list.add('292001');
+          const arr = Array.from(list);
+          try { localStorage.setItem('simak_encryption_code_history', JSON.stringify(arr)); } catch {}
+          return arr;
+        });
       }
     });
 
@@ -951,7 +992,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
       return { targetTab: 'system-kurikulum', userRole: 'Tim Kurikulum / Pengelola KSP', systemName: 'Sistem Kurikulum Merdeka' };
     }
     if (norm.includes('kepala') || norm.includes('principal')) {
-      return { targetTab: 'dashboard', userRole: 'Kepala Sekolah', systemName: 'Sistem Manajemen Kepala Sekolah' };
+      return { targetTab: 'validasi', userRole: 'Kepala Sekolah', systemName: 'Sistem Manajemen Kepala Sekolah' };
     }
     if (norm.includes('tu') || norm.includes('tata usaha')) {
       return { targetTab: 'system-tu', userRole: 'Kepala Tata Usaha / Staf TU', systemName: 'Sistem Tata Usaha (TU)' };
@@ -969,7 +1010,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
       return { targetTab: 'system-kesiswaan', userRole: 'Wakasek Kesiswaan / Tim Kesiswaan', systemName: 'Sistem Kesiswaan' };
     }
     if (norm.includes('guru') || norm.includes('pendidik') || norm.includes('pengampu')) {
-      return { targetTab: 'dashboard', userRole: 'Guru Pengampu', systemName: 'Halaman Guru (Dashboard)' };
+      return { targetTab: 'students', userRole: 'Guru Pengampu', systemName: 'Halaman Guru & Data Siswa' };
     }
     if (norm.includes('admin') || norm.includes('master')) {
       return { targetTab: 'master-data', userRole: 'Super Administrator / Master Data', systemName: 'Panel Administrator / Master Data' };
@@ -977,7 +1018,45 @@ export const LoginView: React.FC<LoginViewProps> = ({
     if (norm.includes('siswa')) {
       return { targetTab: 'system-kesiswaan', userRole: 'Siswa / Murid', systemName: 'LMS Siswa' };
     }
-    return { targetTab: 'dashboard', userRole: 'Pengguna SIMAK', systemName: 'Dashboard SIMAK' };
+    return { targetTab: 'settings', userRole: 'Pengguna SIMAK', systemName: 'Pengaturan SIMAK' };
+  };
+
+  const checkRoleMatchesSsoSystem = (userRole: string, ssoSystemChoice: string): boolean => {
+    if (!userRole || !ssoSystemChoice) return true;
+    const roleNorm = userRole.toLowerCase().trim();
+    const choiceNorm = ssoSystemChoice.toLowerCase().trim();
+
+    if (choiceNorm.includes('administrator') || choiceNorm.includes('admin') || choiceNorm.includes('master')) {
+      return roleNorm.includes('admin') || roleNorm.includes('master') || roleNorm.includes('super');
+    }
+    if (choiceNorm.includes('kepala') || choiceNorm.includes('principal')) {
+      return roleNorm.includes('kepala') || roleNorm.includes('principal');
+    }
+    if (choiceNorm.includes('kurikulum')) {
+      return roleNorm.includes('kurikulum') || roleNorm.includes('ksp');
+    }
+    if (choiceNorm.includes('tu') || choiceNorm.includes('tata usaha')) {
+      return roleNorm.includes('tu') || roleNorm.includes('tata usaha') || roleNorm.includes('administrasi');
+    }
+    if (choiceNorm.includes('sarpras') || choiceNorm.includes('sarana')) {
+      return roleNorm.includes('sarpras') || roleNorm.includes('sarana');
+    }
+    if (choiceNorm.includes('keuangan') || choiceNorm.includes('bendahara')) {
+      return roleNorm.includes('keuangan') || roleNorm.includes('bendahara');
+    }
+    if (choiceNorm.includes('kesiswaan')) {
+      return roleNorm.includes('kesiswaan');
+    }
+    if (choiceNorm.includes('perpustakaan') || choiceNorm.includes('pustaka')) {
+      return roleNorm.includes('perpustakaan') || roleNorm.includes('pustaka');
+    }
+    if (choiceNorm.includes('guru') || choiceNorm.includes('pendidik')) {
+      return roleNorm.includes('guru') || roleNorm.includes('pendidik') || roleNorm.includes('pengampu') || roleNorm.includes('bk');
+    }
+    if (choiceNorm.includes('siswa') || choiceNorm.includes('murid')) {
+      return roleNorm.includes('siswa') || roleNorm.includes('murid');
+    }
+    return true;
   };
 
   const handleDirectMasterDataLogin = () => {
@@ -1080,6 +1159,168 @@ export const LoginView: React.FC<LoginViewProps> = ({
     }, 600);
   };
 
+  const handleQuickRoleLogin = (roleKey: 'ks' | 'kurikulum' | 'guru' | 'tu' | 'sarpras' | 'keuangan' | 'kesiswaan') => {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    let localRegUsers: UserAccount[] = [];
+    try {
+      if (typeof window !== 'undefined') {
+        const storedJson = localStorage.getItem('simak_registered_users');
+        if (storedJson) localRegUsers = JSON.parse(storedJson);
+      }
+    } catch (e) {}
+    const allRegistered = [...registeredUsers, ...localRegUsers];
+
+    let userToLogin: UserAccount;
+    let targetTab: string;
+    let profileId: string;
+    let successMsg: string;
+
+    switch (roleKey) {
+      case 'ks': {
+        const matched = allRegistered.find(u => u.role?.toLowerCase().includes('kepala'));
+        userToLogin = {
+          uid: matched?.uid || 'USER-KS-01',
+          email: matched?.email || 'kepalasekolah@simakmerdeka.ai.studio',
+          password: 'password123',
+          name: matched?.name || 'Drs. H. Mulyadi, M.Pd.',
+          schoolName: matched?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+          role: 'Kepala Sekolah',
+          nip: matched?.nip || '19680514 199303 1 004',
+          profileId: matched?.profileId || 'PROF-KS',
+          status: 'Aktif',
+          isMaintenance: false
+        };
+        targetTab = 'validasi';
+        profileId = userToLogin.profileId;
+        successMsg = `Masuk Cepat: Berhasil masuk sebagai Kepala Sekolah (${userToLogin.name})! Mengarahkan ke Sistem Manajemen Kepala Sekolah...`;
+        break;
+      }
+      case 'kurikulum': {
+        const matched = allRegistered.find(u => u.role?.toLowerCase().includes('kurikulum'));
+        userToLogin = {
+          uid: matched?.uid || 'USER-KURIKULUM-01',
+          email: matched?.email || 'kurikulum@simakmerdeka.ai.studio',
+          password: 'password123',
+          name: matched?.name || 'Dr. Hendra Gunawan, M.Pd.',
+          schoolName: matched?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+          role: 'Tim Kurikulum / Pengelola KSP',
+          nip: matched?.nip || '19750821 200003 1 002',
+          profileId: matched?.profileId || 'PROF-KURIKULUM',
+          status: 'Aktif',
+          isMaintenance: false
+        };
+        targetTab = 'system-kurikulum';
+        profileId = userToLogin.profileId;
+        successMsg = `Masuk Cepat: Berhasil masuk sebagai Tim Kurikulum (${userToLogin.name})! Mengarahkan ke Sistem Kurikulum Merdeka...`;
+        break;
+      }
+      case 'guru': {
+        const matched = allRegistered.find(u => (u.role?.toLowerCase().includes('guru') || u.role?.toLowerCase().includes('pengampu')) && !u.role?.toLowerCase().includes('admin'));
+        const teacherProfile = teacherProfiles && teacherProfiles.length > 0 ? teacherProfiles[0] : null;
+        userToLogin = {
+          uid: matched?.uid || `USER-GURU-${teacherProfile?.id || '01'}`,
+          email: matched?.email || 'guru@simakmerdeka.ai.studio',
+          password: 'password123',
+          name: matched?.name || teacherProfile?.name || 'Shahrur Robby, S.Pd.',
+          schoolName: matched?.schoolName || teacherProfile?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+          role: 'Guru Pengampu',
+          nip: matched?.nip || teacherProfile?.nip || '19900101 201501 1 001',
+          profileId: matched?.profileId || teacherProfile?.id || 'PROF-01',
+          status: 'Aktif',
+          isMaintenance: false
+        };
+        targetTab = 'system-guru';
+        profileId = userToLogin.profileId;
+        successMsg = `Masuk Cepat: Berhasil masuk sebagai Guru Pengampu (${userToLogin.name})! Mengarahkan ke Halaman Khusus Guru...`;
+        break;
+      }
+      case 'tu': {
+        const matched = allRegistered.find(u => u.role?.toLowerCase().includes('tu') || u.role?.toLowerCase().includes('tata usaha'));
+        userToLogin = {
+          uid: matched?.uid || 'USER-TU-01',
+          email: matched?.email || 'tu@simakmerdeka.ai.studio',
+          password: 'password123',
+          name: matched?.name || 'Rahmat Hidayat, S.Sos.',
+          schoolName: matched?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+          role: 'Kepala Tata Usaha / Staf TU',
+          nip: matched?.nip || '19820415 200801 1 009',
+          profileId: matched?.profileId || 'PROF-TU',
+          status: 'Aktif',
+          isMaintenance: false
+        };
+        targetTab = 'system-tu';
+        profileId = userToLogin.profileId;
+        successMsg = `Masuk Cepat: Berhasil masuk sebagai Staf Tata Usaha (${userToLogin.name})! Mengarahkan ke Sistem Tata Usaha & Persuratan...`;
+        break;
+      }
+      case 'sarpras': {
+        const matched = allRegistered.find(u => u.role?.toLowerCase().includes('sarpras') || u.role?.toLowerCase().includes('sarana'));
+        userToLogin = {
+          uid: matched?.uid || 'USER-SARPRAS-01',
+          email: matched?.email || 'sarpras@simakmerdeka.ai.studio',
+          password: 'password123',
+          name: matched?.name || 'Ir. Agus Wijaya, S.T.',
+          schoolName: matched?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+          role: 'Pengelola Sarpras',
+          nip: matched?.nip || '19790320 200501 1 003',
+          profileId: matched?.profileId || 'PROF-SARPRAS',
+          status: 'Aktif',
+          isMaintenance: false
+        };
+        targetTab = 'system-sarpras';
+        profileId = userToLogin.profileId;
+        successMsg = `Masuk Cepat: Berhasil masuk sebagai Pengelola Sarpras (${userToLogin.name})! Mengarahkan ke Sistem Sarana & Prasarana...`;
+        break;
+      }
+      case 'keuangan': {
+        const matched = allRegistered.find(u => u.role?.toLowerCase().includes('keuangan') || u.role?.toLowerCase().includes('bendahara'));
+        userToLogin = {
+          uid: matched?.uid || 'USER-KEUANGAN-01',
+          email: matched?.email || 'keuangan@simakmerdeka.ai.studio',
+          password: 'password123',
+          name: matched?.name || 'Siti Nurhaliza, S.E., Ak.',
+          schoolName: matched?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+          role: 'Bendahara / Pengelola Keuangan',
+          nip: matched?.nip || '19851125 201001 2 005',
+          profileId: matched?.profileId || 'PROF-KEUANGAN',
+          status: 'Aktif',
+          isMaintenance: false
+        };
+        targetTab = 'system-keuangan';
+        profileId = userToLogin.profileId;
+        successMsg = `Masuk Cepat: Berhasil masuk sebagai Bendahara Keuangan (${userToLogin.name})! Mengarahkan ke Sistem Keuangan & Anggaran...`;
+        break;
+      }
+      case 'kesiswaan': {
+        const matched = allRegistered.find(u => u.role?.toLowerCase().includes('kesiswaan'));
+        userToLogin = {
+          uid: matched?.uid || 'USER-KESISWAAN-01',
+          email: matched?.email || 'kesiswaan@simakmerdeka.ai.studio',
+          password: 'password123',
+          name: matched?.name || 'Bambang Irawan, S.Pd., M.M.',
+          schoolName: matched?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+          role: 'Wakasek Kesiswaan / Tim Kesiswaan',
+          nip: matched?.nip || '19760718 200312 1 002',
+          profileId: matched?.profileId || 'PROF-KESISWAAN',
+          status: 'Aktif',
+          isMaintenance: false
+        };
+        targetTab = 'system-kesiswaan';
+        profileId = userToLogin.profileId;
+        successMsg = `Masuk Cepat: Berhasil masuk sebagai Tim Kesiswaan (${userToLogin.name})! Mengarahkan ke Sistem Kesiswaan...`;
+        break;
+      }
+    }
+
+    setSuccessNotification(successMsg);
+    setTimeout(() => {
+      setIsLoading(false);
+      onLoginSuccess(userToLogin, profileId, targetTab);
+    }, 450);
+  };
+
   const handleGoogleSignIn = async () => {
     try {
       setIsLoading(true);
@@ -1177,10 +1418,19 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
     if (isMasterDataLogin || isMasterAccount) {
       if (ssoSystem !== 'Guru') {
-        const activeEncryptionCode = ((k: string) => null as any)('simak_encryption_code') || '292001';
-        if (encryptionCode.trim() !== activeEncryptionCode) {
-          setErrorMessage('Kode Enkripsi tidak valid! Harap masukkan kode enkripsi yang benar.');
-          return;
+        const inputCode = encryptionCode.trim();
+
+        if (inputCode !== activeEncryptionCode) {
+          const isOldCode = previousEncryptionCodes.includes(inputCode) || 
+                            (activeEncryptionCode !== '292001' && inputCode === '292001');
+
+          if (isOldCode) {
+            setErrorMessage('kode enkripsi telah diubah oleh administrator demi menjaga keamanan data, silahkan hubungi administrator');
+            return;
+          } else {
+            setErrorMessage('Kode Enkripsi tidak valid! Harap masukkan kode enkripsi yang benar.');
+            return;
+          }
         }
       }
     }
@@ -1264,11 +1514,21 @@ export const LoginView: React.FC<LoginViewProps> = ({
           return;
         }
 
-        let targetTab = 'dashboard';
+        // Check if selected SSO system access matches user's registered role
+        if (!isUserMasterAdmin && (isMasterDataLogin || ssoSystem)) {
+          const isRoleMatch = checkRoleMatchesSsoSystem(matchedUser.role, ssoSystem);
+          if (!isRoleMatch) {
+            const targetDest = getSystemDestination(ssoSystem);
+            setErrorMessage(`Gagal Masuk: Akses sistem "${targetDest.systemName}" (${ssoSystem}) yang Anda pilih tidak sesuai dengan peran terdaftar akun Anda ("${matchedUser.role}"). Silakan pilih sistem yang sesuai dengan peran Anda atau hubungi Administrator.`);
+            return;
+          }
+        }
+
+        let targetTab = 'master-data';
         let roleToUse = matchedUser.role;
 
         if (isTeacherLogin) {
-          targetTab = 'dashboard';
+          targetTab = 'students';
           roleToUse = matchedUser.role || 'Guru Pengampu';
         } else if (isMasterDataLogin || isMasterAccount) {
           const dest = getSystemDestination(ssoSystem);
@@ -1358,7 +1618,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
         let roleToUse = matchedProfile.title || 'Guru Pengampu';
 
         if (isTeacherLogin) {
-          targetTab = 'dashboard';
+          targetTab = 'students';
           roleToUse = matchedProfile.title || 'Guru Pengampu';
         } else if (isMasterDataLogin || isMasterAccount) {
           const dest = getSystemDestination(ssoSystem);
@@ -4238,6 +4498,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                         </>
                       )}
                     </button>
+
                     {!isStudentLogin && !isMasterDataLogin && (
                       <div className="text-center mt-3 pt-3 border-t border-slate-100">
                         <p className="text-xs text-slate-500 font-medium">

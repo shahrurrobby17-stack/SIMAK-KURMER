@@ -7,6 +7,16 @@ export interface RegisteredSchool {
   principalNip?: string;
   academicYear?: string;
   semester?: string;
+  city?: string;
+  province?: string;
+  postalCode?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  jenjang?: string;
+  statusSekolah?: string;
+  akreditasi?: string;
+  kurikulum?: string;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -102,6 +112,16 @@ export interface TeacherProfile {
   principalName: string;
   principalNip: string;
   city?: string;
+  address?: string;
+  province?: string;
+  postalCode?: string;
+  phone?: string;
+  email?: string;
+  website?: string;
+  jenjang?: string;
+  statusSekolah?: string;
+  akreditasi?: string;
+  kurikulum?: string;
   avatarUrl?: string;
   gender?: 'Laki-laki' | 'Perempuan' | string;
   isMaintenance?: boolean;

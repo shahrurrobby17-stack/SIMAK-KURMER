@@ -379,7 +379,9 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
   // Teacher Module & ATP Validation State with localStorage synchronization
   const [teacherModules, setTeacherModules] = useState<TeacherModuleDocument[]>(() => {
     try {
-      const saved = ((k: string) => null as any)('simak_teacher_modules');
+      const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_curriculum_reset_cleared') === 'true';
+      if (isCleared) return [];
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('simak_teacher_modules') : null;
       if (saved) {
         return JSON.parse(saved);
       }
@@ -405,8 +407,11 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
   // Sync helper to update state & localStorage
   const updateTeacherModules = (updated: TeacherModuleDocument[]) => {
     setTeacherModules(updated);
-    ((k: string, v: string) => void 0)('simak_teacher_modules', JSON.stringify(updated));
-    window.dispatchEvent(new Event('storage'));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_teacher_modules', JSON.stringify(updated));
+      localStorage.removeItem('simak_curriculum_reset_cleared');
+      window.dispatchEvent(new Event('storage'));
+    }
   };
 
   // Listen to external localStorage changes (e.g. from TeacherModuleUploadView)
@@ -526,7 +531,9 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
   // Initial structure of Kurikulum Merdeka (KSP) JJM with localStorage persistence
   const [curriculumMapels, setCurriculumMapels] = useState<JJMItem[]>(() => {
     try {
-      const saved = ((k: string) => null as any)('simak_curriculum_jjm');
+      const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_curriculum_reset_cleared') === 'true';
+      if (isCleared) return [];
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('simak_curriculum_jjm') : null;
       if (saved) {
         return JSON.parse(saved);
       }
@@ -539,7 +546,9 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
   // Modal State for P5 Module with persistence
   const [p5Modules, setP5Modules] = useState<{ id: number; tema: string; status: string; target: string; pic: string }[]>(() => {
     try {
-      const saved = ((k: string) => null as any)('simak_curriculum_p5');
+      const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_curriculum_reset_cleared') === 'true';
+      if (isCleared) return [];
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('simak_curriculum_p5') : null;
       if (saved) {
         return JSON.parse(saved);
       }
@@ -559,7 +568,9 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
   // Calendar & RPE Events State with persistence
   const [rpeEvents, setRpeEvents] = useState<{ date: string; event: string; category: string; desc: string }[]>(() => {
     try {
-      const saved = ((k: string) => null as any)('simak_curriculum_events');
+      const isCleared = typeof window !== 'undefined' && localStorage.getItem('simak_curriculum_reset_cleared') === 'true';
+      if (isCleared) return [];
+      const saved = typeof window !== 'undefined' ? localStorage.getItem('simak_curriculum_events') : null;
       if (saved) {
         return JSON.parse(saved);
       }
@@ -876,7 +887,9 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
       return u;
     });
 
-    ((k: string, v: string) => void 0)('simak_registered_users', JSON.stringify(updatedUsers));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_registered_users', JSON.stringify(updatedUsers));
+    }
     saveRegisteredUsersToFirebase(updatedUsers);
     if (onUpdateRegisteredUsers) {
       onUpdateRegisteredUsers(updatedUsers);
@@ -903,21 +916,27 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
     const unsubJjm = subscribeToCurriculumJjm((items) => {
       if (items && Array.isArray(items)) {
         setCurriculumMapels(items);
-        ((k: string, v: string) => void 0)('simak_curriculum_jjm', JSON.stringify(items));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('simak_curriculum_jjm', JSON.stringify(items));
+        }
       }
     });
 
     const unsubP5 = subscribeToCurriculumP5((items) => {
       if (items && Array.isArray(items)) {
         setP5Modules(items);
-        ((k: string, v: string) => void 0)('simak_curriculum_p5', JSON.stringify(items));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('simak_curriculum_p5', JSON.stringify(items));
+        }
       }
     });
 
     const unsubEvents = subscribeToCurriculumEvents((items) => {
       if (items && Array.isArray(items)) {
         setRpeEvents(items);
-        ((k: string, v: string) => void 0)('simak_curriculum_events', JSON.stringify(items));
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('simak_curriculum_events', JSON.stringify(items));
+        }
       }
     });
 
@@ -925,6 +944,22 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
       if (unsubJjm) unsubJjm();
       if (unsubP5) unsubP5();
       if (unsubEvents) unsubEvents();
+    };
+  }, []);
+
+  // Listen for curriculum reset event
+  useEffect(() => {
+    const handleReset = () => {
+      setWeeklySchedules([]);
+      setTeacherModules([]);
+      setCurriculumMapels([]);
+      setP5Modules([]);
+      setRpeEvents([]);
+    };
+
+    window.addEventListener('simak_kurikulum_reset', handleReset);
+    return () => {
+      window.removeEventListener('simak_kurikulum_reset', handleReset);
     };
   }, []);
 
@@ -1028,7 +1063,10 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
     };
     const updated = [newMod, ...p5Modules];
     setP5Modules(updated);
-    ((k: string, v: string) => void 0)('simak_curriculum_p5', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_curriculum_p5', JSON.stringify(updated));
+      localStorage.removeItem('simak_curriculum_reset_cleared');
+    }
     saveCurriculumP5ToFirebase(updated);
     setShowP5Modal(false);
     setNewP5Tema('');
@@ -1039,7 +1077,9 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
     if (p5ToDelete) {
       const updated = p5Modules.filter(p => p.id !== p5ToDelete.id);
       setP5Modules(updated);
-      ((k: string, v: string) => void 0)('simak_curriculum_p5', JSON.stringify(updated));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('simak_curriculum_p5', JSON.stringify(updated));
+      }
       saveCurriculumP5ToFirebase(updated);
       setShowDeleteP5Modal(false);
       setP5ToDelete(null);
@@ -1058,7 +1098,10 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
     };
     const updated = [...rpeEvents, newEv];
     setRpeEvents(updated);
-    ((k: string, v: string) => void 0)('simak_curriculum_events', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_curriculum_events', JSON.stringify(updated));
+      localStorage.removeItem('simak_curriculum_reset_cleared');
+    }
     saveCurriculumEventsToFirebase(updated);
     setShowEventModal(false);
     setNewEventName('');
@@ -1071,7 +1114,9 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
     if (eventToDeleteIndex !== null) {
       const updated = rpeEvents.filter((_, idx) => idx !== eventToDeleteIndex);
       setRpeEvents(updated);
-      ((k: string, v: string) => void 0)('simak_curriculum_events', JSON.stringify(updated));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('simak_curriculum_events', JSON.stringify(updated));
+      }
       saveCurriculumEventsToFirebase(updated);
       setShowDeleteEventModal(false);
       setEventToDeleteIndex(null);
@@ -1089,7 +1134,9 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
     if (jjmToDelete !== null) {
       const updated = curriculumMapels.filter((_, idx) => idx !== jjmToDelete.index);
       setCurriculumMapels(updated);
-      ((k: string, v: string) => void 0)('simak_curriculum_jjm', JSON.stringify(updated));
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('simak_curriculum_jjm', JSON.stringify(updated));
+      }
       saveCurriculumJjmToFirebase(updated);
       setShowDeleteJjmModal(false);
       setJjmToDelete(null);
@@ -1121,7 +1168,10 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
     }
 
     setCurriculumMapels(updated);
-    ((k: string, v: string) => void 0)('simak_curriculum_jjm', JSON.stringify(updated));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_curriculum_jjm', JSON.stringify(updated));
+      localStorage.removeItem('simak_curriculum_reset_cleared');
+    }
     saveCurriculumJjmToFirebase(updated);
     setShowJjmModal(false);
   };
@@ -1149,7 +1199,9 @@ export const CurriculumSystemView: React.FC<CurriculumSystemViewProps> = ({
       return true;
     });
 
-    ((k: string, v: string) => void 0)('simak_registered_users', JSON.stringify(updatedUsers));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_registered_users', JSON.stringify(updatedUsers));
+    }
     saveRegisteredUsersToFirebase(updatedUsers);
     if (onUpdateRegisteredUsers) {
       onUpdateRegisteredUsers(updatedUsers);

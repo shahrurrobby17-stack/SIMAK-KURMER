@@ -46,9 +46,12 @@ import {
   ExternalLink,
   Wallet,
   Package,
-  Library
+  Library,
+  School,
+  Settings
 } from 'lucide-react';
-import { UserAccount, TeacherProfile, InfoAnnouncement, InfoAnnouncementItem, getAnnouncementItems } from '../types';
+import { UserAccount, TeacherProfile, RegisteredSchool, InfoAnnouncement, InfoAnnouncementItem, getAnnouncementItems } from '../types';
+import { normalizeSchoolId, deleteSchoolFromFirebase } from '../lib/firebaseService';
 import { SaveSuccessModal } from './SaveSuccessModal';
 import { CurriculumSystemView } from './systems/CurriculumSystemView';
 import { TeacherSystemView } from './systems/TeacherSystemView';
@@ -56,6 +59,8 @@ import { AdministrationSystemView } from './systems/AdministrationSystemView';
 import { SarprasSystemView } from './systems/SarprasSystemView';
 import { LibrarySystemView } from './systems/LibrarySystemView';
 import { StudentSystemView } from './systems/StudentSystemView';
+import { FinanceSystemView } from './systems/FinanceSystemView';
+import { SchoolDetailSystemView } from './systems/SchoolDetailSystemView';
 
 interface MasterDataViewProps {
   registeredUsers: UserAccount[];
@@ -63,13 +68,18 @@ interface MasterDataViewProps {
   teacherProfiles?: TeacherProfile[];
   currentUser?: UserAccount | null;
   teacher?: TeacherProfile;
+  onUpdateTeacherProfile?: (newProfile: TeacherProfile) => boolean;
+  registeredSchools?: RegisteredSchool[];
+  onRegisterSchool?: (newSchool: Partial<RegisteredSchool> & { name: string }) => Promise<void> | void;
+  onDeleteSchoolStorage?: (schoolId: string, schoolName?: string) => Promise<boolean> | void;
+  activeSchoolName?: string;
   infoAnnouncement?: InfoAnnouncement;
   classList?: string[];
   onUpdateInfoAnnouncement?: (updated: InfoAnnouncement) => void;
   renderUserModule?: (user: UserAccount, tab: string) => React.ReactNode;
   onNavigateTab?: (tab: string) => void;
-  activeCategory?: 'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa';
-  onCategoryChange?: (category: 'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa') => void;
+  activeCategory?: 'Semua' | 'DetailSekolah' | 'Penyimpanan' | 'Pengumuman' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa';
+  onCategoryChange?: (category: 'Semua' | 'DetailSekolah' | 'Penyimpanan' | 'Pengumuman' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa') => void;
 }
 
 export const MasterDataView: React.FC<MasterDataViewProps> = ({
@@ -78,6 +88,11 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
   teacherProfiles = [],
   currentUser,
   teacher,
+  onUpdateTeacherProfile,
+  registeredSchools = [],
+  onRegisterSchool,
+  onDeleteSchoolStorage,
+  activeSchoolName,
   infoAnnouncement,
   classList,
   onUpdateInfoAnnouncement,
@@ -90,10 +105,10 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
   const [statusFilter, setStatusFilter] = useState<string>('Semua');
   const [schoolFilter, setSchoolFilter] = useState<string>('Semua');
   const [roleFilter, setRoleFilter] = useState<string>('Semua');
-  const [internalCategory, setInternalCategory] = useState<'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa'>('Semua');
+  const [internalCategory, setInternalCategory] = useState<'Semua' | 'DetailSekolah' | 'Penyimpanan' | 'Pengumuman' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa'>('Semua');
   const selectedCategory = activeCategory !== undefined ? activeCategory : internalCategory;
 
-  const setSelectedCategory = (cat: 'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa') => {
+  const setSelectedCategory = (cat: 'Semua' | 'DetailSekolah' | 'Penyimpanan' | 'Pengumuman' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa') => {
     setInternalCategory(cat);
     onCategoryChange?.(cat);
   };
@@ -108,6 +123,38 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
   const [showResetModal, setShowResetModal] = useState<boolean>(false);
   const [userToReset, setUserToReset] = useState<UserAccount | null>(null);
   const [newResetPassword, setNewResetPassword] = useState<string>('12345678');
+
+  // Delete School Storage Modal State
+  const [showDeleteSchoolStorageModal, setShowDeleteSchoolStorageModal] = useState<boolean>(false);
+  const [selectedSchoolToDelete, setSelectedSchoolToDelete] = useState<string>('');
+  const [isDeletingSchoolStorage, setIsDeletingSchoolStorage] = useState<boolean>(false);
+
+  const handleExecuteDeleteSchoolStorage = async () => {
+    const schoolObj = registeredSchools.find(s => 
+      s.name.toLowerCase().trim() === selectedSchoolToDelete.toLowerCase().trim() ||
+      s.id.toLowerCase() === selectedSchoolToDelete.toLowerCase()
+    ) || {
+      id: normalizeSchoolId(selectedSchoolToDelete || 'sekolah-default'),
+      name: selectedSchoolToDelete || 'Sekolah Terpilih'
+    };
+
+    setIsDeletingSchoolStorage(true);
+    try {
+      if (onDeleteSchoolStorage) {
+        await onDeleteSchoolStorage(schoolObj.id, schoolObj.name);
+      } else {
+        await deleteSchoolFromFirebase(schoolObj.id);
+      }
+
+      showToast(`Penyimpanan sekolah "${schoolObj.name}" berhasil dihapus dan dibersihkan dari sistem!`, 'success');
+      setShowDeleteSchoolStorageModal(false);
+    } catch (err: any) {
+      console.error('Error deleting school storage:', err);
+      showToast(`Terjadi kendala saat menghapus penyimpanan: ${err?.message || 'Gagal menghapus'}`, 'error');
+    } finally {
+      setIsDeletingSchoolStorage(false);
+    }
+  };
 
   // Module Data Inspector Modal State
   const [showModuleModal, setShowModuleModal] = useState<boolean>(false);
@@ -477,8 +524,8 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
         </div>
       )}
 
-      {/* Persistent Navigation Bar Akses Sistem Administrator - Tetap ada & tidak hilang ketika menu diklik */}
-      <div className="bg-white border border-slate-200 px-3.5 pt-3 pb-2.5 shadow-xs">
+      {/* Persistent Sticky Navigation Bar Akses Sistem Administrator - Tetap ada & tidak hilang ketika menu diklik */}
+      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border border-slate-200 px-3.5 pt-3 pb-2.5 shadow-xs">
         <div className="flex items-center justify-between gap-3 mb-2.5 pb-2 border-b border-slate-100 flex-wrap">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-[#164e63] text-white">
@@ -493,16 +540,18 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
               </p>
             </div>
           </div>
-          {selectedCategory === 'Semua' && (
-            <button
-              type="button"
-              onClick={() => handleOpenAddModal()}
-              className="px-3.5 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
-            >
-              <UserPlus className="w-3.5 h-3.5" />
-              <span>Tambah Akun</span>
-            </button>
-          )}
+          <div className="flex items-center gap-2 flex-wrap">
+            {selectedCategory === 'Semua' && (
+              <button
+                type="button"
+                onClick={() => handleOpenAddModal()}
+                className="px-3.5 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Tambah Akun</span>
+              </button>
+            )}
+          </div>
         </div>
 
         <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
@@ -517,6 +566,47 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
           >
             <Database className="w-3.5 h-3.5 text-[#164e63]" />
             <span>Monitoring Akun ({totalCount})</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('DetailSekolah')}
+            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+              selectedCategory === 'DetailSekolah'
+                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <School className="w-3.5 h-3.5 text-sky-600" />
+            <span>Detail Sekolah</span>
+          </button>
+
+          {/* Menu Penyimpanan - Di Atas Menu Pengumuman Sistem */}
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('Penyimpanan')}
+            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+              selectedCategory === 'Penyimpanan'
+                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <Database className="w-3.5 h-3.5 text-cyan-700" />
+            <span>Penyimpanan</span>
+          </button>
+
+          {/* Menu Pengumuman Sistem - Di Bawah Menu Penyimpanan */}
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('Pengumuman')}
+            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+              selectedCategory === 'Pengumuman'
+                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <Megaphone className="w-3.5 h-3.5 text-amber-600" />
+            <span>Pengumuman Sistem</span>
           </button>
 
           <button
@@ -573,10 +663,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
 
           <button
             type="button"
-            onClick={() => {
-              if (onNavigateTab) onNavigateTab('system-keuangan');
-              else setSelectedCategory('Keuangan');
-            }}
+            onClick={() => setSelectedCategory('Keuangan')}
             className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
               selectedCategory === 'Keuangan'
                 ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
@@ -616,7 +703,139 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
       </div>
 
       {/* CONDITIONAL RENDERING OF DEDICATED SYSTEMS */}
-      {selectedCategory === 'Kurikulum' ? (
+      {selectedCategory === 'DetailSekolah' ? (
+        <SchoolDetailSystemView
+          teacher={teacher}
+          currentUser={currentUser}
+          registeredUsers={registeredUsers}
+          onUpdateTeacherProfile={onUpdateTeacherProfile}
+          registeredSchools={registeredSchools}
+          onRegisterSchool={onRegisterSchool}
+          onDeleteSchoolStorage={onDeleteSchoolStorage}
+          activeSchoolName={activeSchoolName}
+          onNavigateTab={onNavigateTab}
+          onSelectCategory={setSelectedCategory}
+        />
+      ) : selectedCategory === 'Penyimpanan' ? (
+        <div className="space-y-6 animate-fadeIn pb-12">
+          {/* Header Banner */}
+          <div className="bg-white border border-slate-200 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 bg-[#164e63] text-white shrink-0">
+                <Database className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h1 className="text-base sm:text-lg font-black text-slate-900 uppercase tracking-tight">
+                    Penyimpanan Satuan Pendidikan
+                  </h1>
+                  <span className="px-2 py-0.5 text-[10px] font-bold bg-cyan-100 text-cyan-900 border border-cyan-200">
+                    Multi-Tenant Cloud
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Partisi database dan penyimpanan cloud masing-masing sekolah
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab?.('settings')}
+              className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-colors cursor-pointer shrink-0"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              <span>Buka Menu Pengaturan</span>
+            </button>
+          </div>
+
+          {/* Partisi Aktif Card */}
+          <div className="bg-white border border-slate-200 p-5 shadow-xs space-y-4">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="text-xs sm:text-sm font-bold text-slate-900 uppercase tracking-wider flex items-center gap-2">
+                <School className="w-4 h-4 text-[#164e63]" />
+                <span>Penyimpanan Sekolah Aktif</span>
+              </h3>
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5">
+                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                Tersambung
+              </span>
+            </div>
+
+            <div className="p-4 bg-slate-50 border border-slate-200 space-y-2">
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <h4 className="text-sm font-black text-slate-800">
+                  {activeSchoolName || teacher?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak'}
+                </h4>
+                <span className="font-mono text-xs text-cyan-800 bg-cyan-50 px-2 py-0.5 border border-cyan-200">
+                  Path: /schools/{normalizeSchoolId(activeSchoolName || teacher?.schoolName || '')}
+                </span>
+              </div>
+              <p className="text-xs text-slate-500">
+                NPSN: <span className="font-bold text-slate-700">{teacher?.npsn || '20500000'}</span> • Kepala Sekolah: <span className="font-bold text-slate-700">{teacher?.principalName || 'Kepala Sekolah'}</span>
+              </p>
+            </div>
+
+            <div className="pt-2 flex items-center justify-between flex-wrap gap-3">
+              <p className="text-xs text-slate-500">
+                Pengelolaan dan penghapusan partisi penyimpanan sekolah telah dipindahkan ke <strong>Menu Pengaturan &gt; Penyimpanan</strong>.
+              </p>
+              <button
+                type="button"
+                onClick={() => onNavigateTab?.('settings')}
+                className="px-4 py-2 border border-[#164e63] text-[#164e63] hover:bg-cyan-50 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                <span>Ke Menu Pengaturan Penyimpanan</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : selectedCategory === 'Pengumuman' ? (
+        <div className="space-y-6 animate-fadeIn pb-12">
+          <div className="bg-white border border-slate-200 p-5 shadow-xs flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3.5">
+              <div className="p-3 bg-amber-500 text-white shrink-0">
+                <Megaphone className="w-6 h-6" />
+              </div>
+              <div>
+                <h1 className="text-base sm:text-lg font-black text-slate-900 uppercase tracking-tight">
+                  Pengumuman Sistem (Running Text)
+                </h1>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Teks pengumuman portal login dan halaman depan SIMAK
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => onNavigateTab?.('settings')}
+              className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-colors cursor-pointer shrink-0"
+            >
+              <Settings className="w-3.5 h-3.5" />
+              <span>Kelola di Menu Pengaturan</span>
+            </button>
+          </div>
+
+          <div className="bg-white border border-slate-200 p-5 shadow-xs space-y-4">
+            <div className="p-4 bg-slate-50 border border-slate-200">
+              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">Pengumuman Aktif:</span>
+              <p className="text-xs text-slate-800 font-bold">
+                {infoAnnouncement?.text || 'Selamat Datang di SIMAK MERDEKA - Sistem Informasi Manajemen Akademik & Kehadiran.'}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={() => onNavigateTab?.('settings')}
+              className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+            >
+              <span>Buka Editor Pengumuman di Menu Pengaturan</span>
+              <ChevronRight className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        </div>
+      ) : selectedCategory === 'Kurikulum' ? (
         <CurriculumSystemView
           registeredUsers={registeredUsers}
           teacher={teacher}
@@ -657,6 +876,12 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
         />
       ) : selectedCategory === 'Perpustakaan' ? (
         <LibrarySystemView
+          registeredUsers={registeredUsers}
+          teacher={teacher}
+          onNavigateTab={onNavigateTab}
+        />
+      ) : selectedCategory === 'Keuangan' ? (
+        <FinanceSystemView
           registeredUsers={registeredUsers}
           teacher={teacher}
           onNavigateTab={onNavigateTab}
@@ -1805,6 +2030,129 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
         title="Data Berhasil Disimpan"
         message={saveSuccessMsg || "Data telah berhasil disimpan dan tersinkronisasi."}
       />
+
+      {/* Modal Hapus Penyimpanan Sekolah (Multi-Tenant Partition Cleanup) */}
+      {showDeleteSchoolStorageModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white border border-slate-200 shadow-2xl rounded-none w-full max-w-lg overflow-hidden flex flex-col">
+            {/* Modal Header */}
+            <div className="bg-rose-700 text-white px-5 py-3.5 flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 bg-white/20 flex items-center justify-center rounded-none">
+                  <Trash2 className="w-4 h-4 text-white" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black tracking-tight text-white uppercase">
+                    Hapus Penyimpanan Sekolah
+                  </h3>
+                  <p className="text-[11px] text-rose-100">
+                    Pembersihan Partisi Data Multi-Tenant Satuan Pendidikan
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  if (!isDeletingSchoolStorage) {
+                    setShowDeleteSchoolStorageModal(false);
+                  }
+                }}
+                className="text-white/80 hover:text-white p-1 transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Body */}
+            <div className="p-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Pilih Partisi Satuan Pendidikan yang Ingin Dihapus *
+                </label>
+                <select
+                  value={selectedSchoolToDelete}
+                  onChange={(e) => setSelectedSchoolToDelete(e.target.value)}
+                  disabled={isDeletingSchoolStorage}
+                  className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-300 font-bold text-slate-800 focus:bg-white focus:outline-none focus:ring-2 focus:ring-rose-500 cursor-pointer"
+                >
+                  {registeredSchools.map((s) => (
+                    <option key={s.id} value={s.name}>
+                      {s.name} {s.npsn ? `(NPSN: ${s.npsn})` : ''} {s.name === (teacher?.schoolName || activeSchoolName) ? '— [Sedang Aktif]' : ''}
+                    </option>
+                  ))}
+                  {registeredSchools.length === 0 && (
+                    <option value={teacher?.schoolName || activeSchoolName || 'Sekolah Utama'}>
+                      {teacher?.schoolName || activeSchoolName || 'Sekolah Utama'}
+                    </option>
+                  )}
+                </select>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  Penyimpanan untuk sekolah yang dipilih akan dibersihkan dari server dan peramban.
+                </p>
+              </div>
+
+              {/* Data Summary Card */}
+              <div className="p-3 bg-slate-50 border border-slate-200 text-xs space-y-1.5">
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 font-semibold">Satuan Pendidikan:</span>
+                  <span className="font-bold text-slate-800 truncate max-w-[240px]">{selectedSchoolToDelete || 'Belum dipilih'}</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 font-semibold">Path Database:</span>
+                  <span className="font-mono text-cyan-800 text-[10px]">/schools/{normalizeSchoolId(selectedSchoolToDelete || '')}</span>
+                </div>
+                <div className="flex items-center justify-between text-[11px]">
+                  <span className="text-slate-500 font-semibold">Pengguna Terdaftar:</span>
+                  <span className="font-bold text-rose-700">
+                    {registeredUsers.filter(u => (u.schoolName || '').toLowerCase().trim() === (selectedSchoolToDelete || '').toLowerCase().trim()).length} Akun
+                  </span>
+                </div>
+              </div>
+
+              {/* Warning Notice */}
+              <div className="p-3 bg-rose-50 border border-rose-200 text-rose-900 text-xs flex items-start gap-2.5">
+                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                <div className="space-y-1 text-[11px]">
+                  <p className="font-bold">Peringatan Penghapusan Data Permanen:</p>
+                  <p className="text-rose-800 leading-relaxed">
+                    Tindakan ini akan menghapus dokumen partisi penyimpanan sekolah di cloud dan membersihkan cache lokal untuk sekolah <strong>"{selectedSchoolToDelete}"</strong>. Pastikan Anda telah mengarsipkan data penting jika diperlukan.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Modal Footer */}
+            <div className="px-5 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={() => setShowDeleteSchoolStorageModal(false)}
+                disabled={isDeletingSchoolStorage}
+                className="px-4 py-2 border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100 transition-colors cursor-pointer"
+              >
+                Batal
+              </button>
+              <button
+                type="button"
+                onClick={handleExecuteDeleteSchoolStorage}
+                disabled={isDeletingSchoolStorage || !selectedSchoolToDelete}
+                className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95 disabled:opacity-50"
+              >
+                {isDeletingSchoolStorage ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    <span>Menghapus Penyimpanan...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="w-3.5 h-3.5" />
+                    <span>Hapus Penyimpanan Sekarang</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
