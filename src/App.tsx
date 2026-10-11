@@ -104,19 +104,14 @@ import { FooterHelpModals, HelpModalType } from './components/FooterHelpModals';
 import { RestrictedAccessModal } from './components/RestrictedAccessModal';
 import { SchoolStorageSelectorModal } from './components/SchoolStorageSelectorModal';
 import { InfoBannerCard } from './components/InfoBannerCard';
-import { MobileDeviceRestricted } from './components/MobileDeviceRestricted';
+import { MobileDeviceRestricted, checkIsMobileDevice } from './components/MobileDeviceRestricted';
 import { syncToGoogleSheets } from './lib/googleSheetsService';
 import { Lock, RefreshCw, CheckCircle2, CloudDownload, Clock, Sparkles } from 'lucide-react';
 
 export default function App() {
-  // Detection for mobile phone (HP/Smartphone) or mobile view (< 768px or mobile phone UA)
+  // Detection for mobile phone (HP/Smartphone), including when "Situs Desktop" is clicked on mobile browsers
   const [isMobileDevice, setIsMobileDevice] = useState<boolean>(() => {
-    if (typeof window === 'undefined') return false;
-    const ua = navigator.userAgent || '';
-    const isMobileUA = /Android.*Mobile|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|webOS|Windows Phone/i.test(ua);
-    const isSmallScreen = window.innerWidth < 768;
-    const isLandscapePhone = (isMobileUA || ('ontouchstart' in window && window.innerHeight < 550)) && window.innerWidth < 1024;
-    return isSmallScreen || isMobileUA || isLandscapePhone;
+    return checkIsMobileDevice();
   });
 
   const [viewportSize, setViewportSize] = useState<{ width: number; height: number }>(() => ({
@@ -129,11 +124,7 @@ export default function App() {
       const w = window.innerWidth;
       const h = window.innerHeight;
       setViewportSize({ width: w, height: h });
-      const ua = navigator.userAgent || '';
-      const isMobileUA = /Android.*Mobile|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|webOS|Windows Phone/i.test(ua);
-      const isSmallScreen = w < 768;
-      const isLandscapePhone = (isMobileUA || ('ontouchstart' in window && h < 550)) && w < 1024;
-      setIsMobileDevice(isSmallScreen || isMobileUA || isLandscapePhone);
+      setIsMobileDevice(checkIsMobileDevice());
     };
 
     handleCheckMobile();
@@ -2172,14 +2163,7 @@ export default function App() {
         currentWidth={viewportSize.width}
         currentHeight={viewportSize.height}
         onRefresh={() => {
-          const w = window.innerWidth;
-          const h = window.innerHeight;
-          setViewportSize({ width: w, height: h });
-          const ua = navigator.userAgent || '';
-          const isMobileUA = /Android.*Mobile|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|webOS|Windows Phone/i.test(ua);
-          const isSmallScreen = w < 768;
-          const isLandscapePhone = (isMobileUA || ('ontouchstart' in window && h < 550)) && w < 1024;
-          setIsMobileDevice(isSmallScreen || isMobileUA || isLandscapePhone);
+          setIsMobileDevice(checkIsMobileDevice());
           window.location.reload();
         }}
       />

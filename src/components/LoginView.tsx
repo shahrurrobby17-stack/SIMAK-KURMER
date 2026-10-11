@@ -3785,7 +3785,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 Ringkasan Indikator Utama SIMAK
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-2xl mx-auto font-medium leading-relaxed">
-                Pantau persentase kelengkapan modul ajar, status sinkronisasi cloud real-time, serta statistik tingkat kehadiran siswa secara langsung dari database Firestore.
+                Pantau status sinkronisasi cloud real-time serta rincian verifikasi perangkat database Firestore secara langsung.
               </p>
 
               {/* Status bar with Last Sync timestamp and manual refresh */}
@@ -3807,138 +3807,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   <RefreshCw className={`w-3 h-3 text-sky-600 ${isRefreshing ? 'animate-spin' : ''}`} />
                   <span>Segarkan Data</span>
                 </button>
-              </div>
-            </div>
-
-            {/* 3 Main Metric Highlight Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-              {/* 1. Kelengkapan Modul */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-sky-500" />
-                <div className="flex items-start justify-between mb-3">
-                  <div className="p-3 rounded-xl bg-sky-50 border border-sky-100 text-sky-600">
-                    <FileText className="w-6 h-6 stroke-[2.5]" />
-                  </div>
-                  <span className="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span>Real-Time Live</span>
-                  </span>
-                </div>
-                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                  Kelengkapan Modul Ajar
-                </div>
-                <div className="text-3xl font-black text-slate-900 mb-2 flex items-baseline gap-2">
-                  <span>{classAnalyticsMetrics.modulePercentage}</span>
-                  <span className="text-xs font-bold text-sky-600">✓ Perangkat Lengkap</span>
-                </div>
-                <p className="text-xs text-slate-600 font-medium mb-3">
-                  Capaian Pembelajaran (CP), Tujuan Pembelajaran (TP), Modul Ajar, dan Rubrik KKTP terstruktur rapi.
-                </p>
-
-                {/* Live stats counts */}
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-[11px] font-semibold text-slate-600 mb-3 flex items-center justify-between">
-                  <span>Alur TP: <strong className="text-slate-900">{classAnalyticsMetrics.completedTpSlots > 0 ? `${classAnalyticsMetrics.completedTpSlots}/${classAnalyticsMetrics.totalTpSlots}` : '100% Lengkap'}</strong></span>
-                  <span>Jurnal KBM: <strong className="text-sky-700">{classAnalyticsMetrics.totalTeachingLogs} Sesi</strong></span>
-                </div>
-                
-                {/* Progress bar */}
-                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                  <div 
-                    className="bg-sky-500 h-2.5 rounded-full transition-all duration-700" 
-                    style={{ width: classAnalyticsMetrics.modulePercentage }}
-                  />
-                </div>
-                <div className="mt-2 text-[11px] text-slate-500 flex justify-between font-semibold">
-                  <span>Kurikulum Merdeka 2024/2025</span>
-                  <span className="text-sky-700 font-bold">{classAnalyticsMetrics.modulePercentage} Siap</span>
-                </div>
-              </div>
-
-              {/* 2. Sinkronisasi Data */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-sky-500" />
-                <div className="flex items-start justify-between mb-3">
-                  <div className="p-3 rounded-xl bg-sky-50 border border-sky-100 text-sky-600">
-                    <ShieldCheck className="w-6 h-6 stroke-[2.5]" />
-                  </div>
-                  <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span>Cloud Active</span>
-                  </span>
-                </div>
-                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                  Persentase Sinkronisasi
-                </div>
-                <div className="text-3xl font-black text-slate-900 mb-2 flex items-baseline gap-2">
-                  <span>{classAnalyticsMetrics.syncVal}</span>
-                  <span className="text-xs font-bold text-emerald-600">Terhubung Firestore</span>
-                </div>
-                <p className="text-xs text-slate-600 font-medium mb-3">
-                  Tingkat konsistensi dan integritas data antara sistem SIMAK dan Google Cloud Firestore Database.
-                </p>
-
-                {/* Live stats counts */}
-                <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100 text-[11px] font-semibold text-slate-600 mb-3 flex items-center justify-between">
-                  <span>Siswa: <strong className="text-slate-900">{classAnalyticsMetrics.totalStudents}</strong></span>
-                  <span>Nilai: <strong className="text-slate-900">{classAnalyticsMetrics.totalGradeRecords}</strong></span>
-                  <span>Presensi: <strong className="text-sky-700">{classAnalyticsMetrics.totalAtt}</strong></span>
-                </div>
-                
-                {/* Progress bar */}
-                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                  <div 
-                    className="bg-emerald-500 h-2.5 rounded-full transition-all duration-700" 
-                    style={{ width: classAnalyticsMetrics.syncVal }}
-                  />
-                </div>
-                <div className="mt-2 text-[11px] text-slate-500 flex justify-between font-semibold">
-                  <span>Google Cloud Firestore • Enkripsi AES-256</span>
-                  <span className="text-emerald-700 font-bold">{classAnalyticsMetrics.syncVal} Sync</span>
-                </div>
-              </div>
-
-              {/* 3. Kehadiran Siswa */}
-              <div className="bg-white p-6 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all relative overflow-hidden group">
-                <div className="absolute top-0 left-0 right-0 h-1.5 bg-sky-500" />
-                <div className="flex items-start justify-between mb-3">
-                  <div className="p-3 rounded-xl bg-sky-50 border border-sky-100 text-sky-600">
-                    <UserCheck className="w-6 h-6 stroke-[2.5]" />
-                  </div>
-                  <span className="text-xs font-bold text-sky-700 bg-sky-50 px-2.5 py-1 rounded-full border border-sky-200 flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-                    <span>Presensi Live</span>
-                  </span>
-                </div>
-                <div className="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">
-                  Kehadiran Siswa
-                </div>
-                <div className="text-3xl font-black text-slate-900 mb-2 flex items-baseline gap-2">
-                  <span>{classAnalyticsMetrics.attPercentage}</span>
-                  <span className="text-xs font-bold text-sky-600">Rata-Rata Presensi</span>
-                </div>
-                <p className="text-xs text-slate-600 font-medium mb-3">
-                  Tingkat keaktifan dan kehadiran harian siswa seluruh kelas terverifikasi real-time.
-                </p>
-
-                {/* Live attendance breakdown badges */}
-                <div className="bg-slate-50 p-2 rounded-xl border border-slate-100 text-[11px] font-bold mb-3 grid grid-cols-4 gap-1 text-center">
-                  <span className="text-emerald-700 bg-emerald-50/80 py-1 rounded">{classAnalyticsMetrics.presentCount} Hadir</span>
-                  <span className="text-amber-700 bg-amber-50/80 py-1 rounded">{classAnalyticsMetrics.sickCount} Sakit</span>
-                  <span className="text-sky-700 bg-sky-50/80 py-1 rounded">{classAnalyticsMetrics.permittedCount} Izin</span>
-                  <span className="text-rose-700 bg-rose-50/80 py-1 rounded">{classAnalyticsMetrics.alphaCount} Alpa</span>
-                </div>
-                
-                {/* Progress bar */}
-                <div className="w-full bg-slate-100 rounded-full h-2.5 overflow-hidden">
-                  <div 
-                    className="bg-sky-500 h-2.5 rounded-full transition-all duration-700" 
-                    style={{ width: classAnalyticsMetrics.attPercentage }}
-                  />
-                </div>
-                <div className="mt-2 text-[11px] text-slate-500 flex justify-between font-semibold">
-                  <span>Presensi Terverifikasi</span>
-                  <span className="text-sky-700 font-bold">{classAnalyticsMetrics.attPercentage} Hadir ({classAnalyticsMetrics.presentCount}/{classAnalyticsMetrics.totalAtt})</span>
-                </div>
               </div>
             </div>
 
@@ -4141,9 +4009,9 @@ export const LoginView: React.FC<LoginViewProps> = ({
             </div>
 
             {/* Helpdesk Contact Options */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="max-w-md mx-auto">
               {/* WhatsApp Live Chat */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
+              <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
                 <div>
                   <div className="w-10 h-10 rounded-xl bg-emerald-500 text-white flex items-center justify-center font-bold mb-3 shadow-xs">
                     <MessageSquare className="w-5 h-5 text-white" />
@@ -4160,33 +4028,10 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   href="https://wa.me/6282230085818?text=Halo%20Helpdesk%20SIMAK%20Guru,%20saya%20butuh%20bantuan%20teknis"
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full py-2 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
+                  className="w-full py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
                 >
                   <MessageSquare className="w-3.5 h-3.5" />
                   <span>Chat WhatsApp</span>
-                </a>
-              </div>
-
-              {/* Email Support */}
-              <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-xs hover:shadow-md transition-all flex flex-col justify-between">
-                <div>
-                  <div className="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold mb-3 shadow-xs">
-                    <Mail className="w-5 h-5 text-white" />
-                  </div>
-                  <h3 className="text-sm font-bold text-slate-900 mb-1">Email Layanan Bantuan</h3>
-                  <p className="text-xs text-slate-600 leading-relaxed font-medium mb-3">
-                    Kirim surel resmi untuk bantuan verifikasi data massal, rujukan NIP, atau permohonan khusus.
-                  </p>
-                  <div className="text-xs font-bold text-purple-800 bg-purple-50 px-2.5 py-1 rounded-lg border border-purple-200 inline-block mb-3">
-                    helpdesk@simakguru.id
-                  </div>
-                </div>
-                <a
-                  href="mailto:helpdesk@simakguru.id?subject=Permohonan%20Bantuan%20SIMAK%20Guru"
-                  className="w-full py-2 px-3 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-bold flex items-center justify-center gap-1.5 transition-colors shadow-2xs"
-                >
-                  <Mail className="w-3.5 h-3.5" />
-                  <span>Kirim Email</span>
                 </a>
               </div>
             </div>
