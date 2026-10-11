@@ -20,7 +20,9 @@ import {
   UserCheck,
   Trash2,
   Database,
-  ChevronRight
+  ChevronRight,
+  Plus,
+  X
 } from 'lucide-react';
 import { TeacherProfile, UserAccount, RegisteredSchool } from '../../types';
 import { registerSchoolToFirebase, normalizeSchoolId, deleteSchoolFromFirebase } from '../../lib/firebaseService';
@@ -87,16 +89,16 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
   ) || registeredSchools[0];
 
   // Form states
-  const [schoolName, setSchoolName] = useState<string>(() => teacher?.schoolName || currentSchoolData?.name || 'SMA Negeri 1 Indonesia - Sekolah Penggerak');
-  const [npsn, setNpsn] = useState<string>(() => teacher?.npsn || currentSchoolData?.npsn || '20500000');
+  const [schoolName, setSchoolName] = useState<string>(() => teacher?.schoolName || currentSchoolData?.name || 'SMA Diponegoro Wagir');
+  const [npsn, setNpsn] = useState<string>(() => teacher?.npsn || currentSchoolData?.npsn || '20521404');
   const [jenjang, setJenjang] = useState<string>(() => currentSchoolData?.jenjang || 'SMA');
-  const [statusSekolah, setStatusSekolah] = useState<string>(() => currentSchoolData?.statusSekolah || 'Negeri');
+  const [statusSekolah, setStatusSekolah] = useState<string>(() => currentSchoolData?.statusSekolah || 'Swasta');
   const [akreditasi, setAkreditasi] = useState<string>(() => currentSchoolData?.akreditasi || 'A (Unggul)');
   const [kurikulum, setKurikulum] = useState<string>(() => currentSchoolData?.kurikulum || 'Kurikulum Merdeka');
-  const [principalName, setPrincipalName] = useState<string>(() => teacher?.principalName || currentSchoolData?.principalName || 'Dr. Hj. Sri Wahyuni, M.Si.');
-  const [principalNip, setPrincipalNip] = useState<string>(() => teacher?.principalNip || currentSchoolData?.principalNip || '19691120 199403 2 003');
-  const [city, setCity] = useState<string>(() => teacher?.city || currentSchoolData?.city || 'Indonesia');
-  const [address, setAddress] = useState<string>(() => currentSchoolData?.address || 'Jl. Pendidikan Merdeka No. 45, Kompleks Pendidikan');
+  const [principalName, setPrincipalName] = useState<string>(() => teacher?.principalName || currentSchoolData?.principalName || 'H. Moh. Ridwan, S.Pd., M.Si.');
+  const [principalNip, setPrincipalNip] = useState<string>(() => teacher?.principalNip || currentSchoolData?.principalNip || '19691120 199403 1 003');
+  const [city, setCity] = useState<string>(() => teacher?.city || currentSchoolData?.city || 'Kab. Malang');
+  const [address, setAddress] = useState<string>(() => currentSchoolData?.address || 'Jl. Raya Parangargo No. 1, Wagir, Kab. Malang');
   const [province, setProvince] = useState<string>(() => currentSchoolData?.province || 'Jawa Timur');
   const [postalCode, setPostalCode] = useState<string>(() => currentSchoolData?.postalCode || '65145');
   const [phone, setPhone] = useState<string>(() => currentSchoolData?.phone || '(0341) 551234');
@@ -107,6 +109,118 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  // Modal Tambah Sekolah State
+  const [showAddSchoolModal, setShowAddSchoolModal] = useState<boolean>(false);
+  const [isSubmittingNewSchool, setIsSubmittingNewSchool] = useState<boolean>(false);
+  const [newSchoolData, setNewSchoolData] = useState({
+    name: '',
+    npsn: '',
+    jenjang: 'SMA',
+    statusSekolah: 'Swasta',
+    akreditasi: 'A (Unggul)',
+    principalName: '',
+    principalNip: '',
+    city: 'Kab. Malang',
+    address: '',
+    phone: '',
+    email: ''
+  });
+
+  const handleSelectSchool = (schoolObj: RegisteredSchool) => {
+    if (!schoolObj) return;
+    setSchoolName(schoolObj.name || '');
+    setNpsn(schoolObj.npsn || '');
+    setJenjang(schoolObj.jenjang || 'SMA');
+    setStatusSekolah(schoolObj.statusSekolah || 'Swasta');
+    setAkreditasi(schoolObj.akreditasi || 'A (Unggul)');
+    setKurikulum(schoolObj.kurikulum || 'Kurikulum Merdeka');
+    setPrincipalName(schoolObj.principalName || '');
+    setPrincipalNip(schoolObj.principalNip || '');
+    setCity(schoolObj.city || 'Kab. Malang');
+    setAddress(schoolObj.address || '');
+    setProvince(schoolObj.province || 'Jawa Timur');
+    setPostalCode(schoolObj.postalCode || '');
+    setPhone(schoolObj.phone || '');
+    setEmailSekolah(schoolObj.email || '');
+    setWebsite(schoolObj.website || '');
+  };
+
+  const handleAddNewSchoolSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newSchoolData.name.trim()) {
+      alert('Nama sekolah wajib diisi!');
+      return;
+    }
+    if (!newSchoolData.npsn.trim()) {
+      alert('NPSN sekolah wajib diisi!');
+      return;
+    }
+
+    setIsSubmittingNewSchool(true);
+    try {
+      const sId = normalizeSchoolId(newSchoolData.name.trim());
+      const newSchoolPayload = {
+        id: sId,
+        name: newSchoolData.name.trim(),
+        npsn: newSchoolData.npsn.trim(),
+        jenjang: newSchoolData.jenjang,
+        statusSekolah: newSchoolData.statusSekolah,
+        akreditasi: newSchoolData.akreditasi,
+        principalName: newSchoolData.principalName.trim() || 'Kepala Sekolah',
+        principalNip: newSchoolData.principalNip.trim() || '-',
+        city: newSchoolData.city.trim() || 'Kab. Malang',
+        address: newSchoolData.address.trim() || '',
+        phone: newSchoolData.phone.trim() || '',
+        email: newSchoolData.email.trim() || '',
+        academicYear: academicYear || '2026/2027',
+        semester: semester || 'Ganjil',
+        kurikulum: 'Kurikulum Merdeka'
+      };
+
+      await registerSchoolToFirebase(newSchoolPayload);
+
+      if (onRegisterSchool) {
+        await onRegisterSchool(newSchoolPayload);
+      }
+
+      // Load new school details into active form
+      setSchoolName(newSchoolData.name.trim());
+      setNpsn(newSchoolData.npsn.trim());
+      setJenjang(newSchoolData.jenjang);
+      setStatusSekolah(newSchoolData.statusSekolah);
+      setAkreditasi(newSchoolData.akreditasi);
+      setPrincipalName(newSchoolData.principalName.trim() || 'Kepala Sekolah');
+      setPrincipalNip(newSchoolData.principalNip.trim() || '-');
+      setCity(newSchoolData.city.trim() || 'Kab. Malang');
+      setAddress(newSchoolData.address.trim() || '');
+
+      setFeedback({
+        type: 'success',
+        message: `Sekolah baru "${newSchoolData.name.trim()}" (NPSN: ${newSchoolData.npsn.trim()}) berhasil ditambahkan ke database sistem!`
+      });
+
+      setShowAddSchoolModal(false);
+      setNewSchoolData({
+        name: '',
+        npsn: '',
+        jenjang: 'SMA',
+        statusSekolah: 'Swasta',
+        akreditasi: 'A (Unggul)',
+        principalName: '',
+        principalNip: '',
+        city: 'Kab. Malang',
+        address: '',
+        phone: '',
+        email: ''
+      });
+    } catch (err: any) {
+      console.error('Error adding new school:', err);
+      alert(`Gagal menambah sekolah: ${err?.message || 'Kesalahan sistem'}`);
+    } finally {
+      setIsSubmittingNewSchool(false);
+    }
+  };
 
   // Sync state if teacher prop updates
   useEffect(() => {
@@ -280,16 +394,46 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start sm:self-center shrink-0">
+          <div className="flex items-center gap-2 self-start sm:self-center shrink-0 flex-wrap">
+            {registeredSchools && registeredSchools.length > 0 && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-[11px] font-bold text-slate-500 hidden md:inline">Pilih Sekolah:</span>
+                <select
+                  value={schoolName}
+                  onChange={(e) => {
+                    const sel = registeredSchools.find(s => s.name === e.target.value);
+                    if (sel) handleSelectSchool(sel);
+                  }}
+                  className="px-2.5 py-1.5 bg-slate-50 border border-slate-300 text-slate-800 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
+                >
+                  {registeredSchools.map((sch, i) => (
+                    <option key={sch.id || i} value={sch.name}>
+                      {sch.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+
+            <button
+              id="btn-open-add-school-modal"
+              type="button"
+              onClick={() => setShowAddSchoolModal(true)}
+              className="px-3.5 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
+            >
+              <Plus className="w-4 h-4 stroke-[2.5]" />
+              <span>Tambah Sekolah</span>
+            </button>
+
             {canEditSchool ? (
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-300 text-emerald-800 text-xs font-bold">
                 <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
-                <span>Izin Edit: {isAdministrator ? 'Administrator' : 'Kepala Sekolah'}</span>
+                <span className="hidden lg:inline">Izin Edit: {isAdministrator ? 'Administrator' : 'Kepala Sekolah'}</span>
               </div>
             ) : (
               <div className="flex items-center gap-1.5 px-3 py-1.5 bg-amber-50 border border-amber-300 text-amber-800 text-xs font-bold">
                 <Lock className="w-4 h-4 text-amber-600 shrink-0" />
-                <span>Mode Hanya-Lihat</span>
+                <span className="hidden lg:inline">Mode Hanya-Lihat</span>
               </div>
             )}
           </div>
@@ -890,6 +1034,211 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
             <span>Buka Pengaturan Penyimpanan</span>
             <ChevronRight className="w-3.5 h-3.5" />
           </button>
+        </div>
+      )}
+
+      {/* MODAL TAMBAH SEKOLAH BARU */}
+      {showAddSchoolModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white border border-slate-300 shadow-2xl w-full max-w-xl overflow-hidden animate-scaleIn">
+            {/* Modal Header */}
+            <div className="bg-[#164e63] px-5 py-4 text-white flex items-center justify-between">
+              <div className="flex items-center gap-2.5">
+                <div className="p-2 bg-cyan-700/60 text-white">
+                  <School className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-sm font-black uppercase tracking-wider">Tambah Sekolah Baru</h3>
+                  <p className="text-[11px] text-cyan-100">Daftarkan satuan pendidikan baru ke dalam sistem SIMAK</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddSchoolModal(false)}
+                className="p-1 hover:bg-cyan-700/80 text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Modal Form Body */}
+            <form onSubmit={handleAddNewSchoolSubmit} className="p-5 space-y-4 max-h-[80vh] overflow-y-auto">
+              {/* Jenjang */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Jenjang Pendidikan *
+                </label>
+                <div className="grid grid-cols-4 gap-2">
+                  {['SD/MI', 'SMP/MTS', 'SMA/MA', 'SMK'].map((j) => (
+                    <button
+                      key={j}
+                      type="button"
+                      onClick={() => setNewSchoolData(prev => ({ ...prev, jenjang: j.startsWith('SD') ? 'SD' : j.startsWith('SMP') ? 'SMP' : j.startsWith('SMA') ? 'SMA' : 'SMK' }))}
+                      className={`py-2 text-xs font-bold border text-center transition-all cursor-pointer ${
+                        (newSchoolData.jenjang === 'SD' && j.startsWith('SD')) ||
+                        (newSchoolData.jenjang === 'SMP' && j.startsWith('SMP')) ||
+                        (newSchoolData.jenjang === 'SMA' && j.startsWith('SMA')) ||
+                        (newSchoolData.jenjang === 'SMK' && j.startsWith('SMK'))
+                          ? 'bg-[#164e63] text-white border-[#164e63] shadow-xs'
+                          : 'bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100'
+                      }`}
+                    >
+                      {j}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Nama Sekolah */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Nama Resmi Sekolah *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={newSchoolData.name}
+                  onChange={(e) => setNewSchoolData(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Contoh: SMA Diponegoro Wagir"
+                  className="w-full px-3 py-2 border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-50"
+                />
+              </div>
+
+              {/* NPSN & Status */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    NPSN Sekolah *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={newSchoolData.npsn}
+                    onChange={(e) => setNewSchoolData(prev => ({ ...prev, npsn: e.target.value }))}
+                    placeholder="Contoh: 20521404"
+                    className="w-full px-3 py-2 border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Status Sekolah *
+                  </label>
+                  <select
+                    value={newSchoolData.statusSekolah}
+                    onChange={(e) => setNewSchoolData(prev => ({ ...prev, statusSekolah: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-50 cursor-pointer"
+                  >
+                    <option value="Swasta">Swasta</option>
+                    <option value="Negeri">Negeri</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Akreditasi & Kota/Kab */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Akreditasi
+                  </label>
+                  <select
+                    value={newSchoolData.akreditasi}
+                    onChange={(e) => setNewSchoolData(prev => ({ ...prev, akreditasi: e.target.value }))}
+                    className="w-full px-3 py-2 border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-50 cursor-pointer"
+                  >
+                    <option value="A (Unggul)">A (Unggul)</option>
+                    <option value="B (Baik)">B (Baik)</option>
+                    <option value="C (Cukup)">C (Cukup)</option>
+                    <option value="Belum Terakreditasi">Belum Terakreditasi</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Kota / Kabupaten
+                  </label>
+                  <input
+                    type="text"
+                    value={newSchoolData.city}
+                    onChange={(e) => setNewSchoolData(prev => ({ ...prev, city: e.target.value }))}
+                    placeholder="Contoh: Kab. Malang"
+                    className="w-full px-3 py-2 border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-50"
+                  />
+                </div>
+              </div>
+
+              {/* Kepala Sekolah & NIP */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    Nama Kepala Sekolah
+                  </label>
+                  <input
+                    type="text"
+                    value={newSchoolData.principalName}
+                    onChange={(e) => setNewSchoolData(prev => ({ ...prev, principalName: e.target.value }))}
+                    placeholder="Nama lengkap & gelar"
+                    className="w-full px-3 py-2 border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-700 mb-1">
+                    NIP Kepala Sekolah
+                  </label>
+                  <input
+                    type="text"
+                    value={newSchoolData.principalNip}
+                    onChange={(e) => setNewSchoolData(prev => ({ ...prev, principalNip: e.target.value }))}
+                    placeholder="Contoh: 1970..."
+                    className="w-full px-3 py-2 border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-50"
+                  />
+                </div>
+              </div>
+
+              {/* Alamat Lengkap */}
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1">
+                  Alamat Lengkap Sekolah
+                </label>
+                <textarea
+                  rows={2}
+                  value={newSchoolData.address}
+                  onChange={(e) => setNewSchoolData(prev => ({ ...prev, address: e.target.value }))}
+                  placeholder="Jl. Raya Parangargo No. 1, Wagir..."
+                  className="w-full px-3 py-2 border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-50 resize-none"
+                />
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex items-center justify-end gap-2.5 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setShowAddSchoolModal(false)}
+                  className="px-4 py-2 border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingNewSchool}
+                  className="px-5 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-2 shadow-xs transition-all cursor-pointer disabled:opacity-50"
+                >
+                  {isSubmittingNewSchool ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Menyimpan...</span>
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-3.5 h-3.5" />
+                      <span>Simpan Sekolah Baru</span>
+                    </>
+                  )}
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

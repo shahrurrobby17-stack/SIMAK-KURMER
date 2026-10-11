@@ -97,16 +97,54 @@ import { SettingsView } from './components/SettingsView';
 import { MaintenanceManagerView } from './components/MaintenanceManagerView';
 import { MaintenanceScreen } from './components/MaintenanceScreen';
 import { LoginView } from './components/LoginView';
+import { UserLoginLogsView } from './components/UserLoginLogsView';
 import { ProfilePromptModal } from './components/ProfilePromptModal';
 import { LogoutConfirmModal } from './components/LogoutConfirmModal';
 import { FooterHelpModals, HelpModalType } from './components/FooterHelpModals';
 import { RestrictedAccessModal } from './components/RestrictedAccessModal';
 import { SchoolStorageSelectorModal } from './components/SchoolStorageSelectorModal';
 import { InfoBannerCard } from './components/InfoBannerCard';
+import { MobileDeviceRestricted } from './components/MobileDeviceRestricted';
 import { syncToGoogleSheets } from './lib/googleSheetsService';
 import { Lock, RefreshCw, CheckCircle2, CloudDownload, Clock, Sparkles } from 'lucide-react';
 
 export default function App() {
+  // Detection for mobile phone (HP/Smartphone) or mobile view (< 768px or mobile phone UA)
+  const [isMobileDevice, setIsMobileDevice] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false;
+    const ua = navigator.userAgent || '';
+    const isMobileUA = /Android.*Mobile|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|webOS|Windows Phone/i.test(ua);
+    const isSmallScreen = window.innerWidth < 768;
+    const isLandscapePhone = (isMobileUA || ('ontouchstart' in window && window.innerHeight < 550)) && window.innerWidth < 1024;
+    return isSmallScreen || isMobileUA || isLandscapePhone;
+  });
+
+  const [viewportSize, setViewportSize] = useState<{ width: number; height: number }>(() => ({
+    width: typeof window !== 'undefined' ? window.innerWidth : 0,
+    height: typeof window !== 'undefined' ? window.innerHeight : 0,
+  }));
+
+  useEffect(() => {
+    const handleCheckMobile = () => {
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      setViewportSize({ width: w, height: h });
+      const ua = navigator.userAgent || '';
+      const isMobileUA = /Android.*Mobile|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|webOS|Windows Phone/i.test(ua);
+      const isSmallScreen = w < 768;
+      const isLandscapePhone = (isMobileUA || ('ontouchstart' in window && h < 550)) && w < 1024;
+      setIsMobileDevice(isSmallScreen || isMobileUA || isLandscapePhone);
+    };
+
+    handleCheckMobile();
+    window.addEventListener('resize', handleCheckMobile);
+    window.addEventListener('orientationchange', handleCheckMobile);
+    return () => {
+      window.removeEventListener('resize', handleCheckMobile);
+      window.removeEventListener('orientationchange', handleCheckMobile);
+    };
+  }, []);
+
   // Load initial states with localStorage & Firebase fallback
   const [currentUser, setCurrentUser] = useState<UserAccount | null>(() => {
     try {
@@ -560,12 +598,15 @@ export default function App() {
 
   // Login Background Global State & Sync
   const [loginBackgroundConfig, setLoginBackgroundConfig] = useState<LoginBackgroundConfig>(() => {
-    const saved = null;
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {}
-    }
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('simak_login_bg_config');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object') return parsed;
+        }
+      }
+    } catch (e) {}
     return defaultLoginBackgroundConfig;
   });
 
@@ -574,6 +615,9 @@ export default function App() {
       if (remoteConfig) {
         setLoginBackgroundConfig(remoteConfig);
         try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('simak_login_bg_config', JSON.stringify(remoteConfig));
+          }
         } catch (e) {}
       }
     });
@@ -583,8 +627,11 @@ export default function App() {
   const handleUpdateLoginBackgroundConfig = (newConfig: LoginBackgroundConfig) => {
     setLoginBackgroundConfig(newConfig);
     try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('simak_login_bg_config', JSON.stringify(newConfig));
+      }
     } catch (err) {
-      console.warn('Error saving to localStorage:', err);
+      console.warn('Error saving login bg config to localStorage:', err);
     }
     saveLoginBackgroundConfigToFirebase(newConfig);
   };
@@ -654,6 +701,15 @@ export default function App() {
     }
     return list;
   });
+
+  // Always keep localStorage synchronized with registeredUsers for login verification
+  useEffect(() => {
+    try {
+      if (registeredUsers && registeredUsers.length > 0) {
+        localStorage.setItem('simak_registered_users', JSON.stringify(registeredUsers));
+      }
+    } catch (e) {}
+  }, [registeredUsers]);
 
   const [showLoginScreen, setShowLoginScreen] = useState<boolean>(true);
 
@@ -1746,6 +1802,11 @@ export default function App() {
       try {
         localStorage.removeItem('simak_students_reset_cleared');
       } catch (e) {}
+    } else {
+      try {
+        localStorage.setItem('simak_students_reset_cleared', 'true');
+        localStorage.removeItem('simak_students_data');
+      } catch (e) {}
     }
     const injected = updatedStudents.map(injectSchool);
     setStudents(prevAll => {
@@ -2043,7 +2104,7 @@ export default function App() {
   }, [isGuruRole, activeTab]);
 
   useEffect(() => {
-    if (isKepalaSekolah && (activeTab === 'master-data' || activeTab === 'ai-assistant' || activeTab === 'residu')) {
+    if (isKepalaSekolah && (activeTab === 'master-data' || activeTab === 'system-schools' || activeTab === 'ai-assistant' || activeTab === 'residu')) {
       setActiveTab('validasi');
     }
   }, [isKepalaSekolah, activeTab]);
@@ -2087,7 +2148,7 @@ export default function App() {
       return;
     }
 
-    if (isKepalaSekolah && (tab === 'master-data' || tab === 'ai-assistant' || tab === 'residu')) {
+    if (isKepalaSekolah && (tab === 'master-data' || tab === 'system-schools' || tab === 'ai-assistant' || tab === 'residu')) {
       setActiveTab('validasi');
       return;
     }
@@ -2104,11 +2165,33 @@ export default function App() {
     } catch (e) {}
   };
 
+  // Block access completely on mobile phone (HP/Smartphone)
+  if (isMobileDevice) {
+    return (
+      <MobileDeviceRestricted
+        currentWidth={viewportSize.width}
+        currentHeight={viewportSize.height}
+        onRefresh={() => {
+          const w = window.innerWidth;
+          const h = window.innerHeight;
+          setViewportSize({ width: w, height: h });
+          const ua = navigator.userAgent || '';
+          const isMobileUA = /Android.*Mobile|iPhone|iPod|BlackBerry|IEMobile|Opera Mini|webOS|Windows Phone/i.test(ua);
+          const isSmallScreen = w < 768;
+          const isLandscapePhone = (isMobileUA || ('ontouchstart' in window && h < 550)) && w < 1024;
+          setIsMobileDevice(isSmallScreen || isMobileUA || isLandscapePhone);
+          window.location.reload();
+        }}
+      />
+    );
+  }
+
   if (showLoginScreen || !currentUser) {
     return (
       <LoginView
         teacherProfiles={teacherProfiles}
         registeredUsers={registeredUsers}
+        registeredSchools={registeredSchools}
         onRegisterNewAccount={handleRegisterNewAccount}
         onResetPassword={handleResetPassword}
         students={allStudents.length > 0 ? allStudents : students}
@@ -2146,21 +2229,23 @@ export default function App() {
           const isUserKepala = Boolean(
             user.role && (
               user.role.toLowerCase().includes('kepala') ||
-              user.role.toLowerCase().includes('principal')
+              user.role.toLowerCase().includes('principal') ||
+              user.role.toLowerCase().includes('kepsek')
             )
           );
 
-          const isUserAdmin = Boolean(
-            isMasterUser ||
+          const isUserAdmin = !isUserKepala && Boolean(
             (user.role && (
               user.role.toLowerCase().includes('admin') ||
               user.role.toLowerCase().includes('master') ||
+              user.role.toLowerCase().includes('operator') ||
               user.role.toLowerCase().includes('super')
             )) ||
             (user.email && (
-              user.email.toLowerCase().includes('admin') ||
-              user.email.toLowerCase().includes('master')
-            ))
+              user.email.toLowerCase() === 'shahrurrobby17@gmail.com' ||
+              user.email.toLowerCase().includes('admin.simakmerdeka')
+            )) ||
+            (user.name && user.name.toLowerCase().includes('shahrur'))
           );
 
           let destinationTab: NavTab = 'dashboard';
@@ -2348,7 +2433,7 @@ export default function App() {
                 transition={{ duration: 0.2, ease: [0.25, 1, 0.5, 1] }}
                 className="w-full h-full"
               >
-                {activeTab === 'dashboard' && isAdministrator && (
+                  {activeTab === 'dashboard' && isAdministrator && (
                     <DashboardAnalytics 
                       students={allStudents && allStudents.length > 0 ? allStudents : students}
                       grades={allGrades && allGrades.length > 0 ? allGrades : grades}
@@ -2365,6 +2450,14 @@ export default function App() {
                       isMasterUser={isMasterUser}
                       isAccountDisabled={isCurrentAccountDisabled}
                       onTabChange={handleTabChange}
+                    />
+                  )}
+
+                  {activeTab === 'login-logs' && (isAdministrator || isMasterUser || isAdminSystem) && (
+                    <UserLoginLogsView 
+                      currentUser={currentUser}
+                      activeSchoolName={activeSchoolName}
+                      onNavigateTab={handleTabChange}
                     />
                   )}
 
@@ -2467,6 +2560,11 @@ export default function App() {
                     <TeacherSystemView 
                       registeredUsers={registeredUsers}
                       teacher={teacher}
+                      currentUser={currentUser}
+                      teacherProfiles={teacherProfiles}
+                      registeredSchools={registeredSchools}
+                      activeSchoolName={activeSchoolName}
+                      onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
                       onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
                     />
                   )}
@@ -2508,6 +2606,7 @@ export default function App() {
                       onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
                       onAddStudent={handleAddStudent}
                       onEditStudent={(st) => handleUpdateStudents(allStudents.map(s => s.id === st.id ? st : s))}
+                      onUpdateStudents={handleUpdateStudents}
                       onDeleteStudent={handleDeleteStudent}
                       onSaveTask={handleSaveStudentTask}
                       onUpdateAttendance={handleUpdateAttendanceRecordsBatch}
@@ -2523,25 +2622,67 @@ export default function App() {
                     />
                   )}
 
-              {activeTab === 'master-data' && (isMasterUser || isAdminSystem || isAdministrator || isKepalaSekolah) && (
-                <MasterDataView 
-                  registeredUsers={registeredUsers}
-                  onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
-                  teacherProfiles={teacherProfiles}
-                  currentUser={currentUser}
-                  teacher={teacher}
-                  onUpdateTeacherProfile={handleUpdateTeacherProfile}
-                  registeredSchools={registeredSchools}
-                  onRegisterSchool={handleRegisterNewSchool}
-                  onDeleteSchoolStorage={handleDeleteSchoolStorage}
-                  activeSchoolName={activeSchoolName}
-                  classList={classList}
-                  infoAnnouncement={infoAnnouncement}
-                  onUpdateInfoAnnouncement={handleUpdateInfoAnnouncement}
-                  renderUserModule={renderUserModule}
-                  onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
-                />
-              )}
+                  {activeTab === 'system-schools' && (isMasterUser || isAdminSystem || isAdministrator) && (
+                    <MasterDataView 
+                      registeredUsers={registeredUsers}
+                      onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
+                      teacherProfiles={teacherProfiles}
+                      currentUser={currentUser}
+                      teacher={teacher}
+                      onUpdateTeacherProfile={handleUpdateTeacherProfile}
+                      registeredSchools={registeredSchools}
+                      onRegisterSchool={handleRegisterNewSchool}
+                      onDeleteSchoolStorage={handleDeleteSchoolStorage}
+                      activeSchoolName={activeSchoolName}
+                      classList={classList}
+                      infoAnnouncement={infoAnnouncement}
+                      onUpdateInfoAnnouncement={handleUpdateInfoAnnouncement}
+                      renderUserModule={renderUserModule}
+                      onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
+                      activeCategory="DetailSekolah"
+                    />
+                  )}
+
+                  {activeTab === 'system-registered-schools' && (isMasterUser || isAdminSystem || isAdministrator) && (
+                    <MasterDataView 
+                      registeredUsers={registeredUsers}
+                      onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
+                      teacherProfiles={teacherProfiles}
+                      currentUser={currentUser}
+                      teacher={teacher}
+                      onUpdateTeacherProfile={handleUpdateTeacherProfile}
+                      registeredSchools={registeredSchools}
+                      onRegisterSchool={handleRegisterNewSchool}
+                      onDeleteSchoolStorage={handleDeleteSchoolStorage}
+                      activeSchoolName={activeSchoolName}
+                      classList={classList}
+                      infoAnnouncement={infoAnnouncement}
+                      onUpdateInfoAnnouncement={handleUpdateInfoAnnouncement}
+                      renderUserModule={renderUserModule}
+                      onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
+                      activeCategory="DaftarSekolahTabel"
+                    />
+                  )}
+
+                  {activeTab === 'master-data' && (isMasterUser || isAdminSystem || isAdministrator || isKepalaSekolah) && (
+                    <MasterDataView 
+                      registeredUsers={registeredUsers}
+                      onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
+                      teacherProfiles={teacherProfiles}
+                      currentUser={currentUser}
+                      teacher={teacher}
+                      onUpdateTeacherProfile={handleUpdateTeacherProfile}
+                      registeredSchools={registeredSchools}
+                      onRegisterSchool={handleRegisterNewSchool}
+                      onDeleteSchoolStorage={handleDeleteSchoolStorage}
+                      activeSchoolName={activeSchoolName}
+                      classList={classList}
+                      infoAnnouncement={infoAnnouncement}
+                      onUpdateInfoAnnouncement={handleUpdateInfoAnnouncement}
+                      renderUserModule={renderUserModule}
+                      onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
+                    />
+                  )}
 
               {(activeTab === 'validasi' || activeTab.startsWith('validasi')) && (
                 <ValidationSystemView 

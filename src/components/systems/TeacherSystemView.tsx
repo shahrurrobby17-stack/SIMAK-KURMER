@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   Users,
   BookOpen,
@@ -20,14 +20,27 @@ import {
   XSquare,
   Edit3,
   Trash2,
-  FolderUp
+  FolderUp,
+  ShieldCheck,
+  Filter,
+  UserCheck,
+  UserX,
+  X,
+  Save,
+  Check,
+  School
 } from 'lucide-react';
-import { UserAccount, TeacherProfile, TeachingLog } from '../../types';
+import { UserAccount, TeacherProfile, RegisteredSchool } from '../../types';
 import { TeacherModuleUploadView, initialDefaultModules } from '../TeacherModuleUploadView';
 
 interface TeacherSystemViewProps {
   registeredUsers: UserAccount[];
   teacher?: TeacherProfile;
+  currentUser?: UserAccount | null;
+  teacherProfiles?: TeacherProfile[];
+  registeredSchools?: RegisteredSchool[];
+  activeSchoolName?: string;
+  onUpdateRegisteredUsers?: (users: UserAccount[]) => void;
   onNavigateTab?: (tab: string) => void;
   onOpenAddUserModal?: (defaultRole: string) => void;
   onOpenEditUserModal?: (user: UserAccount) => void;
@@ -49,37 +62,229 @@ interface TeachingLogItem {
   status: string;
 }
 
-interface TeacherAdminItem {
-  id: string;
-  nama: string;
-  nip: string;
-  mapel: string;
-  modul: boolean;
-  atp: boolean;
-  kktp: boolean;
-  jurnal: boolean;
-  nilai: boolean;
-  status: string;
-}
-
 export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
-  registeredUsers,
+  registeredUsers = [],
   teacher,
+  currentUser,
+  teacherProfiles = [],
+  registeredSchools = [],
+  activeSchoolName,
+  onUpdateRegisteredUsers,
   onNavigateTab,
   onOpenAddUserModal,
   onOpenEditUserModal,
   onOpenDeleteUserModal,
-  onOpenModuleModal,
-  onSelectCategory
+  onOpenModuleModal
 }) => {
-  const [activeTab, setActiveTab] = useState<'jurnal' | 'uploadModul' | 'administrasi' | 'direktori'>('jurnal');
+  // Default tab is 'direktori' (GTK Table)
+  const [activeTab, setActiveTab] = useState<'direktori' | 'jurnal' | 'uploadModul' | 'administrasi'>('direktori');
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [statusKepegawaianFilter, setStatusKepegawaianFilter] = useState<string>('Semua');
+  const [schoolFilter, setSchoolFilter] = useState<string>('Semua');
+  const [roleFilter, setRoleFilter] = useState<string>('Semua');
 
-  // Filter teachers
-  const teacherUsers = registeredUsers.filter(u => {
-    const r = (u.role || '').toLowerCase();
-    return !r.includes('kurikulum') && !r.includes('tu') && !r.includes('tata usaha') && !r.includes('siswa') && !r.includes('operator') && !r.includes('administrasi');
-  });
+  // Modal States for Inline GTK Add/Edit
+  const [showInlineAddModal, setShowInlineAddModal] = useState<boolean>(false);
+  const [showInlineEditModal, setShowInlineEditModal] = useState<boolean>(false);
+  const [selectedUserForEdit, setSelectedUserForEdit] = useState<UserAccount | null>(null);
+  const [showInlineDeleteModal, setShowInlineDeleteModal] = useState<boolean>(false);
+  const [selectedUserForDelete, setSelectedUserForDelete] = useState<UserAccount | null>(null);
+
+  // Form States for Add/Edit GTK
+  const [formName, setFormName] = useState<string>('');
+  const [formEmail, setFormEmail] = useState<string>('');
+  const [formNip, setFormNip] = useState<string>('');
+  const [formSchool, setFormSchool] = useState<string>('SMA Negeri 1 Indonesia - Sekolah Penggerak');
+  const [formRole, setFormRole] = useState<string>('Guru Pengampu');
+  const [formEmploymentStatus, setFormEmploymentStatus] = useState<'PPPK' | 'PNS' | 'Non-ASN' | 'Honorer' | 'GTY'>('PNS');
+  const [formStatus, setFormStatus] = useState<'Aktif' | 'Nonaktif' | 'Menunggu Aktivasi'>('Aktif');
+
+  // Identify Role Level
+  const isAdministrator = useMemo(() => {
+    return Boolean(
+      currentUser?.email?.toLowerCase() === 'shahrurrobby17@gmail.com' ||
+      (currentUser?.role && (
+        currentUser.role.toLowerCase().includes('admin') ||
+        currentUser.role.toLowerCase().includes('master') ||
+        currentUser.role.toLowerCase().includes('super')
+      )) ||
+      teacher?.id === 'PROF-ADMIN'
+    );
+  }, [currentUser, teacher]);
+
+  const isKepalaSekolah = useMemo(() => {
+    return Boolean(
+      currentUser?.role && (
+        currentUser.role.toLowerCase().includes('kepala') ||
+        currentUser.role.toLowerCase().includes('principal')
+      ) && !isAdministrator
+    );
+  }, [currentUser, isAdministrator]);
+
+  // Derive Status Kepegawaian (PPPK / PNS / Non-ASN / Honorer / GTY)
+  const getStatusKepegawaian = (item: any): 'PPPK' | 'PNS' | 'Non-ASN' | 'Honorer' | 'GTY' => {
+    if (item.employmentStatus) {
+      const empUpper = String(item.employmentStatus).toUpperCase();
+      if (empUpper.includes('GTY') || empUpper.includes('YAYASAN')) return 'GTY';
+      if (empUpper.includes('PPPK')) return 'PPPK';
+      if (empUpper.includes('PNS')) return 'PNS';
+      if (empUpper.includes('NON-ASN') || empUpper.includes('NON ASN')) return 'Non-ASN';
+      if (empUpper.includes('HONORER')) return 'Honorer';
+      return item.employmentStatus as any;
+    }
+    if (item.statusKepegawaian) {
+      const skUpper = String(item.statusKepegawaian).toUpperCase();
+      if (skUpper.includes('GTY') || skUpper.includes('YAYASAN')) return 'GTY';
+      if (skUpper.includes('PPPK')) return 'PPPK';
+      if (skUpper.includes('PNS')) return 'PNS';
+      if (skUpper.includes('NON-ASN') || skUpper.includes('NON ASN')) return 'Non-ASN';
+      if (skUpper.includes('HONORER')) return 'Honorer';
+      return item.statusKepegawaian as any;
+    }
+
+    const nipClean = item.nip ? String(item.nip).replace(/\s+/g, '').trim() : '';
+    const roleLower = (item.role || '').toLowerCase();
+
+    if (roleLower.includes('gty') || roleLower.includes('yayasan')) return 'GTY';
+    if (roleLower.includes('pppk')) return 'PPPK';
+    if (roleLower.includes('pns')) return 'PNS';
+    if (roleLower.includes('honorer')) return 'Honorer';
+    if (roleLower.includes('non-asn') || roleLower.includes('non asn')) return 'Non-ASN';
+
+    if (nipClean.length >= 18) {
+      const yearSlot = nipClean.substring(8, 12);
+      const yr = parseInt(yearSlot, 10);
+      if (!isNaN(yr) && yr >= 2021) {
+        return 'PPPK';
+      }
+      return 'PNS';
+    } else if (nipClean.length >= 12) {
+      return 'Non-ASN';
+    } else if (nipClean.length > 0) {
+      return 'Honorer';
+    }
+
+    return 'Honorer';
+  };
+
+  // Build Unified GTK List (Teachers, Staff, Educators, Officers)
+  const allGtkList = useMemo(() => {
+    const map = new Map<string, any>();
+
+    // 1. Process registeredUsers
+    registeredUsers.forEach((u) => {
+      const rLower = (u.role || '').toLowerCase();
+      // Exclude students
+      if (rLower.includes('siswa') || rLower.includes('murid')) return;
+
+      const userSchool = u.schoolName || activeSchoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak';
+
+      // For Kepala Sekolah, filter by active school context
+      if (isKepalaSekolah && activeSchoolName) {
+        const uSchoolClean = userSchool.toLowerCase().trim();
+        const activeClean = activeSchoolName.toLowerCase().trim();
+        if (uSchoolClean && !uSchoolClean.includes(activeClean) && !activeClean.includes(uSchoolClean)) {
+          return;
+        }
+      }
+
+      const key = u.email ? u.email.toLowerCase() : u.uid;
+      map.set(key, {
+        uid: u.uid,
+        name: u.name,
+        email: u.email,
+        nip: u.nip || '-',
+        schoolName: userSchool,
+        role: u.role || 'Guru Pengampu',
+        status: u.status || 'Aktif',
+        employmentStatus: getStatusKepegawaian(u)
+      });
+    });
+
+    // 2. Combine with teacherProfiles
+    teacherProfiles.forEach((p) => {
+      const key = p.email ? p.email.toLowerCase() : (p.id || p.nip);
+      if (!key) return;
+
+      const profSchool = p.schoolName || activeSchoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak';
+
+      if (isKepalaSekolah && activeSchoolName) {
+        const pSchoolClean = profSchool.toLowerCase().trim();
+        const activeClean = activeSchoolName.toLowerCase().trim();
+        if (pSchoolClean && !pSchoolClean.includes(activeClean) && !activeClean.includes(pSchoolClean)) {
+          return;
+        }
+      }
+
+      if (!map.has(key)) {
+        map.set(key, {
+          uid: p.id || `PROF-${Date.now()}`,
+          name: p.name,
+          email: p.email || `${p.nip ? p.nip.replace(/\s+/g, '') : 'prof'}@simakmerdeka.ai.studio`,
+          nip: p.nip || '-',
+          schoolName: profSchool,
+          role: p.title || 'Guru Pengampu',
+          status: p.status || 'Aktif',
+          employmentStatus: getStatusKepegawaian(p)
+        });
+      }
+    });
+
+    return Array.from(map.values());
+  }, [registeredUsers, teacherProfiles, isKepalaSekolah, activeSchoolName]);
+
+  // List of distinct schools for school filter
+  const schoolOptions = useMemo(() => {
+    const set = new Set<string>();
+    registeredSchools.forEach((s) => set.add(s.name));
+    allGtkList.forEach((g) => {
+      if (g.schoolName) set.add(g.schoolName);
+    });
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [registeredSchools, allGtkList]);
+
+  // Filtered GTK List
+  const filteredGtkList = useMemo(() => {
+    return allGtkList.filter((item) => {
+      // Search term
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const nameMatch = item.name && item.name.toLowerCase().includes(q);
+        const nipMatch = item.nip && item.nip.toLowerCase().includes(q);
+        const emailMatch = item.email && item.email.toLowerCase().includes(q);
+        const roleMatch = item.role && item.role.toLowerCase().includes(q);
+        const schoolMatch = item.schoolName && item.schoolName.toLowerCase().includes(q);
+        if (!nameMatch && !nipMatch && !emailMatch && !roleMatch && !schoolMatch) return false;
+      }
+
+      // School filter
+      if (schoolFilter !== 'Semua') {
+        if (item.schoolName !== schoolFilter) return false;
+      }
+
+      // Status Kepegawaian filter
+      if (statusKepegawaianFilter !== 'Semua') {
+        if (item.employmentStatus !== statusKepegawaianFilter) return false;
+      }
+
+      // Role filter
+      if (roleFilter !== 'Semua') {
+        const rLower = (item.role || '').toLowerCase();
+        if (roleFilter === 'Guru' && !rLower.includes('guru') && !rLower.includes('pendidik')) return false;
+        if (roleFilter === 'Kepala Sekolah' && !rLower.includes('kepala') && !rLower.includes('principal')) return false;
+        if (roleFilter === 'TU / Staff' && !rLower.includes('tu') && !rLower.includes('tata usaha') && !rLower.includes('administrasi') && !rLower.includes('staf')) return false;
+      }
+
+      return true;
+    });
+  }, [allGtkList, searchQuery, schoolFilter, statusKepegawaianFilter, roleFilter]);
+
+  // Counts
+  const pnsCount = useMemo(() => allGtkList.filter(g => g.employmentStatus === 'PNS').length, [allGtkList]);
+  const pppkCount = useMemo(() => allGtkList.filter(g => g.employmentStatus === 'PPPK').length, [allGtkList]);
+  const gtyCount = useMemo(() => allGtkList.filter(g => g.employmentStatus === 'GTY').length, [allGtkList]);
+  const nonAsnCount = useMemo(() => allGtkList.filter(g => g.employmentStatus === 'Non-ASN').length, [allGtkList]);
+  const honorerCount = useMemo(() => allGtkList.filter(g => g.employmentStatus === 'Honorer').length, [allGtkList]);
 
   // Teaching Logs State
   const [teachingLogs, setTeachingLogs] = useState<TeachingLogItem[]>([
@@ -106,219 +311,121 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
   const [showDeleteLogModal, setShowDeleteLogModal] = useState<boolean>(false);
   const [logToDelete, setLogToDelete] = useState<TeachingLogItem | null>(null);
 
-  // Load and sync modules from localStorage
-  const [modules, setModules] = useState<any[]>(() => {
-    const saved = ((k: string) => null as any)('simak_teacher_modules');
-    if (saved) {
-      try {
-        return JSON.parse(saved);
-      } catch (e) {
-        console.error(e);
-      }
+  // Modules
+  const [modules] = useState<any[]>(() => initialDefaultModules);
+
+  // Open Add Inline GTK Modal
+  const handleOpenInlineAdd = () => {
+    if (onOpenAddUserModal) {
+      onOpenAddUserModal('Guru Pengampu');
+      return;
     }
-    return initialDefaultModules;
-  });
-
-  React.useEffect(() => {
-    const saved = ((k: string) => null as any)('simak_teacher_modules');
-    if (saved) {
-      try {
-        setModules(JSON.parse(saved));
-      } catch (e) {
-        console.error(e);
-      }
-    }
-  }, [activeTab]);
-
-  // Dynamically compute the administrative and supervisi list
-  const teacherAdminList = React.useMemo(() => {
-    // Load grades from localStorage
-    let gradesData: any[] = [];
-    try {
-      const savedGrades = ((k: string) => null as any)('simak_grades');
-      if (savedGrades) gradesData = JSON.parse(savedGrades);
-    } catch (e) {}
-
-    // Load tasks from localStorage
-    let tasksData: any[] = [];
-    try {
-      const savedTasks = ((k: string) => null as any)('simak_student_tasks');
-      if (savedTasks) tasksData = JSON.parse(savedTasks);
-    } catch (e) {}
-
-    // Load teacher profiles
-    let profilesData: any[] = [];
-    try {
-      const savedProfiles = ((k: string) => null as any)('simak_teacher_profiles');
-      if (savedProfiles) profilesData = JSON.parse(savedProfiles);
-    } catch (e) {}
-
-    return teacherUsers.map((user, index) => {
-      const profile = profilesData.find(p => p.name.toLowerCase() === user.name.toLowerCase() || p.id === user.uid);
-      const nip = user.nip || (profile ? profile.nip : '') || (index === 0 ? '19900101 201501 1 001' : index === 1 ? '19850412 201001 1 008' : index === 2 ? '19880922 201402 2 005' : index === 3 ? '19790215 200501 1 003' : '19920311 201903 2 007');
-
-      // Determine mapel
-      let mapel = 'Biologi';
-      if (profile && profile.subjectRole) {
-        mapel = profile.subjectRole;
-      } else if (user.role && user.role.includes('(')) {
-        const match = user.role.match(/\(([^)]+)\)/);
-        if (match) mapel = match[1];
-      } else if (user.role && user.role.includes('Guru Pengampu')) {
-        mapel = user.role.replace('Guru Pengampu', '').trim();
-      }
-
-      // Filter documents uploaded by this teacher
-      const teacherDocs = modules.filter(m => m.teacherName.toLowerCase() === user.name.toLowerCase());
-
-      // Check status of each category
-      const hasModul = teacherDocs.some(m => m.category.includes('Modul Ajar'));
-      const isModulApproved = teacherDocs.some(m => m.category.includes('Modul Ajar') && m.status === 'Disetujui');
-      const isModulReviewing = teacherDocs.some(m => m.category.includes('Modul Ajar') && m.status === 'Meninjau');
-
-      const hasAtp = teacherDocs.some(m => m.category.includes('Alur Tujuan Pembelajaran'));
-      const isAtpApproved = teacherDocs.some(m => m.category.includes('Alur Tujuan Pembelajaran') && m.status === 'Disetujui');
-      const isAtpReviewing = teacherDocs.some(m => m.category.includes('Alur Tujuan Pembelajaran') && m.status === 'Meninjau');
-
-      const hasKktp = teacherDocs.some(m => m.category.includes('Kriteria Ketercapaian TP') || m.category.includes('KKTP'));
-      const isKktpApproved = teacherDocs.some(m => (m.category.includes('Kriteria Ketercapaian TP') || m.category.includes('KKTP')) && m.status === 'Disetujui');
-      const isKktpReviewing = teacherDocs.some(m => (m.category.includes('Kriteria Ketercapaian TP') || m.category.includes('KKTP')) && m.status === 'Meninjau');
-
-      // Jurnal: true if has logs in teachingLogs state
-      const hasJurnal = teachingLogs.some(l => l.guru.toLowerCase() === user.name.toLowerCase());
-
-      // Buku Nilai: true if grades exist or task grades exist
-      const hasNilai = gradesData.length > 0 || tasksData.some(t => t.grades && Object.keys(t.grades).length > 0) || teacherDocs.some(m => m.category.includes('Kisi-Kisi') || m.category.includes('Soal'));
-
-      // Calculate progress percentage
-      const completedCount = [
-        isModulApproved || isModulReviewing || hasModul,
-        isAtpApproved || isAtpReviewing || hasAtp,
-        isKktpApproved || isKktpReviewing || hasKktp,
-        hasJurnal,
-        hasNilai
-      ].filter(Boolean).length;
-      
-      const pct = Math.round((completedCount / 5) * 100);
-      const statusStr = pct === 100 ? 'Lengkap (100%)' : `Progres (${pct}%)`;
-
-      return {
-        id: user.uid || `ADM-${index}`,
-        nama: user.name,
-        nip,
-        mapel,
-        modul: hasModul,
-        modulApproved: isModulApproved,
-        modulReviewing: isModulReviewing,
-        atp: hasAtp,
-        atpApproved: isAtpApproved,
-        atpReviewing: isAtpReviewing,
-        kktp: hasKktp,
-        kktpApproved: isKktpApproved,
-        kktpReviewing: isKktpReviewing,
-        jurnal: hasJurnal,
-        nilai: hasNilai,
-        status: statusStr,
-        pct
-      };
-    });
-  }, [teacherUsers, modules, teachingLogs]);
-
-  // Journal Handlers
-  const handleOpenAddLog = () => {
-    setEditingLogId(null);
-    setLogFormGuru(teacher?.name || (teacherUsers[0]?.name || ''));
-    setLogFormMapel('Biologi');
-    setLogFormKelas('X-IPA 1');
-    setLogFormTgl(new Date().toISOString().split('T')[0]);
-    setLogFormJam('Jam Ke 1-2 (07.00 - 08.30)');
-    setLogFormTp('');
-    setLogFormHadir(32);
-    setLogFormAbsen(0);
-    setLogFormStatus('Tuntas');
-    setShowLogModal(true);
+    setFormName('');
+    setFormEmail('');
+    setFormNip('');
+    setFormSchool(activeSchoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak');
+    setFormRole('Guru Pengampu');
+    setFormEmploymentStatus('PNS');
+    setFormStatus('Aktif');
+    setShowInlineAddModal(true);
   };
 
-  const handleOpenEditLog = (item: TeachingLogItem) => {
-    setEditingLogId(item.id);
-    setLogFormGuru(item.guru);
-    setLogFormMapel(item.mapel);
-    setLogFormKelas(item.kelas);
-    setLogFormTgl(item.tgl);
-    setLogFormJam(item.jam);
-    setLogFormTp(item.tp);
-    setLogFormHadir(item.hadir);
-    setLogFormAbsen(item.absen);
-    setLogFormStatus(item.status);
-    setShowLogModal(true);
+  // Open Edit Inline GTK Modal
+  const handleOpenInlineEdit = (userItem: any) => {
+    if (onOpenEditUserModal) {
+      onOpenEditUserModal(userItem);
+      return;
+    }
+    setSelectedUserForEdit(userItem);
+    setFormName(userItem.name || '');
+    setFormEmail(userItem.email || '');
+    setFormNip(userItem.nip || '');
+    setFormSchool(userItem.schoolName || activeSchoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak');
+    setFormRole(userItem.role || 'Guru Pengampu');
+    setFormEmploymentStatus(userItem.employmentStatus || 'PNS');
+    setFormStatus(userItem.status || 'Aktif');
+    setShowInlineEditModal(true);
   };
 
-  const handleSaveLog = (e: React.FormEvent) => {
+  // Save Inline Add GTK
+  const handleSaveInlineAdd = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!logFormGuru || !logFormMapel) return;
+    if (!formName.trim() || !formEmail.trim()) return;
 
-    if (editingLogId) {
-      setTeachingLogs(prev => prev.map(l => l.id === editingLogId ? {
-        ...l,
-        guru: logFormGuru,
-        mapel: logFormMapel,
-        kelas: logFormKelas,
-        tgl: logFormTgl,
-        jam: logFormJam,
-        tp: logFormTp,
-        hadir: Number(logFormHadir),
-        absen: Number(logFormAbsen),
-        status: logFormStatus
-      } : l));
-    } else {
-      const newLog: TeachingLogItem = {
-        id: `LOG-${Date.now().toString().slice(-4)}`,
-        guru: logFormGuru,
-        mapel: logFormMapel,
-        kelas: logFormKelas,
-        tgl: logFormTgl,
-        jam: logFormJam,
-        tp: logFormTp,
-        hadir: Number(logFormHadir),
-        absen: Number(logFormAbsen),
-        status: logFormStatus
-      };
-      setTeachingLogs(prev => [newLog, ...prev]);
+    const newGtkUser: UserAccount = {
+      uid: `USER-GTK-${Date.now()}`,
+      name: formName.trim(),
+      email: formEmail.trim().toLowerCase(),
+      nip: formNip.trim() || undefined,
+      schoolName: formSchool,
+      role: formRole,
+      status: formStatus,
+      password: 'password123'
+    };
+    (newGtkUser as any).employmentStatus = formEmploymentStatus;
+
+    if (onUpdateRegisteredUsers) {
+      onUpdateRegisteredUsers([newGtkUser, ...registeredUsers]);
     }
-    setShowLogModal(false);
+    setShowInlineAddModal(false);
   };
 
-  const handleDeleteLogClick = (item: TeachingLogItem) => {
-    setLogToDelete(item);
-    setShowDeleteLogModal(true);
+  // Save Inline Edit GTK
+  const handleSaveInlineEdit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUserForEdit || !formName.trim()) return;
+
+    const updated = registeredUsers.map((u) => {
+      if (u.uid === selectedUserForEdit.uid || u.email === selectedUserForEdit.email) {
+        const item = {
+          ...u,
+          name: formName.trim(),
+          email: formEmail.trim().toLowerCase(),
+          nip: formNip.trim() || undefined,
+          schoolName: formSchool,
+          role: formRole,
+          status: formStatus
+        };
+        (item as any).employmentStatus = formEmploymentStatus;
+        return item;
+      }
+      return u;
+    });
+
+    if (onUpdateRegisteredUsers) {
+      onUpdateRegisteredUsers(updated);
+    }
+    setShowInlineEditModal(false);
+    setSelectedUserForEdit(null);
   };
 
-  const handleConfirmDeleteLog = () => {
-    if (logToDelete) {
-      setTeachingLogs(prev => prev.filter(l => l.id !== logToDelete.id));
-      setShowDeleteLogModal(false);
-      setLogToDelete(null);
+  // Confirm Delete GTK
+  const handleConfirmInlineDelete = () => {
+    if (selectedUserForDelete) {
+      if (onOpenDeleteUserModal) {
+        onOpenDeleteUserModal(selectedUserForDelete);
+      } else if (onUpdateRegisteredUsers) {
+        const updated = registeredUsers.filter(u => u.uid !== selectedUserForDelete.uid && u.email !== selectedUserForDelete.email);
+        onUpdateRegisteredUsers(updated);
+      }
+      setShowInlineDeleteModal(false);
+      setSelectedUserForDelete(null);
     }
   };
-
-  const filteredTeachers = teacherUsers.filter(u => {
-    return u.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-           (u.nip && u.nip.includes(searchQuery)) ||
-           (u.role && u.role.toLowerCase().includes(searchQuery.toLowerCase()));
-  });
 
   return (
     <div className="space-y-6">
-      {/* KPI Cards for Teachers */}
+      {/* KPI Cards for GTK */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
           <div className="p-3 bg-cyan-50 text-[#164e63] rounded-none shrink-0">
             <Users className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total Guru</div>
-            <div className="text-xl font-black text-slate-800">{teacherUsers.length || 1} <span className="text-xs font-semibold text-slate-500">Pendidik</span></div>
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Total GTK</div>
+            <div className="text-xl font-black text-slate-800">
+              {allGtkList.length} <span className="text-xs font-semibold text-slate-500">Pendidik & Staff</span>
+            </div>
           </div>
         </div>
 
@@ -327,18 +434,10 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
             <CheckCircle2 className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Guru Aktif KBM</div>
-            <div className="text-xl font-black text-emerald-700">{teacherUsers.filter(u => u.status !== 'Nonaktif').length || 1} <span className="text-xs font-semibold text-emerald-600">Aktif</span></div>
-          </div>
-        </div>
-
-        <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
-          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-none shrink-0">
-            <BookOpen className="w-5 h-5" />
-          </div>
-          <div>
-            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Jurnal Terisi</div>
-            <div className="text-xl font-black text-indigo-700">96.4% <span className="text-xs font-semibold text-indigo-600">Minggu Ini</span></div>
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">PNS & PPPK</div>
+            <div className="text-xl font-black text-emerald-700">
+              {pnsCount + pppkCount} <span className="text-xs font-semibold text-emerald-600">({pnsCount} PNS / {pppkCount} PPPK)</span>
+            </div>
           </div>
         </div>
 
@@ -347,33 +446,60 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
             <Award className="w-5 h-5" />
           </div>
           <div>
-            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Kelengkapan Modul</div>
-            <div className="text-xl font-black text-amber-700">88.5% <span className="text-xs font-semibold text-amber-600">Terunggah</span></div>
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">GTY, Non-ASN & Honorer</div>
+            <div className="text-xl font-black text-amber-700">
+              {gtyCount + nonAsnCount + honorerCount} <span className="text-xs font-semibold text-amber-600">({gtyCount} GTY / {nonAsnCount} Non-ASN / {honorerCount} Honorer)</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
+          <div className="p-3 bg-indigo-50 text-indigo-600 rounded-none shrink-0">
+            <Building2 className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Cakupan Unit Sekolah</div>
+            <div className="text-xl font-black text-indigo-700">
+              {isAdministrator ? `${schoolOptions.length} Sekolah` : (activeSchoolName || 'Sekolah Aktif')}
+            </div>
           </div>
         </div>
       </div>
 
       {/* Subsystem Navigation Tabs */}
-      <div className="flex border-b border-slate-200 bg-white px-2 pt-2 gap-2">
+      <div className="flex border-b border-slate-200 bg-white px-2 pt-2 gap-2 overflow-x-auto">
+        <button
+          type="button"
+          onClick={() => setActiveTab('direktori')}
+          className={`px-4 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
+            activeTab === 'direktori'
+              ? 'border-[#164e63] text-[#164e63] bg-cyan-50/50'
+              : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+          }`}
+        >
+          <Users className="w-4 h-4" />
+          <span>Daftar GTK & Status Kepegawaian ({allGtkList.length})</span>
+        </button>
+
         <button
           type="button"
           onClick={() => setActiveTab('jurnal')}
-          className={`px-4 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer ${
+          className={`px-4 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'jurnal'
-              ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
+              ? 'border-[#164e63] text-[#164e63] bg-cyan-50/50'
               : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           <BookOpen className="w-4 h-4" />
-          <span>Monitoring Jurnal & Agenda Mengajar</span>
+          <span>Monitoring Jurnal Mengajar</span>
         </button>
 
         <button
           type="button"
           onClick={() => setActiveTab('uploadModul')}
-          className={`px-4 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer ${
+          className={`px-4 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'uploadModul'
-              ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
+              ? 'border-[#164e63] text-[#164e63] bg-cyan-50/50'
               : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
@@ -384,31 +510,242 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
         <button
           type="button"
           onClick={() => setActiveTab('administrasi')}
-          className={`px-4 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer ${
+          className={`px-4 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer whitespace-nowrap ${
             activeTab === 'administrasi'
-              ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
+              ? 'border-[#164e63] text-[#164e63] bg-cyan-50/50'
               : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
           }`}
         >
           <CheckSquare className="w-4 h-4" />
           <span>Kelengkapan Administrasi & Supervisi</span>
         </button>
-
-        <button
-          type="button"
-          onClick={() => setActiveTab('direktori')}
-          className={`px-4 py-2.5 text-xs font-bold border-b-2 flex items-center gap-2 transition-all cursor-pointer ${
-            activeTab === 'direktori'
-              ? 'border-emerald-600 text-emerald-700 bg-emerald-50/50'
-              : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-          }`}
-        >
-          <Users className="w-4 h-4" />
-          <span>Direktori Akun Guru Pengampu ({teacherUsers.length})</span>
-        </button>
       </div>
 
-      {/* TAB CONTENT: JURNAL MENGAJAR */}
+      {/* TAB CONTENT 1: DAFTAR GTK TABEL UTAMA */}
+      {activeTab === 'direktori' && (
+        <div className="bg-white p-5 rounded-none border border-slate-200 shadow-xs space-y-4">
+          {/* Header Controls & Filter Bar */}
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+            <div>
+              <h3 className="text-sm font-black text-slate-800 tracking-tight uppercase flex items-center gap-2">
+                <Users className="w-4 h-4 text-[#164e63]" />
+                <span>Daftar Guru & Tenaga Kependidikan (GTK)</span>
+              </h3>
+              <p className="text-xs text-slate-500 font-medium mt-0.5">
+                {isAdministrator 
+                  ? 'Menampilkan seluruh data pendidik, pegawai, dan staf dari semua unit sekolah terdaftar.' 
+                  : `Daftar pendidik & tenaga kependidikan aktif unit ${activeSchoolName || 'Sekolah'}.`}
+              </p>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Search input */}
+              <div className="relative">
+                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Cari Nama, NIP/NUPTK, Peran..."
+                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs w-52 sm:w-60 focus:outline-none focus:ring-2 focus:ring-cyan-600"
+                />
+              </div>
+
+              {/* School Filter (Shown for Administrator) */}
+              {isAdministrator && (
+                <select
+                  value={schoolFilter}
+                  onChange={(e) => setSchoolFilter(e.target.value)}
+                  className="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-600 max-w-[170px] truncate cursor-pointer"
+                >
+                  <option value="Semua">Semua Unit Sekolah</option>
+                  {schoolOptions.map(sch => (
+                    <option key={sch} value={sch}>{sch}</option>
+                  ))}
+                </select>
+              )}
+
+              {/* Status Kepegawaian Filter */}
+              <select
+                value={statusKepegawaianFilter}
+                onChange={(e) => setStatusKepegawaianFilter(e.target.value)}
+                className="px-2.5 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-600 cursor-pointer"
+              >
+                <option value="Semua">Semua Kepegawaian</option>
+                <option value="PNS">PNS ({pnsCount})</option>
+                <option value="PPPK">PPPK ({pppkCount})</option>
+                <option value="GTY">GTY / Guru Tetap Yayasan ({gtyCount})</option>
+                <option value="Non-ASN">Non-ASN ({nonAsnCount})</option>
+                <option value="Honorer">Honorer ({honorerCount})</option>
+              </select>
+
+              {/* Add GTK Button */}
+              <button
+                type="button"
+                onClick={handleOpenInlineAdd}
+                className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Tambah GTK / Guru</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Table displaying GTK Details */}
+          <div className="overflow-x-auto border border-slate-200">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200 uppercase tracking-wider text-[10px]">
+                  <th className="p-3 w-10 text-center">No</th>
+                  <th className="p-3">Nama Pendidik & Tenaga Kependidikan</th>
+                  <th className="p-3">NIP / NUPTK</th>
+                  <th className="p-3">Unit Sekolah</th>
+                  <th className="p-3 text-center">Status Kepegawaian</th>
+                  <th className="p-3">Peran / Jabatan</th>
+                  <th className="p-3 text-center">Status Akses</th>
+                  <th className="p-3 text-center">Aksi</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredGtkList.length === 0 ? (
+                  <tr>
+                    <td colSpan={8} className="p-8 text-center text-slate-500 font-medium">
+                      <div className="flex flex-col items-center justify-center space-y-2">
+                        <Users className="w-8 h-8 text-slate-300" />
+                        <p className="font-bold text-slate-700">Tidak Ada Data GTK Ditemukan</p>
+                        <p className="text-xs text-slate-500">Cobalah mengubah kata kunci pencarian atau pilihan filter kepegawaian.</p>
+                      </div>
+                    </td>
+                  </tr>
+                ) : (
+                  filteredGtkList.map((item, idx) => {
+                    const statusKategori = item.employmentStatus || 'Honorer';
+                    const isAktif = item.status !== 'Nonaktif' && item.status !== 'BELUM AKTIF';
+
+                    return (
+                      <tr key={item.uid || idx} className="hover:bg-cyan-50/40 transition-colors">
+                        <td className="p-3 text-center font-bold text-slate-400">
+                          {idx + 1}
+                        </td>
+
+                        {/* Nama */}
+                        <td className="p-3">
+                          <div className="flex items-center gap-2.5">
+                            <div className="w-7 h-7 rounded-none bg-[#164e63] text-white flex items-center justify-center font-black text-xs shrink-0 shadow-2xs">
+                              {item.name ? item.name.charAt(0).toUpperCase() : 'G'}
+                            </div>
+                            <div>
+                              <div className="font-bold text-slate-800">{item.name}</div>
+                              <div className="text-[10px] text-slate-500 font-mono">{item.email}</div>
+                            </div>
+                          </div>
+                        </td>
+
+                        {/* NIP / NUPTK */}
+                        <td className="p-3 font-mono font-medium text-slate-700">
+                          {item.nip || '-'}
+                        </td>
+
+                        {/* Unit Sekolah */}
+                        <td className="p-3 font-semibold text-slate-700">
+                          <div className="flex items-center gap-1.5">
+                            <Building2 className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span className="truncate max-w-[180px]">{item.schoolName || 'SD Negeri 1 SIMAK'}</span>
+                          </div>
+                        </td>
+
+                        {/* Status Kepegawaian (PPPK/PNS/Non-ASN/Honorer/GTY) */}
+                        <td className="p-3 text-center">
+                          <span className={`px-2.5 py-1 text-[10px] font-extrabold border ${
+                            statusKategori === 'PNS'
+                              ? 'bg-emerald-100 text-emerald-800 border-emerald-300'
+                              : statusKategori === 'PPPK'
+                              ? 'bg-cyan-100 text-[#164e63] border-cyan-300'
+                              : statusKategori === 'GTY'
+                              ? 'bg-purple-100 text-purple-900 border-purple-300'
+                              : statusKategori === 'Non-ASN'
+                              ? 'bg-amber-100 text-amber-900 border-amber-300'
+                              : 'bg-slate-100 text-slate-700 border-slate-300'
+                          }`}>
+                            {statusKategori === 'PNS' && '✓ PNS'}
+                            {statusKategori === 'PPPK' && '✓ PPPK'}
+                            {statusKategori === 'GTY' && '✓ GTY (Yayasan)'}
+                            {statusKategori === 'Non-ASN' && '• Non-ASN'}
+                            {statusKategori === 'Honorer' && '• Honorer'}
+                          </span>
+                        </td>
+
+                        {/* Peran / Jabatan */}
+                        <td className="p-3 font-bold text-slate-800">
+                          {item.role || 'Guru Pengampu'}
+                        </td>
+
+                        {/* Status Akses */}
+                        <td className="p-3 text-center">
+                          <span className={`px-2 py-0.5 text-[10px] font-bold ${
+                            isAktif ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-rose-50 text-rose-700 border border-rose-200'
+                          }`}>
+                            {isAktif ? 'Aktif' : 'Nonaktif'}
+                          </span>
+                        </td>
+
+                        {/* Aksi */}
+                        <td className="p-3 text-center">
+                          <div className="flex items-center justify-center gap-1">
+                            <button
+                              type="button"
+                              onClick={() => handleOpenInlineEdit(item)}
+                              title="Edit Data GTK"
+                              className="px-2 py-1 bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white font-bold text-[11px] border border-amber-300 transition-all cursor-pointer flex items-center gap-1"
+                            >
+                              <Edit3 className="w-3 h-3" />
+                              <span>Edit</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setSelectedUserForDelete(item);
+                                setShowInlineDeleteModal(true);
+                              }}
+                              title="Hapus Akun GTK"
+                              className="px-2 py-1 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white font-bold text-[11px] border border-rose-300 transition-all cursor-pointer flex items-center gap-1"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                              <span>Hapus</span>
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
+
+          <div className="flex items-center justify-between text-[11px] text-slate-500 pt-2 border-t border-slate-100">
+            <div>
+              Menampilkan <span className="font-bold text-slate-800">{filteredGtkList.length}</span> dari total <span className="font-bold text-slate-800">{allGtkList.length}</span> GTK terdaftar.
+            </div>
+            {(searchQuery || schoolFilter !== 'Semua' || statusKepegawaianFilter !== 'Semua' || roleFilter !== 'Semua') && (
+              <button
+                type="button"
+                onClick={() => {
+                  setSearchQuery('');
+                  setSchoolFilter('Semua');
+                  setStatusKepegawaianFilter('Semua');
+                  setRoleFilter('Semua');
+                }}
+                className="text-[#164e63] font-bold hover:underline cursor-pointer"
+              >
+                Reset Filter
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* TAB CONTENT 2: JURNAL MENGAJAR */}
       {activeTab === 'jurnal' && (
         <div className="bg-white p-5 rounded-none border border-slate-200 shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
@@ -419,7 +756,19 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
             <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={handleOpenAddLog}
+                onClick={() => {
+                  setEditingLogId(null);
+                  setLogFormGuru(teacher?.name || 'Shahrur Robby, S.Pd.');
+                  setLogFormMapel('Biologi');
+                  setLogFormKelas('X-IPA 1');
+                  setLogFormTgl(new Date().toISOString().split('T')[0]);
+                  setLogFormJam('Jam Ke 1-2 (07.00 - 08.30)');
+                  setLogFormTp('');
+                  setLogFormHadir(32);
+                  setLogFormAbsen(0);
+                  setLogFormStatus('Tuntas');
+                  setShowLogModal(true);
+                }}
                 className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs active:scale-95 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" />
@@ -452,7 +801,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                     <td className="p-3 font-bold text-[#164e63]">{log.guru}</td>
                     <td className="p-3 font-semibold text-slate-800">{log.mapel}</td>
                     <td className="p-3">
-                      <span className="px-2 py-0.5 bg-cyan-100 text-cyan-800 font-bold text-[10px] rounded-none">
+                      <span className="px-2 py-0.5 bg-cyan-100 text-cyan-800 font-bold text-[10px]">
                         {log.kelas}
                       </span>
                     </td>
@@ -462,7 +811,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                       {log.absen > 0 && <span className="text-rose-600 font-bold ml-1">({log.absen} Absen)</span>}
                     </td>
                     <td className="p-3 text-center">
-                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold text-[10px] rounded-none">
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold text-[10px]">
                         {log.status}
                       </span>
                     </td>
@@ -470,18 +819,33 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                       <div className="flex items-center justify-center gap-1.5">
                         <button
                           type="button"
-                          onClick={() => handleOpenEditLog(log)}
+                          onClick={() => {
+                            setEditingLogId(log.id);
+                            setLogFormGuru(log.guru);
+                            setLogFormMapel(log.mapel);
+                            setLogFormKelas(log.kelas);
+                            setLogFormTgl(log.tgl);
+                            setLogFormJam(log.jam);
+                            setLogFormTp(log.tp);
+                            setLogFormHadir(log.hadir);
+                            setLogFormAbsen(log.absen);
+                            setLogFormStatus(log.status);
+                            setShowLogModal(true);
+                          }}
                           title="Edit Jurnal"
-                          className="px-2 py-1 bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white font-bold text-[11px] border border-amber-300 rounded-none transition-all cursor-pointer flex items-center gap-1"
+                          className="px-2 py-1 bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white font-bold text-[11px] border border-amber-300 transition-all cursor-pointer flex items-center gap-1"
                         >
                           <Edit3 className="w-3 h-3" />
                           <span>Edit</span>
                         </button>
                         <button
                           type="button"
-                          onClick={() => handleDeleteLogClick(log)}
+                          onClick={() => {
+                            setLogToDelete(log);
+                            setShowDeleteLogModal(true);
+                          }}
                           title="Hapus Jurnal"
-                          className="px-2 py-1 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white font-bold text-[11px] border border-rose-300 rounded-none transition-all cursor-pointer flex items-center gap-1"
+                          className="px-2 py-1 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white font-bold text-[11px] border border-rose-300 transition-all cursor-pointer flex items-center gap-1"
                         >
                           <Trash2 className="w-3 h-3" />
                           <span>Hapus</span>
@@ -496,12 +860,12 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
         </div>
       )}
 
-      {/* TAB CONTENT: UPLOAD MODUL / ATP */}
+      {/* TAB CONTENT 3: UPLOAD MODUL / ATP */}
       {activeTab === 'uploadModul' && (
         <TeacherModuleUploadView teacher={teacher} registeredUsers={registeredUsers} />
       )}
 
-      {/* TAB CONTENT: KELENGKAPAN ADMINISTRASI */}
+      {/* TAB CONTENT 4: KELENGKAPAN ADMINISTRASI */}
       {activeTab === 'administrasi' && (
         <div className="bg-white p-5 rounded-none border border-slate-200 shadow-xs space-y-4">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
@@ -516,134 +880,44 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
             </div>
           </div>
 
-          <div className="p-3 bg-slate-50 border-l-4 border-[#164e63] text-xs text-slate-700 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 text-[#164e63] shrink-0 mt-0.5" />
-            <div>
-              <p className="font-bold text-slate-800">💡 Sinkronisasi & Penghitungan Otomatis</p>
-              <p className="text-slate-600 mt-0.5">Status kelengkapan administrasi dan supervisi di bawah ini dihitung secara real-time berdasarkan aktivitas nyata di sistem: unggahan perangkat ajar guru (Modul, ATP, KKTP), agenda mengajar harian, serta penginputan nilai formatif/sumatif kelas.</p>
-            </div>
-          </div>
-
           <div className="overflow-x-auto border border-slate-200">
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
                   <th className="p-3">Nama Guru</th>
                   <th className="p-3">NIP</th>
-                  <th className="p-3">Mapel</th>
+                  <th className="p-3">Unit Sekolah</th>
+                  <th className="p-3 text-center">Status Kepegawaian</th>
                   <th className="p-3 text-center">Modul Ajar</th>
                   <th className="p-3 text-center">ATP</th>
                   <th className="p-3 text-center">KKTP</th>
-                  <th className="p-3 text-center">Jurnal</th>
-                  <th className="p-3 text-center">Buku Nilai</th>
-                  <th className="p-3 text-center">Tingkat Kelengkapan</th>
-                  <th className="p-3 text-center">Aksi</th>
+                  <th className="p-3 text-center">Status Supervisi</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {teacherAdminList.map((item) => (
-                  <tr key={item.id} className="hover:bg-slate-50">
-                    <td className="p-3 font-bold text-slate-800">{item.nama}</td>
+                {allGtkList.map((item, idx) => (
+                  <tr key={item.uid || idx} className="hover:bg-slate-50">
+                    <td className="p-3 font-bold text-slate-800">{item.name}</td>
                     <td className="p-3 text-slate-600 font-mono">{item.nip}</td>
-                    <td className="p-3 font-semibold text-[#164e63]">{item.mapel}</td>
-                    <td className="p-3 text-center">
-                      {item.modulApproved ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-200">
-                          ✓ Valid
-                        </span>
-                      ) : item.modulReviewing ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200">
-                          ⏳ Meninjau
-                        </span>
-                      ) : item.modul ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-100 text-cyan-800 text-[10px] font-bold border border-cyan-200">
-                          ✓ Terunggah
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 text-rose-600 text-[10px] font-bold border border-rose-150">
-                          × Belum
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3 text-center">
-                      {item.atpApproved ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-200">
-                          ✓ Valid
-                        </span>
-                      ) : item.atpReviewing ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200">
-                          ⏳ Meninjau
-                        </span>
-                      ) : item.atp ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-100 text-cyan-800 text-[10px] font-bold border border-cyan-200">
-                          ✓ Terunggah
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 text-rose-600 text-[10px] font-bold border border-rose-150">
-                          × Belum
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3 text-center">
-                      {item.kktpApproved ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-200">
-                          ✓ Valid
-                        </span>
-                      ) : item.kktpReviewing ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-amber-100 text-amber-800 text-[10px] font-bold border border-amber-200">
-                          ⏳ Meninjau
-                        </span>
-                      ) : item.kktp ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-cyan-100 text-cyan-800 text-[10px] font-bold border border-cyan-200">
-                          ✓ Terunggah
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 text-rose-600 text-[10px] font-bold border border-rose-150">
-                          × Belum
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3 text-center">
-                      {item.jurnal ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-200">
-                          ✓ Terisi
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 text-rose-600 text-[10px] font-bold border border-rose-150">
-                          × Kosong
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3 text-center">
-                      {item.nilai ? (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold border border-emerald-200">
-                          ✓ Terinput
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 bg-rose-50 text-rose-600 text-[10px] font-bold border border-rose-150">
-                          × Belum
-                        </span>
-                      )}
-                    </td>
-                    <td className="p-3 text-center">
-                      <span className={`px-2.5 py-1 font-bold text-[10px] rounded-none ${
-                        item.status.includes('100%') ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-amber-100 text-amber-800 border border-amber-200'
-                      }`}>
-                        {item.status}
+                    <td className="p-3 font-semibold text-slate-700">{item.schoolName}</td>
+                    <td className="p-3 text-center font-bold">
+                      <span className="px-2 py-0.5 bg-slate-100 text-slate-700 text-[10px]">
+                        {item.employmentStatus}
                       </span>
                     </td>
                     <td className="p-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => setActiveTab('uploadModul')}
-                          title="Tinjau Berkas Perangkat Ajar"
-                          className="px-2 py-1 bg-[#164e63] text-white hover:bg-cyan-800 font-bold text-[11px] border border-[#164e63] rounded-none transition-all cursor-pointer flex items-center gap-1 shadow-xs active:scale-95"
-                        >
-                          <FolderUp className="w-3.5 h-3.5" />
-                          <span>Tinjau</span>
-                        </button>
-                      </div>
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold">✓ Terunggah</span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold">✓ Terunggah</span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 text-[10px] font-bold">✓ Terunggah</span>
+                    </td>
+                    <td className="p-3 text-center">
+                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold text-[10px]">
+                        Lengkap (100%)
+                      </span>
                     </td>
                   </tr>
                 ))}
@@ -653,217 +927,121 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
         </div>
       )}
 
-      {/* TAB CONTENT: DIREKTORI GURU */}
-      {activeTab === 'direktori' && (
-        <div className="bg-white p-5 rounded-none border border-slate-200 shadow-xs space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
-            <div>
-              <h3 className="text-sm font-bold text-slate-800">Direktori Akun Guru Pengampu Terdaftar</h3>
-              <p className="text-xs text-slate-500">Daftar akun pengajar dengan akses ke jurnal, presensi kelas, dan penginputan nilai formatif/sumatif.</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Cari guru atau NIP..."
-                  className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-none text-xs w-56 focus:outline-none focus:ring-2 focus:ring-cyan-600"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={() => onOpenAddUserModal && onOpenAddUserModal('Guru Pengampu')}
-                className="px-3 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white rounded-none font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-xs"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Tambah Guru</span>
-              </button>
-            </div>
-          </div>
-
-          <div className="overflow-x-auto border border-slate-200">
-            <table className="w-full text-left border-collapse text-xs">
-              <thead>
-                <tr className="bg-slate-100 text-slate-700 font-bold border-b border-slate-200">
-                  <th className="p-3">Nama Pendidik</th>
-                  <th className="p-3">Email Akun</th>
-                  <th className="p-3">NIP</th>
-                  <th className="p-3">Sekolah</th>
-                  <th className="p-3">Peran / Jabatan</th>
-                  <th className="p-3 text-center">Status</th>
-                  <th className="p-3 text-center">Aksi Data Modul</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100">
-                {filteredTeachers.map(user => (
-                  <tr key={user.uid || user.email} className="hover:bg-slate-50">
-                    <td className="p-3 font-bold text-slate-800">{user.name}</td>
-                    <td className="p-3 font-mono text-slate-600">{user.email}</td>
-                    <td className="p-3 text-slate-600">{user.nip || '-'}</td>
-                    <td className="p-3 text-slate-700">{user.schoolName || 'SD Negeri 1 SIMAK'}</td>
-                    <td className="p-3 font-bold text-emerald-800">{user.role || 'Guru Pengampu'}</td>
-                    <td className="p-3 text-center">
-                      <span className="px-2 py-0.5 bg-emerald-100 text-emerald-800 font-bold text-[10px] rounded-none">
-                        {user.status || 'Aktif'}
-                      </span>
-                    </td>
-                    <td className="p-3 text-center">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button
-                          type="button"
-                          onClick={() => onOpenEditUserModal && onOpenEditUserModal(user)}
-                          title="Edit Data Guru"
-                          className="px-2 py-1 bg-amber-50 text-amber-700 hover:bg-amber-600 hover:text-white font-bold text-[11px] border border-amber-300 rounded-none transition-all cursor-pointer flex items-center gap-1"
-                        >
-                          <Edit3 className="w-3 h-3" />
-                          <span>Edit</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onOpenDeleteUserModal && onOpenDeleteUserModal(user)}
-                          title="Hapus Akun Guru"
-                          className="px-2 py-1 bg-rose-50 text-rose-700 hover:bg-rose-600 hover:text-white font-bold text-[11px] border border-rose-300 rounded-none transition-all cursor-pointer flex items-center gap-1"
-                        >
-                          <Trash2 className="w-3 h-3" />
-                          <span>Hapus</span>
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onOpenModuleModal && onOpenModuleModal(user, 'jurnal')}
-                          className="px-2 py-1 bg-emerald-50 text-emerald-800 hover:bg-emerald-700 hover:text-white font-bold text-[11px] border border-emerald-200 rounded-none transition-all cursor-pointer"
-                        >
-                          Jurnal
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => onOpenModuleModal && onOpenModuleModal(user, 'kelolaNilai')}
-                          className="px-2 py-1 bg-cyan-50 text-[#164e63] hover:bg-[#164e63] hover:text-white font-bold text-[11px] border border-cyan-200 rounded-none transition-all cursor-pointer"
-                        >
-                          Nilai
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-      )}
-
-      {/* MODAL: INPUT / EDIT JURNAL MENGAJAR */}
-      {showLogModal && (
+      {/* MODAL: ADD GTK INLINE */}
+      {showInlineAddModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
-          <div className="bg-white rounded-none shadow-2xl border border-slate-300 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
+          <div className="bg-white rounded-none shadow-2xl border border-slate-300 w-full max-w-md overflow-hidden flex flex-col">
             <div className="bg-[#164e63] text-white px-5 py-3.5 flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <BookOpen className="w-5 h-5 text-emerald-300" />
-                <h3 className="font-bold text-sm">
-                  {editingLogId ? 'Edit Jurnal Mengajar Harian' : 'Tambah Jurnal Mengajar Baru'}
-                </h3>
+                <Plus className="w-5 h-5 text-emerald-300" />
+                <h3 className="font-bold text-sm">Tambah Data GTK / Guru Baru</h3>
               </div>
               <button
                 type="button"
-                onClick={() => setShowLogModal(false)}
+                onClick={() => setShowInlineAddModal(false)}
                 className="text-white/80 hover:text-white text-lg font-bold cursor-pointer"
               >
                 ✕
               </button>
             </div>
 
-            <form onSubmit={handleSaveLog} className="p-5 space-y-4 overflow-y-auto flex-1 text-xs">
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700">Nama Guru Pengampu <span className="text-rose-500">*</span></label>
+            <form onSubmit={handleSaveInlineAdd} className="p-5 space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Nama Lengkap GTK *</label>
                 <input
                   type="text"
                   required
-                  value={logFormGuru}
-                  onChange={(e) => setLogFormGuru(e.target.value)}
-                  placeholder="Contoh: Shahrur Robby, S.Pd."
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  placeholder="Contoh: Drs. H. Bambang Susanto, M.Pd."
+                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Email Resmi *</label>
+                <input
+                  type="email"
+                  required
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                  placeholder="bambang@simakmerdeka.ai.studio"
                   className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Mata Pelajaran <span className="text-rose-500">*</span></label>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">NIP / NUPTK</label>
                   <input
                     type="text"
-                    required
-                    value={logFormMapel}
-                    onChange={(e) => setLogFormMapel(e.target.value)}
-                    placeholder="Contoh: Biologi"
+                    value={formNip}
+                    onChange={(e) => setFormNip(e.target.value)}
+                    placeholder="19800101 200501 1 002"
                     className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
                   />
                 </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Kelas <span className="text-rose-500">*</span></label>
-                  <input
-                    type="text"
-                    required
-                    value={logFormKelas}
-                    onChange={(e) => setLogFormKelas(e.target.value)}
-                    placeholder="Contoh: X-IPA 1"
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
-                  />
-                </div>
-              </div>
 
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700">Jam Pelajaran</label>
-                <input
-                  type="text"
-                  value={logFormJam}
-                  onChange={(e) => setLogFormJam(e.target.value)}
-                  placeholder="Contoh: Jam Ke 1-2 (07.00 - 08.30)"
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-bold text-slate-700">Tujuan Pembelajaran (TP) / Materi Bahasan</label>
-                <textarea
-                  rows={2}
-                  value={logFormTp}
-                  onChange={(e) => setLogFormTp(e.target.value)}
-                  placeholder="Ringkasan aktivitas atau materi yang diajarkan..."
-                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none resize-none"
-                />
-              </div>
-
-              <div className="grid grid-cols-3 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Jumlah Hadir</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={logFormHadir}
-                    onChange={(e) => setLogFormHadir(parseInt(e.target.value) || 0)}
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Jumlah Absen</label>
-                  <input
-                    type="number"
-                    min={0}
-                    value={logFormAbsen}
-                    onChange={(e) => setLogFormAbsen(parseInt(e.target.value) || 0)}
-                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-slate-700">Status KBM</label>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Status Kepegawaian *</label>
                   <select
-                    value={logFormStatus}
-                    onChange={(e) => setLogFormStatus(e.target.value)}
+                    value={formEmploymentStatus}
+                    onChange={(e) => setFormEmploymentStatus(e.target.value as any)}
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none font-bold text-slate-800"
+                  >
+                    <option value="PNS">PNS (Pegawai Negeri Sipil)</option>
+                    <option value="PPPK">PPPK (Pegawai Kontrak ASN)</option>
+                    <option value="GTY">GTY (Guru Tetap Yayasan)</option>
+                    <option value="Non-ASN">Non-ASN / Pegawai Tetap</option>
+                    <option value="Honorer">Honorer / Guru Tidak Tetap</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Unit Sekolah *</label>
+                <select
+                  value={formSchool}
+                  onChange={(e) => setFormSchool(e.target.value)}
+                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
+                >
+                  {schoolOptions.map(sch => (
+                    <option key={sch} value={sch}>{sch}</option>
+                  ))}
+                  {!schoolOptions.includes(formSchool) && <option value={formSchool}>{formSchool}</option>}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Peran / Jabatan *</label>
+                  <select
+                    value={formRole}
+                    onChange={(e) => setFormRole(e.target.value)}
                     className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
                   >
-                    <option value="Tuntas">Tuntas</option>
-                    <option value="Proses">Proses</option>
-                    <option value="Remedial">Remedial</option>
+                    <option value="Guru Pengampu">Guru Pengampu</option>
+                    <option value="Guru Kelas">Guru Kelas / Wali Kelas</option>
+                    <option value="Guru BK">Guru BK (Bimbingan Konseling)</option>
+                    <option value="Kepala Sekolah">Kepala Sekolah</option>
+                    <option value="Kepala Tata Usaha / Staf TU">Staf Tata Usaha (TU)</option>
+                    <option value="Wakasek Kesiswaan / Tim Kesiswaan">Wakasek Kesiswaan</option>
+                    <option value="Tim Kurikulum / Pengelola KSP">Tim Kurikulum</option>
+                    <option value="Pengelola Sarpras">Pengelola Sarpras</option>
+                    <option value="Pustakawan / Pengelola Perpustakaan">Pustakawan</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Status Akses</label>
+                  <select
+                    value={formStatus}
+                    onChange={(e) => setFormStatus(e.target.value as any)}
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
+                  >
+                    <option value="Aktif">Aktif</option>
+                    <option value="Nonaktif">Nonaktif</option>
+                    <option value="Menunggu Aktivasi">Menunggu Aktivasi</option>
                   </select>
                 </div>
               </div>
@@ -871,7 +1049,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
               <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
                 <button
                   type="button"
-                  onClick={() => setShowLogModal(false)}
+                  onClick={() => setShowInlineAddModal(false)}
                   className="px-4 py-2 border border-slate-300 text-slate-700 font-bold hover:bg-slate-100 rounded-none cursor-pointer"
                 >
                   Batal
@@ -880,7 +1058,7 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                   type="submit"
                   className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold rounded-none cursor-pointer shadow-xs active:scale-95 transition-all"
                 >
-                  Simpan Jurnal
+                  Simpan GTK
                 </button>
               </div>
             </form>
@@ -888,7 +1066,190 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
         </div>
       )}
 
-      {/* MODAL: DELETE JURNAL CONFIRMATION */}
+      {/* MODAL: EDIT GTK INLINE */}
+      {showInlineEditModal && selectedUserForEdit && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-none shadow-2xl border border-slate-300 w-full max-w-md overflow-hidden flex flex-col">
+            <div className="bg-[#164e63] text-white px-5 py-3.5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-5 h-5 text-amber-300" />
+                <h3 className="font-bold text-sm">Edit Data GTK ({selectedUserForEdit.name})</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowInlineEditModal(false)}
+                className="text-white/80 hover:text-white text-lg font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveInlineEdit} className="p-5 space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Nama Lengkap GTK *</label>
+                <input
+                  type="text"
+                  required
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none font-bold text-slate-800"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Email Resmi *</label>
+                <input
+                  type="email"
+                  required
+                  value={formEmail}
+                  onChange={(e) => setFormEmail(e.target.value)}
+                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">NIP / NUPTK</label>
+                  <input
+                    type="text"
+                    value={formNip}
+                    onChange={(e) => setFormNip(e.target.value)}
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none font-mono"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Status Kepegawaian *</label>
+                  <select
+                    value={formEmploymentStatus}
+                    onChange={(e) => setFormEmploymentStatus(e.target.value as any)}
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none font-bold text-slate-800"
+                  >
+                    <option value="PNS">PNS (Pegawai Negeri Sipil)</option>
+                    <option value="PPPK">PPPK (Pegawai Kontrak ASN)</option>
+                    <option value="GTY">GTY (Guru Tetap Yayasan)</option>
+                    <option value="Non-ASN">Non-ASN / Pegawai Tetap</option>
+                    <option value="Honorer">Honorer / Guru Tidak Tetap</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Unit Sekolah *</label>
+                <select
+                  value={formSchool}
+                  onChange={(e) => setFormSchool(e.target.value)}
+                  className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
+                >
+                  {schoolOptions.map(sch => (
+                    <option key={sch} value={sch}>{sch}</option>
+                  ))}
+                  {!schoolOptions.includes(formSchool) && <option value={formSchool}>{formSchool}</option>}
+                </select>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Peran / Jabatan *</label>
+                  <select
+                    value={formRole}
+                    onChange={(e) => setFormRole(e.target.value)}
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
+                  >
+                    <option value="Guru Pengampu">Guru Pengampu</option>
+                    <option value="Guru Kelas">Guru Kelas / Wali Kelas</option>
+                    <option value="Guru BK">Guru BK (Bimbingan Konseling)</option>
+                    <option value="Kepala Sekolah">Kepala Sekolah</option>
+                    <option value="Kepala Tata Usaha / Staf TU">Staf Tata Usaha (TU)</option>
+                    <option value="Wakasek Kesiswaan / Tim Kesiswaan">Wakasek Kesiswaan</option>
+                    <option value="Tim Kurikulum / Pengelola KSP">Tim Kurikulum</option>
+                    <option value="Pengelola Sarpras">Pengelola Sarpras</option>
+                    <option value="Pustakawan / Pengelola Perpustakaan">Pustakawan</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Status Akses</label>
+                  <select
+                    value={formStatus}
+                    onChange={(e) => setFormStatus(e.target.value as any)}
+                    className="w-full p-2 bg-slate-50 border border-slate-300 rounded-none focus:ring-2 focus:ring-cyan-600 focus:outline-none"
+                  >
+                    <option value="Aktif">Aktif</option>
+                    <option value="Nonaktif">Nonaktif</option>
+                    <option value="Menunggu Aktivasi">Menunggu Aktivasi</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2 pt-3 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setShowInlineEditModal(false)}
+                  className="px-4 py-2 border border-slate-300 text-slate-700 font-bold hover:bg-slate-100 rounded-none cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold rounded-none cursor-pointer shadow-xs active:scale-95 transition-all"
+                >
+                  Simpan Perubahan
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: DELETE CONFIRMATION INLINE */}
+      {showInlineDeleteModal && selectedUserForDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
+          <div className="bg-white rounded-none shadow-2xl border border-slate-300 w-full max-w-sm overflow-hidden flex flex-col">
+            <div className="bg-rose-700 text-white px-5 py-3.5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Trash2 className="w-5 h-5" />
+                <h3 className="font-bold text-sm">Konfirmasi Hapus Akun GTK</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowInlineDeleteModal(false)}
+                className="text-white/80 hover:text-white text-lg font-bold cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+            <div className="p-5 space-y-3 text-xs">
+              <p className="text-slate-700">
+                Apakah Anda yakin ingin menghapus akun GTK ini dari database?
+              </p>
+              <div className="p-3 bg-slate-50 border border-slate-200 space-y-1">
+                <div className="font-bold text-slate-800">{selectedUserForDelete.name}</div>
+                <div className="text-slate-600 font-mono">{selectedUserForDelete.email}</div>
+                <div className="text-slate-500 text-[11px]">{selectedUserForDelete.schoolName} • {selectedUserForDelete.role}</div>
+              </div>
+              <div className="flex justify-end gap-2 pt-2 border-t border-slate-200">
+                <button
+                  type="button"
+                  onClick={() => setShowInlineDeleteModal(false)}
+                  className="px-3.5 py-1.5 border border-slate-300 text-slate-700 font-bold hover:bg-slate-100 rounded-none cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="button"
+                  onClick={handleConfirmInlineDelete}
+                  className="px-3.5 py-1.5 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-none cursor-pointer shadow-xs active:scale-95 transition-all"
+                >
+                  Ya, Hapus
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: LOG DELETE */}
       {showDeleteLogModal && logToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fadeIn">
           <div className="bg-white rounded-none shadow-2xl border border-slate-300 w-full max-w-sm overflow-hidden flex flex-col">
@@ -924,7 +1285,13 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={handleConfirmDeleteLog}
+                  onClick={() => {
+                    if (logToDelete) {
+                      setTeachingLogs(prev => prev.filter(l => l.id !== logToDelete.id));
+                      setShowDeleteLogModal(false);
+                      setLogToDelete(null);
+                    }
+                  }}
                   className="px-3.5 py-1.5 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-none cursor-pointer shadow-xs active:scale-95 transition-all"
                 >
                   Ya, Hapus

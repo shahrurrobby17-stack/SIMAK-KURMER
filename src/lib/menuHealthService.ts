@@ -649,6 +649,7 @@ export function computeMenuHealthMap(params: SystemDataHealthParams): Record<Nav
 
   return {
     dashboard: dashboardHealth,
+    'login-logs': masterDataHealth,
     students: studentsHealth,
     schedule: scheduleHealth,
     journal: journalHealth,
@@ -662,6 +663,8 @@ export function computeMenuHealthMap(params: SystemDataHealthParams): Record<Nav
     settings: settingsHealth,
     sync: syncHealth,
     'master-data': masterDataHealth,
+    'system-schools': masterDataHealth,
+    'system-registered-schools': masterDataHealth,
     'system-kurikulum': kurikulumHealth,
     'system-guru': guruHealth,
     'system-tu': tuHealth,

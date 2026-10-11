@@ -34,11 +34,13 @@ import {
   Calendar,
   FileCheck,
   AlertOctagon,
+  School,
   X
 } from 'lucide-react';
 
 export type NavTab = 
   | 'dashboard' 
+  | 'login-logs'
   | 'attendance' 
   | 'grades' 
   | 'extra-tasks' 
@@ -46,6 +48,8 @@ export type NavTab =
   | 'journal' 
   | 'upload-modul'
   | 'master-data' 
+  | 'system-schools'
+  | 'system-registered-schools'
   | 'system-kurikulum'
   | 'system-guru'
   | 'system-tu'
@@ -267,8 +271,8 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     }
   }, [activeTab, isKurikulumRole, isKesiswaanRole, isKeuanganRole, lastSystemMode]);
 
-  // Halaman Keuangan hanya membatasi menu jika BUKAN Kepala Sekolah
-  const isKeuanganOnlyMode = !isKepalaSekolah && (
+  // Halaman Keuangan hanya membatasi menu jika BUKAN Administrator / BUKAN Kepala Sekolah
+  const isKeuanganOnlyMode = !hasAdminAccess && !isKepalaSekolah && (
     isKeuanganRole || 
     activeTab === 'system-keuangan' || 
     (activeTab as string) === 'keuangan' || 
@@ -291,8 +295,8 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     (lastSystemMode === 'tu' && activeTab === 'settings')
   );
 
-  // Halaman Kesiswaan hanya membatasi menu jika BUKAN Kepala Sekolah
-  const isKesiswaanOnlyMode = !isKepalaSekolah && (
+  // Halaman Kesiswaan hanya membatasi menu jika BUKAN Administrator / BUKAN Kepala Sekolah
+  const isKesiswaanOnlyMode = !hasAdminAccess && !isKepalaSekolah && (
     isKesiswaanRole || 
     activeTab === 'system-kesiswaan' || 
     (activeTab as string) === 'kesiswaan' || 
@@ -423,6 +427,14 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     badge: null
   };
 
+  const loginLogsItem = {
+    id: 'login-logs' as NavTab,
+    label: 'Riwayat Login',
+    subtitle: 'Log Pengguna Login',
+    icon: Clock,
+    badge: null
+  };
+
   const gtkItem = {
     id: 'system-guru' as NavTab,
     label: 'Daftar GTK',
@@ -451,6 +463,20 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       label: 'Kurikulum',
       subtitle: 'Sistem Informasi Kurikulum Merdeka',
       icon: BookOpen,
+      badge: null
+    },
+    {
+      id: 'system-schools' as NavTab,
+      label: 'Data Sekolah',
+      subtitle: 'Sistem Data & Master Sekolah',
+      icon: School,
+      badge: null
+    },
+    {
+      id: 'system-registered-schools' as NavTab,
+      label: 'Daftar Sekolah',
+      subtitle: 'Daftar & Tabel Sekolah Terdaftar',
+      icon: Building2,
       badge: null
     },
     {
@@ -499,13 +525,17 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
   // Master data sub items dapat diakses oleh Administrator dan Kepala Sekolah
   const displayedMasterDataSubItems = masterDataSubItems.filter(item => {
-    if (isKepalaSekolah && item.id === 'master-data') return false;
+    if (isKepalaSekolah && (item.id === 'master-data' || item.id === 'system-schools' || item.id === 'system-registered-schools')) return false;
     return true;
   });
 
+  const prevMasterDataTabRef = React.useRef<NavTab>(activeTab);
   useEffect(() => {
-    if (displayedMasterDataSubItems.some((item) => item.id === activeTab)) {
-      setIsMasterDataOpen(true);
+    if (prevMasterDataTabRef.current !== activeTab) {
+      if (displayedMasterDataSubItems.some((item) => item.id === activeTab)) {
+        setIsMasterDataOpen(true);
+      }
+      prevMasterDataTabRef.current = activeTab;
     }
   }, [activeTab, displayedMasterDataSubItems]);
 
@@ -558,11 +588,15 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
   const [isValidasiOpen, setIsValidasiOpen] = useState<boolean>(true);
 
+  const prevValidasiTabRef = React.useRef<NavTab>(activeTab);
   useEffect(() => {
-    if (isValidasiActive) {
-      setIsValidasiOpen(true);
+    if (prevValidasiTabRef.current !== activeTab) {
+      if (isValidasiActive) {
+        setIsValidasiOpen(true);
+      }
+      prevValidasiTabRef.current = activeTab;
     }
-  }, [isValidasiActive]);
+  }, [activeTab, isValidasiActive]);
 
   const isMasterUserOrAdmin = isMasterUser || isAdmin || isAdministrator;
 
@@ -770,7 +804,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     : isPerpustakaanOnlyMode
     ? [perpustakaanItem, settingsItem]
     : [
-        ...(isAdministrator ? [dashboardItem] : []), 
+        ...(isAdministrator ? [dashboardItem, loginLogsItem] : []), 
         {
           id: 'validasi' as NavTab,
           label: 'Validasi',
@@ -940,6 +974,9 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             <>
               {/* Dashboard Item - Khusus Administrator */}
               {isAdministrator && renderDesktopItem(dashboardItem, isMobileDrawer)}
+
+              {/* Menu Log / Riwayat Pengguna Login - Tepat di atas Menu Master Data (Khusus Administrator Saja) */}
+              {isAdministrator && renderDesktopItem(loginLogsItem, isMobileDrawer)}
 
               {/* Master Data Section */}
               {!isStudentRole && (

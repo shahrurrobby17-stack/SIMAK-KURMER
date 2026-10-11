@@ -126,6 +126,7 @@ export interface TeacherProfile {
   gender?: 'Laki-laki' | 'Perempuan' | string;
   isMaintenance?: boolean;
   status?: 'Aktif' | 'Nonaktif' | 'Maintenance' | 'Menunggu Aktivasi';
+  employmentStatus?: 'PPPK' | 'PNS' | 'Non-ASN' | 'Honorer' | 'GTY' | string;
 }
 
 export interface DataLockConfig {
@@ -224,6 +225,7 @@ export interface UserAccount {
   registeredAt?: string;
   isMaintenance?: boolean;
   status?: 'Aktif' | 'Nonaktif' | 'Maintenance' | 'Menunggu Aktivasi';
+  employmentStatus?: 'PPPK' | 'PNS' | 'Non-ASN' | 'Honorer' | 'GTY' | string;
 }
 
 export interface InfoAnnouncementItem {

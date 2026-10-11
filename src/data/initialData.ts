@@ -5,16 +5,16 @@ export const initialTeacherProfile: TeacherProfile = {
   name: "Shahrur Robby, S.Pd.",
   title: "Admin Utama / Guru",
   nip: "19900101 201501 1 001",
-  npsn: "20500000",
-  schoolName: "SMA Negeri 1 Indonesia - Sekolah Penggerak",
+  npsn: "20521404",
+  schoolName: "SMA Diponegoro Wagir",
   guardianClass: "X-IPA 1",
   subjectRole: "Biologi",
   academicYear: "2026/2027",
   semester: "Ganjil",
   kkm: 75,
-  principalName: "Dr. Hj. Sri Wahyuni, M.Si.",
-  principalNip: "19691120 199403 2 003",
-  city: "Indonesia",
+  principalName: "H. Moh. Ridwan, S.Pd., M.Si.",
+  principalNip: "19691120 199403 1 003",
+  city: "Kab. Malang",
 };
 
 export const initialTeacherProfiles: TeacherProfile[] = [

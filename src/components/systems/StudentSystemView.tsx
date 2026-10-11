@@ -116,6 +116,7 @@ interface StudentSystemViewProps {
   onSelectCategory?: (category: 'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Siswa') => void;
   onAddStudent?: (newStudent: Student) => boolean | void;
   onEditStudent?: (updatedStudent: Student) => boolean | void;
+  onUpdateStudents?: (updatedStudents: Student[]) => boolean | void;
   onDeleteStudent?: (studentId: string) => boolean | void;
   onSaveTask?: (task: StudentTask) => boolean | void;
   onUpdateAttendance?: (records: AttendanceRecord[]) => void;
@@ -413,6 +414,7 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
   onNavigateTab,
   onAddStudent,
   onEditStudent,
+  onUpdateStudents,
   onDeleteStudent,
   onSaveTask,
   onUpdateAttendance,
@@ -903,6 +905,9 @@ export const StudentSystemView: React.FC<StudentSystemViewProps> = ({
       setOsisMembers([]);
       setAchievements([]);
       setScholarships([]);
+      if (onUpdateStudents) {
+        onUpdateStudents([]);
+      }
       window.dispatchEvent(new CustomEvent('simak_students_reset'));
       window.dispatchEvent(new CustomEvent('simak_kesiswaan_reset'));
       setNotificationMsg('Seluruh data siswa telah berhasil direset / dikosongkan.');

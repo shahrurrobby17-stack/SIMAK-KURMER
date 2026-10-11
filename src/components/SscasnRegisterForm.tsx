@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { 
   User, 
   Users, 
@@ -30,9 +30,11 @@ import {
   UserCheck,
   Clock,
   ShieldAlert,
-  HelpCircle
+  HelpCircle,
+  BookOpen
 } from 'lucide-react';
-import { UserAccount, TeacherProfile } from '../types';
+import { UserAccount, TeacherProfile, RegisteredSchool } from '../types';
+import { subscribeToRegisteredSchools, initialRegisteredSchools, deduplicateSchools } from '../lib/firebaseService';
 import { TutWuriHandayaniLogo } from './TutWuriHandayaniLogo';
 
 interface SscasnRegisterFormProps {
@@ -41,6 +43,7 @@ interface SscasnRegisterFormProps {
   onRegisterSuccess?: (account: UserAccount, profile: TeacherProfile) => void;
   onOpenHelpdesk?: () => void;
   registeredUsers?: UserAccount[];
+  registeredSchools?: RegisteredSchool[];
 }
 
 export const SimakEmblemLogo: React.FC<{ className?: string }> = ({ className = "w-10 h-10" }) => (
@@ -57,10 +60,30 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
   onSwitchToLogin,
   onRegisterSuccess,
   onOpenHelpdesk,
-  registeredUsers = []
+  registeredUsers = [],
+  registeredSchools: propsRegisteredSchools
 }) => {
   // Stepper State (1 to 6)
   const [step, setStep] = useState<1 | 2 | 3 | 4 | 5 | 6>(1);
+
+  // Registered Schools List State
+  const [schoolsList, setSchoolsList] = useState<RegisteredSchool[]>(() => {
+    if (propsRegisteredSchools && propsRegisteredSchools.length > 0) return propsRegisteredSchools;
+    return initialRegisteredSchools;
+  });
+
+  useEffect(() => {
+    if (propsRegisteredSchools && propsRegisteredSchools.length > 0) {
+      setSchoolsList(propsRegisteredSchools);
+    } else {
+      const unsub = subscribeToRegisteredSchools((list) => {
+        if (list && list.length > 0) {
+          setSchoolsList(list);
+        }
+      });
+      return () => unsub();
+    }
+  }, [propsRegisteredSchools]);
 
   // Langkah 1: Data Identitas Pendaftar
   const [fullName, setFullName] = useState<string>('');
@@ -78,7 +101,46 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
   const [showPassword, setShowPassword] = useState<boolean>(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [role, setRole] = useState<string>('Guru Pengampu');
-  const [school, setSchool] = useState<string>('SMA Negeri 1 Indonesia');
+  const [subject, setSubject] = useState<string>('');
+  const [assignedClass, setAssignedClass] = useState<string>('');
+  const [jenjangPendidikan, setJenjangPendidikan] = useState<string>('');
+  const [school, setSchool] = useState<string>('');
+
+  const filteredSchoolsList = useMemo(() => {
+    if (!jenjangPendidikan) return [];
+    const target = jenjangPendidikan.split('/')[0].trim().toLowerCase();
+    const list = deduplicateSchools(schoolsList);
+    
+    return list.filter(s => {
+      const nameLower = (s.name || '').toLowerCase();
+      const jenjangLower = (s.jenjang || '').toLowerCase();
+      
+      if (target === 'sd') {
+        return jenjangLower.includes('sd') || jenjangLower.includes('mi') || nameLower.startsWith('sd') || nameLower.startsWith('mi');
+      }
+      if (target === 'smp') {
+        return jenjangLower.includes('smp') || jenjangLower.includes('mts') || nameLower.startsWith('smp') || nameLower.startsWith('mts');
+      }
+      if (target === 'sma') {
+        return jenjangLower.includes('sma') || jenjangLower.includes('ma') || jenjangLower.includes('smk') || nameLower.startsWith('sma') || nameLower.startsWith('ma') || nameLower.startsWith('smk') || (!jenjangLower && !nameLower.startsWith('sd') && !nameLower.startsWith('smp'));
+      }
+      return true;
+    });
+  }, [schoolsList, jenjangPendidikan]);
+
+  const selectedSchoolObj = useMemo(() => {
+    return schoolsList.find(s => s.name === school) || filteredSchoolsList[0] || schoolsList[0];
+  }, [schoolsList, school, filteredSchoolsList]);
+
+  useEffect(() => {
+    if (jenjangPendidikan && filteredSchoolsList.length > 0) {
+      if (!school || !filteredSchoolsList.some(s => s.name === school)) {
+        setSchool(filteredSchoolsList[0].name);
+      }
+    } else if (!jenjangPendidikan) {
+      setSchool('');
+    }
+  }, [jenjangPendidikan, filteredSchoolsList]);
 
   // Langkah 3: Pengaman Akun
   const [securityQ1, setSecurityQ1] = useState<string>('Siapa nama hewan peliharaan pertama Anda?');
@@ -175,6 +237,14 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
       setErrorMsg('Nama Satuan Pendidikan / Sekolah wajib diisi.');
       return;
     }
+    if ((role === 'Guru Pengampu' || role === 'Guru Kelas') && !subject.trim()) {
+      setErrorMsg('Mata Pelajaran yang Diampu wajib diisi.');
+      return;
+    }
+    if (role === 'Guru Kelas' && !assignedClass.trim()) {
+      setErrorMsg('Kolom Kelas / Wali Kelas wajib diisi untuk Guru Kelas.');
+      return;
+    }
 
     setStep(3);
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -255,9 +325,9 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
         schoolName: school.trim(),
         title: role,
         nip: '',
-        npsn: '20500000',
-        guardianClass: '-',
-        subjectRole: role,
+        npsn: selectedSchoolObj?.npsn || '20500000',
+        guardianClass: role === 'Guru Kelas' ? (assignedClass.trim() || '-') : '-',
+        subjectRole: subject.trim() ? `${role} (${subject.trim()})` : role,
         academicYear: '2026/2027',
         semester: 'Ganjil',
         kkm: 75,
@@ -358,7 +428,7 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
             </div>
           </div>
 
-          {/* STEPPER BAR (6 LANGKAH PENDAFTARAN - NON-KLIK, MENGIKUTI PROSES BERURUTAN) */}
+          {/* STEPPER BAR (6 LANGKAH PENDAFTARAN - INDIKATOR PROGRES BERTAHAP) */}
           <div className="bg-gradient-to-r from-sky-50/50 via-white to-sky-50/50 border-b border-slate-200 px-4 sm:px-8 py-3 sm:py-3.5">
             <div className="w-full max-w-4xl mx-auto flex items-center justify-between">
               {stepsList.map((st, idx) => {
@@ -366,9 +436,11 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
                 const isCompleted = step > st.num;
                 return (
                   <React.Fragment key={st.num}>
-                    <div 
-                      className={`flex items-center gap-1.5 sm:gap-2 select-none cursor-default text-left p-1 rounded-lg ${
-                        isActive ? 'bg-sky-50/90 ring-1 ring-sky-200' : ''
+                    <div
+                      className={`flex items-center gap-1.5 sm:gap-2 select-none text-left p-1.5 rounded-xl border cursor-default ${
+                        isActive 
+                          ? 'bg-sky-50/90 border-sky-300 ring-2 ring-sky-200/60 shadow-xs' 
+                          : 'border-transparent'
                       }`}
                     >
                       {/* Step Circle */}
@@ -399,7 +471,7 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
 
                     {/* Horizontal Connector Line */}
                     {idx < stepsList.length - 1 && (
-                      <div className={`flex-1 h-0.5 mx-1.5 sm:mx-2.5 transition-colors duration-300 ${
+                      <div className={`flex-1 h-0.5 mx-1 sm:mx-2 transition-colors duration-300 ${
                         step > idx + 1 ? 'bg-[#1888c8]' : 'bg-slate-200'
                       }`} />
                     )}
@@ -408,11 +480,20 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
               })}
             </div>
 
-            {/* Mobile Step Title */}
-            <div className="mt-2 text-center md:hidden border-t border-slate-100 pt-1.5">
-              <span className="text-[11px] font-black text-[#1888c8] uppercase tracking-wider">
-                LANGKAH {step}: {stepsList[step - 1]?.label}
-              </span>
+            {/* Mobile Step Progress Indicator (Non-clickable) */}
+            <div className="mt-2.5 text-center md:hidden border-t border-slate-100 pt-2 flex items-center justify-center gap-1.5 flex-wrap">
+              {stepsList.map((st) => (
+                <div
+                  key={st.num}
+                  className={`px-2 py-1 text-[10px] font-extrabold rounded-lg select-none cursor-default ${
+                    step === st.num
+                      ? 'bg-[#1888c8] text-white shadow-xs'
+                      : 'bg-slate-100 text-slate-500'
+                  }`}
+                >
+                  {st.num}. {st.label}
+                </div>
+              ))}
             </div>
           </div>
 
@@ -763,27 +844,110 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
                         <option value="Kesiswaan">Wakasek Kesiswaan / Tim Kesiswaan</option>
                         <option value="Guru BK">Guru BK (Bimbingan Konseling)</option>
                         <option value="Kepala Sekolah">Kepala Sekolah / Manajemen</option>
-                        <option value="Administrator">Administrator / Operator Sekolah</option>
                       </select>
+                    </div>
+                  </div>
+
+                  {/* Mata Pelajaran (Diperlihatkan jika memilih Guru Pengampu atau Guru Kelas) */}
+                  {(role === 'Guru Pengampu' || role === 'Guru Kelas') && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Mata Pelajaran yang Diampu *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          required
+                          value={subject}
+                          onChange={(e) => setSubject(e.target.value)}
+                          placeholder="Contoh: Matematika, Bahasa Indonesia, IPA, PJOK, dsb."
+                          className="w-full pl-3.5 pr-9 py-2 bg-white border border-slate-300 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-[#1888c8] shadow-2xs"
+                        />
+                        <BookOpen className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-medium mt-1">
+                        * Masukkan mata pelajaran utama yang Anda ampu di sekolah.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Kelas (Diperlihatkan jika memilih Guru Kelas) */}
+                  {role === 'Guru Kelas' && (
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Kelas / Wali Kelas *
+                      </label>
+                      <div className="relative">
+                        <input
+                          type="text"
+                          required
+                          value={assignedClass}
+                          onChange={(e) => setAssignedClass(e.target.value)}
+                          placeholder="Contoh: Kelas 1A, Kelas IV, Kelas 7B, Kelas X, dsb."
+                          className="w-full pl-3.5 pr-9 py-2 bg-white border border-slate-300 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-[#1888c8] shadow-2xs"
+                        />
+                        <Users className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
+                      </div>
+                      <p className="text-[10px] text-slate-500 font-medium mt-1">
+                        * Isikan nama kelas yang Anda ampu sebagai Guru Kelas / Wali Kelas.
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Jenjang Pendidikan */}
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Jenjang Pendidikan / Tingkat Sekolah *
+                    </label>
+                    <div className="relative">
+                      <select
+                        required
+                        value={jenjangPendidikan}
+                        onChange={(e) => setJenjangPendidikan(e.target.value)}
+                        className="w-full pl-3.5 pr-9 py-2 bg-white border border-slate-300 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-[#1888c8] shadow-2xs cursor-pointer appearance-none"
+                      >
+                        <option value="">-- Pilih Jenjang Pendidikan --</option>
+                        <option value="SD / MI">SD / MI (Sekolah Dasar / Madrasah Ibtidaiyah)</option>
+                        <option value="SMP / MTs">SMP / MTs (Sekolah Menengah Pertama / Madrasah Tsanawiyah)</option>
+                        <option value="SMA / MA">SMA / MA (Sekolah Menengah Atas / Madrasah Aliyah / SMK)</option>
+                      </select>
+                      <GraduationCap className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
                     </div>
                   </div>
 
                   {/* Nama Sekolah */}
                   <div>
                     <label className="block text-xs font-bold text-slate-700 mb-1">
-                      Nama Sekolah / Satuan Pendidikan *
+                      Nama Sekolah / Satuan Pendidikan Terdaftar *
                     </label>
                     <div className="relative">
-                      <input
-                        type="text"
+                      <select
                         required
+                        disabled={!jenjangPendidikan}
                         value={school}
                         onChange={(e) => setSchool(e.target.value)}
-                        placeholder="Contoh: SMA Negeri 1 Indonesia"
-                        className="w-full pl-3.5 pr-9 py-2 bg-white border border-slate-300 rounded-lg text-xs sm:text-sm font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-[#1888c8] shadow-2xs"
-                      />
-                      <Building2 className="w-4 h-4 text-slate-400 absolute right-3 top-2.5" />
+                        className="w-full pl-3.5 pr-9 py-2 bg-white border border-slate-300 rounded-lg text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-sky-500/30 focus:border-[#1888c8] shadow-2xs cursor-pointer appearance-none disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                      >
+                        {!jenjangPendidikan ? (
+                          <option value="">-- Pilih Jenjang Pendidikan Terlebih Dahulu --</option>
+                        ) : filteredSchoolsList.length === 0 ? (
+                          <option value="">-- Data Kosong (Belum Ada Sekolah Terdaftar) --</option>
+                        ) : (
+                          filteredSchoolsList.map((sch) => (
+                            <option key={sch.id || sch.name} value={sch.name}>
+                              {sch.name}
+                            </option>
+                          ))
+                        )}
+                      </select>
+                      <Building2 className="w-4 h-4 text-slate-400 absolute right-3 top-2.5 pointer-events-none" />
                     </div>
+
+                    <p className="text-[10px] text-slate-500 font-medium mt-1">
+                      {!jenjangPendidikan 
+                        ? '* Silakan pilih jenjang pendidikan terlebih dahulu untuk mengaktifkan pilihan sekolah.' 
+                        : '* Pilihan sekolah terdaftar diatur dan hanya dapat ditambahkan oleh Administrator SIMAK.'}
+                    </p>
                   </div>
                 </div>
 
@@ -956,9 +1120,27 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
                         <td className="py-2 px-3 font-bold text-slate-600">Hak Akses / Peran</td>
                         <td className="py-2 px-3 font-bold text-[#1888c8]">{role}</td>
                       </tr>
+                      {(role === 'Guru Pengampu' || role === 'Guru Kelas') && subject && (
+                        <tr>
+                          <td className="py-2 px-3 font-bold text-slate-600">Mata Pelajaran</td>
+                          <td className="py-2 px-3 font-bold text-slate-800">{subject}</td>
+                        </tr>
+                      )}
+                      {role === 'Guru Kelas' && assignedClass && (
+                        <tr className="bg-slate-50/70">
+                          <td className="py-2 px-3 font-bold text-slate-600">Kelas / Wali Kelas</td>
+                          <td className="py-2 px-3 font-bold text-slate-800">{assignedClass}</td>
+                        </tr>
+                      )}
                       <tr>
                         <td className="py-2 px-3 font-bold text-slate-600">Satuan Pendidikan / Sekolah</td>
                         <td className="py-2 px-3 font-medium text-slate-800">{school}</td>
+                      </tr>
+                      <tr className="bg-slate-50/70">
+                        <td className="py-2 px-3 font-bold text-slate-600">NPSN Sekolah</td>
+                        <td className="py-2 px-3 font-mono font-bold text-[#1888c8]">
+                          {selectedSchoolObj?.npsn || '-'}
+                        </td>
                       </tr>
                       <tr className="bg-slate-50/70">
                         <td className="py-2 px-3 font-bold text-slate-600">Pertanyaan Pengaman Akun</td>
@@ -1271,9 +1453,27 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
                             <td className="py-2 px-3 font-bold text-slate-600">Peran / Hak Akses</td>
                             <td className="py-2 px-3 font-bold text-[#1888c8]">{role}</td>
                           </tr>
+                          {(role === 'Guru Pengampu' || role === 'Guru Kelas') && subject && (
+                            <tr>
+                              <td className="py-2 px-3 font-bold text-slate-600">Mata Pelajaran</td>
+                              <td className="py-2 px-3 font-bold text-slate-800">{subject}</td>
+                            </tr>
+                          )}
+                          {role === 'Guru Kelas' && assignedClass && (
+                            <tr className="bg-slate-50/70">
+                              <td className="py-2 px-3 font-bold text-slate-600">Kelas / Wali Kelas</td>
+                              <td className="py-2 px-3 font-bold text-slate-800">{assignedClass}</td>
+                            </tr>
+                          )}
                           <tr>
                             <td className="py-2 px-3 font-bold text-slate-600">Satuan Pendidikan</td>
                             <td className="py-2 px-3 font-medium text-slate-800">{school}</td>
+                          </tr>
+                          <tr className="bg-slate-50/70">
+                            <td className="py-2 px-3 font-bold text-slate-600">NPSN Sekolah</td>
+                            <td className="py-2 px-3 font-mono font-bold text-[#1888c8]">
+                              {selectedSchoolObj?.npsn || '-'}
+                            </td>
                           </tr>
                           <tr className="bg-slate-50/70">
                             <td className="py-2 px-3 font-bold text-slate-600">Status Akun</td>

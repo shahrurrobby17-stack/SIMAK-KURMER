@@ -65,12 +65,13 @@ import {
   Award,
   Zap
 } from 'lucide-react';
-import { UserAccount, TeacherProfile, TeachingScheduleItem, Student, StudentGrade, Subject, AttendanceRecord, TeachingLog, InfoAnnouncement, LoginBackgroundConfig, defaultLoginBackgroundConfig } from '../types';
+import { UserAccount, TeacherProfile, TeachingScheduleItem, Student, StudentGrade, Subject, AttendanceRecord, TeachingLog, InfoAnnouncement, LoginBackgroundConfig, RegisteredSchool, defaultLoginBackgroundConfig } from '../types';
 import { PRESET_THEMES } from './LoginBackgroundSettings';
 import { TutWuriHandayaniLogo } from './TutWuriHandayaniLogo';
 import { DashboardAnalytics } from './DashboardAnalytics';
 import { SscasnRegisterForm } from './SscasnRegisterForm';
-import { subscribeToEncryptionCode } from '../lib/firebaseService';
+import { subscribeToEncryptionCode, subscribeToRegisteredSchools, initialRegisteredSchools, deduplicateSchools } from '../lib/firebaseService';
+import { recordUserLoginLog } from '../lib/userLoginLogService';
 import { 
   allDefaultStudents, 
   initialSubjects, 
@@ -125,6 +126,7 @@ interface LoginViewProps {
   onLoginSuccess: (user: UserAccount, profileId?: string, targetTab?: string) => void;
   teacherProfiles: TeacherProfile[];
   registeredUsers?: UserAccount[];
+  registeredSchools?: RegisteredSchool[];
   onRegisterNewAccount?: (user: UserAccount, newProfile?: TeacherProfile) => void;
   onResetPassword?: (email: string, newPassword: string) => void;
   students?: Student[];
@@ -143,6 +145,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   onLoginSuccess, 
   teacherProfiles,
   registeredUsers = [],
+  registeredSchools: propsRegisteredSchools,
   onRegisterNewAccount,
   onResetPassword,
   students,
@@ -161,7 +164,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const [showLoginDropdown, setShowLoginDropdown] = useState<boolean>(false);
   const [selectedAnalyticsClass, setSelectedAnalyticsClass] = useState<string>('Semua Kelas');
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
-  const [preAuthAccepted, setPreAuthAccepted] = useState<boolean>(false);
+  const [preAuthAccepted, setPreAuthAccepted] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'demo'>('login');
   const [isHeaderLight, setIsHeaderLight] = useState<boolean>(false);
 
@@ -212,7 +215,17 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
   // Dynamic Background Style derived from loginBackgroundConfig or default
   const effectiveBgConfig = useMemo(() => {
-    return loginBackgroundConfig || defaultLoginBackgroundConfig;
+    if (loginBackgroundConfig) return loginBackgroundConfig;
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('simak_login_bg_config');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (parsed && typeof parsed === 'object') return parsed;
+        }
+      }
+    } catch (e) {}
+    return defaultLoginBackgroundConfig;
   }, [loginBackgroundConfig]);
 
   const dynamicBgStyle = useMemo<React.CSSProperties>(() => {
@@ -668,7 +681,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [encryptionCode, setEncryptionCode] = useState<string>('');
-  const [ssoSystem, setSsoSystem] = useState<'Administrator' | 'Kepala Sekolah' | 'Kurikulum' | 'TU' | 'Keuangan' | 'Kesiswaan' | 'Guru' | 'Sarpras' | 'Perpustakaan'>('Administrator');
+  const [ssoSystem, setSsoSystem] = useState<'Administrator' | 'Kepala Sekolah' | 'Kurikulum' | 'TU' | 'Keuangan' | 'Kesiswaan' | 'Guru' | 'Sarpras' | 'Perpustakaan'>('Guru');
   const [isMasterDataLogin, setIsMasterDataLogin] = useState<boolean>(false);
   const [isStudentLogin, setIsStudentLogin] = useState<boolean>(false);
   const [isTeacherLogin, setIsTeacherLogin] = useState<boolean>(false);
@@ -677,6 +690,386 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successNotification, setSuccessNotification] = useState<string | null>(null);
+
+  // Auto-detect registered user role when email/NIP is entered
+  const matchedLoginAccount = useMemo(() => {
+    const cleanInput = email.trim();
+    if (!cleanInput) return null;
+
+    const cleanInputLower = cleanInput.toLowerCase();
+    const cleanInputNip = cleanInput.replace(/\s+/g, '').toLowerCase();
+
+    // 1. Check in registered users (props + localStorage)
+    let localRegUsers: UserAccount[] = [];
+    try {
+      if (typeof window !== 'undefined') {
+        const storedJson = localStorage.getItem('simak_registered_users');
+        if (storedJson) localRegUsers = JSON.parse(storedJson);
+      }
+    } catch (e) {}
+    const allRegistered = [...registeredUsers, ...localRegUsers];
+
+    const matchedUser = allRegistered.find(u => {
+      const matchesEmail = u.email && u.email.toLowerCase() === cleanInputLower;
+      const matchesNip = u.nip && u.nip.replace(/\s+/g, '').toLowerCase() === cleanInputNip;
+      return matchesEmail || matchesNip;
+    });
+
+    if (matchedUser) return matchedUser;
+
+    // 2. Check master account
+    if (cleanInputLower === 'shahrurrobby17@gmail.com' || cleanInputNip === '199001012015011001') {
+      return {
+        uid: 'USER-ADMIN',
+        email: 'shahrurrobby17@gmail.com',
+        name: 'Shahrur Robby, S.Pd.',
+        role: 'Administrator',
+        schoolName: 'SMA Negeri 1 Indonesia'
+      } as UserAccount;
+    }
+
+    // 2b. Check built-in system accounts for roles (Kepala Sekolah, Kurikulum, TU, Keuangan, Kesiswaan, Sarpras)
+    const isKepalaSekolahMatch = 
+      cleanInputLower === 'kepalasekolah@simakmerdeka.ai.studio' ||
+      cleanInputLower.includes('kepala') || 
+      cleanInputLower.includes('kepsek') || 
+      cleanInputLower.includes('principal') || 
+      cleanInputLower.startsWith('ks@') ||
+      cleanInputLower.includes('ks.') ||
+      cleanInputLower.includes('.ks@') ||
+      cleanInputLower.includes('ks_') ||
+      cleanInputLower.includes('ks-') ||
+      cleanInputLower.includes('bambang.susanto') ||
+      cleanInputLower.includes('bambang') ||
+      cleanInputLower.includes('sri.wahyuni') ||
+      cleanInputLower.includes('sriwahyuni') ||
+      cleanInputLower.includes('mulyadi') ||
+      cleanInputLower === 'bambang.susanto@sekolah.sch.id' ||
+      cleanInputNip === '196805121993031004' ||
+      cleanInputNip === '196805141993031004' || 
+      cleanInputNip === '196911201994031003' ||
+      cleanInputNip === '196911201994032003';
+
+    if (isKepalaSekolahMatch) {
+      return {
+        uid: 'USER-KS-01',
+        email: cleanInputLower.includes('@') ? cleanInputLower : 'kepalasekolah@simakmerdeka.ai.studio',
+        name: cleanInputLower.includes('bambang') ? 'Drs. H. Bambang Susanto, M.Pd.' : 'Drs. H. Mulyadi, M.Pd.',
+        role: 'Kepala Sekolah',
+        schoolName: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+        nip: cleanInputNip ? cleanInput : '19680514 199303 1 004',
+        profileId: 'PROF-KS',
+        status: 'Aktif',
+        isMaintenance: false
+      } as UserAccount;
+    }
+
+    if (cleanInputLower === 'kurikulum@simakmerdeka.ai.studio' || cleanInputLower.includes('kurikulum') || cleanInputNip === '197508212000031002') {
+      return {
+        uid: 'USER-KURIKULUM-01',
+        email: cleanInputLower.includes('@') ? cleanInputLower : 'kurikulum@simakmerdeka.ai.studio',
+        name: 'Dr. Hendra Gunawan, M.Pd.',
+        role: 'Tim Kurikulum / Pengelola KSP',
+        schoolName: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+        nip: '19750821 200003 1 002',
+        profileId: 'PROF-KURIKULUM',
+        status: 'Aktif',
+        isMaintenance: false
+      } as UserAccount;
+    }
+
+    if (cleanInputLower === 'tu@simakmerdeka.ai.studio' || cleanInputLower.includes('tatausaha') || cleanInputLower.startsWith('tu@') || cleanInputNip === '198204152008011009') {
+      return {
+        uid: 'USER-TU-01',
+        email: cleanInputLower.includes('@') ? cleanInputLower : 'tu@simakmerdeka.ai.studio',
+        name: 'Rahmat Hidayat, S.Sos.',
+        role: 'Kepala Tata Usaha / Staf TU',
+        schoolName: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+        nip: '19820415 200801 1 009',
+        profileId: 'PROF-TU',
+        status: 'Aktif',
+        isMaintenance: false
+      } as UserAccount;
+    }
+
+    if (cleanInputLower === 'keuangan@simakmerdeka.ai.studio' || cleanInputLower.includes('keuangan') || cleanInputLower.includes('bendahara') || cleanInputNip === '198511252010012005') {
+      return {
+        uid: 'USER-KEUANGAN-01',
+        email: cleanInputLower.includes('@') ? cleanInputLower : 'keuangan@simakmerdeka.ai.studio',
+        name: 'Siti Nurhaliza, S.E., Ak.',
+        role: 'Bendahara / Pengelola Keuangan',
+        schoolName: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+        nip: '19851125 201001 2 005',
+        profileId: 'PROF-KEUANGAN',
+        status: 'Aktif',
+        isMaintenance: false
+      } as UserAccount;
+    }
+
+    if (cleanInputLower === 'kesiswaan@simakmerdeka.ai.studio' || cleanInputLower.includes('kesiswaan') || cleanInputNip === '197607182003121002') {
+      return {
+        uid: 'USER-KESISWAAN-01',
+        email: cleanInputLower.includes('@') ? cleanInputLower : 'kesiswaan@simakmerdeka.ai.studio',
+        name: 'Bambang Irawan, S.Pd., M.M.',
+        role: 'Wakasek Kesiswaan / Tim Kesiswaan',
+        schoolName: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+        nip: '19760718 200312 1 002',
+        profileId: 'PROF-KESISWAAN',
+        status: 'Aktif',
+        isMaintenance: false
+      } as UserAccount;
+    }
+
+    if (cleanInputLower === 'sarpras@simakmerdeka.ai.studio' || cleanInputLower.includes('sarpras') || cleanInputNip === '197903202005011003') {
+      return {
+        uid: 'USER-SARPRAS-01',
+        email: cleanInputLower.includes('@') ? cleanInputLower : 'sarpras@simakmerdeka.ai.studio',
+        name: 'Ir. Agus Wijaya, S.T.',
+        role: 'Pengelola Sarpras',
+        schoolName: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+        nip: '19790320 200501 1 003',
+        profileId: 'PROF-SARPRAS',
+        status: 'Aktif',
+        isMaintenance: false
+      } as UserAccount;
+    }
+
+    // 3. Check teacher profiles
+    const matchedProfile = teacherProfiles.find(p => {
+      const pNipClean = p.nip ? p.nip.replace(/\s+/g, '').toLowerCase() : '';
+      const pEmail = `${pNipClean}@simakmerdeka.ai.studio`.toLowerCase();
+      return pNipClean === cleanInputNip || pEmail === cleanInputLower || (p.name && p.name.toLowerCase() === cleanInputLower);
+    });
+
+    if (matchedProfile) {
+      return {
+        uid: `USER-${matchedProfile.id}`,
+        email: `${matchedProfile.nip.replace(/\s+/g, '')}@simakmerdeka.ai.studio`,
+        name: matchedProfile.name,
+        role: matchedProfile.title || 'Guru Pengampu',
+        schoolName: matchedProfile.schoolName
+      } as UserAccount;
+    }
+
+    return null;
+  }, [email, registeredUsers, teacherProfiles]);
+
+  // Check if email or detected account is Master Administrator
+  const isMasterOrAdminAccount = useMemo(() => {
+    const cleanLower = email.trim().toLowerCase();
+    const cleanNip = email.trim().replace(/\s+/g, '');
+    if (!cleanLower) return false;
+
+    // Do NOT treat specific non-admin SSO roles as Master Administrator
+    const isKepalaSekolahEmail =
+      cleanLower.includes('kepala') || 
+      cleanLower.includes('kepsek') || 
+      cleanLower.includes('principal') || 
+      cleanLower.startsWith('ks@') ||
+      cleanLower.includes('ks.') ||
+      cleanLower.includes('.ks@') ||
+      cleanLower.includes('ks_') ||
+      cleanLower.includes('ks-') ||
+      cleanLower.includes('bambang.susanto') ||
+      cleanLower.includes('bambang') ||
+      cleanLower.includes('sri.wahyuni') ||
+      cleanLower.includes('sriwahyuni') ||
+      cleanLower.includes('mulyadi') ||
+      cleanLower === 'bambang.susanto@sekolah.sch.id' ||
+      cleanNip === '196805121993031004' ||
+      cleanNip === '196805141993031004' ||
+      cleanNip === '196911201994031003' ||
+      cleanNip === '196911201994032003';
+
+    if (
+      isKepalaSekolahEmail ||
+      cleanLower.includes('kurikulum') || 
+      cleanLower.includes('kesiswaan') || 
+      cleanLower.includes('keuangan') || 
+      cleanLower.includes('bendahara') || 
+      cleanLower.includes('sarpras') || 
+      cleanLower.includes('perpustakaan') ||
+      cleanLower.startsWith('tu@') ||
+      cleanLower.includes('tatausaha')
+    ) {
+      return false;
+    }
+
+    if (matchedLoginAccount?.role) {
+      const r = matchedLoginAccount.role.toLowerCase();
+      if (
+        r.includes('kepala') || 
+        r.includes('principal') || 
+        r.includes('kepsek') || 
+        r.includes('kurikulum') || 
+        r.includes('tu') || 
+        r.includes('tata usaha') || 
+        r.includes('keuangan') || 
+        r.includes('bendahara') || 
+        r.includes('kesiswaan') || 
+        r.includes('sarpras') || 
+        r.includes('perpustakaan')
+      ) {
+        return false;
+      }
+      if (r.includes('admin') || r.includes('master') || r.includes('operator')) {
+        return true;
+      }
+    }
+
+    if (cleanLower === 'shahrurrobby17@gmail.com' || cleanNip === '199001012015011001' || cleanLower.includes('shahrur') || cleanLower.includes('admin') || cleanLower.includes('master')) {
+      return true;
+    }
+    return false;
+  }, [email, matchedLoginAccount]);
+
+  // Check if detected account is a teacher
+  const isTeacherAccount = useMemo(() => {
+    if (isMasterOrAdminAccount) return false;
+    if (!matchedLoginAccount) return false;
+    const roleNorm = (matchedLoginAccount.role || '').toLowerCase();
+    return roleNorm.includes('guru') || roleNorm.includes('pengampu') || roleNorm.includes('pendidik') || roleNorm.includes('wali');
+  }, [matchedLoginAccount, isMasterOrAdminAccount]);
+
+  // Sync ssoSystem and login mode when email/NIP is entered or deleted
+  useEffect(() => {
+    const cleanLower = email.trim().toLowerCase();
+
+    // When email is deleted or cleared from the input field, revert to standard login
+    if (!cleanLower) {
+      if (!isStudentLogin) {
+        setIsTeacherLogin(true);
+        setIsMasterDataLogin(false);
+        setSsoSystem('Guru');
+        setEncryptionCode('');
+      }
+      return;
+    }
+
+    // Detect Kepala Sekolah SSO role immediately
+    const isKepalaSekolahInput = 
+      cleanLower.includes('kepala') || 
+      cleanLower.includes('kepsek') || 
+      cleanLower.includes('principal') || 
+      cleanLower.startsWith('ks@') ||
+      cleanLower.includes('ks.') ||
+      cleanLower.includes('.ks@') ||
+      cleanLower.includes('ks_') ||
+      cleanLower.includes('ks-') ||
+      cleanLower.includes('bambang.susanto') ||
+      cleanLower.includes('bambang') ||
+      cleanLower.includes('sri.wahyuni') ||
+      cleanLower.includes('sriwahyuni') ||
+      cleanLower.includes('mulyadi') ||
+      cleanLower === 'bambang.susanto@sekolah.sch.id' ||
+      cleanLower.replace(/\s+/g, '') === '196805121993031004' ||
+      cleanLower.replace(/\s+/g, '') === '196805141993031004' || 
+      cleanLower.replace(/\s+/g, '') === '196911201994031003' ||
+      cleanLower.replace(/\s+/g, '') === '196911201994032003' ||
+      Boolean(matchedLoginAccount?.role && (
+        matchedLoginAccount.role.toLowerCase().includes('kepala') ||
+        matchedLoginAccount.role.toLowerCase().includes('principal') ||
+        matchedLoginAccount.role.toLowerCase().includes('kepsek')
+      ));
+
+    if (isKepalaSekolahInput) {
+      setIsTeacherLogin(false);
+      setIsMasterDataLogin(true);
+      setSsoSystem('Kepala Sekolah');
+      return;
+    }
+    if (cleanLower.includes('kurikulum') || cleanLower.replace(/\s+/g, '') === '197508212000031002') {
+      setIsTeacherLogin(false);
+      setIsMasterDataLogin(true);
+      setSsoSystem('Kurikulum');
+      return;
+    }
+    if (cleanLower.includes('tatausaha') || cleanLower.startsWith('tu@') || cleanLower === 'tu@simakmerdeka.ai.studio' || cleanLower.replace(/\s+/g, '') === '198204152008011009') {
+      setIsTeacherLogin(false);
+      setIsMasterDataLogin(true);
+      setSsoSystem('TU');
+      return;
+    }
+    if (cleanLower.includes('keuangan') || cleanLower.includes('bendahara') || cleanLower.replace(/\s+/g, '') === '198511252010012005') {
+      setIsTeacherLogin(false);
+      setIsMasterDataLogin(true);
+      setSsoSystem('Keuangan');
+      return;
+    }
+    if (cleanLower.includes('kesiswaan') || cleanLower.replace(/\s+/g, '') === '197607182003121002') {
+      setIsTeacherLogin(false);
+      setIsMasterDataLogin(true);
+      setSsoSystem('Kesiswaan');
+      return;
+    }
+    if (cleanLower.includes('sarpras') || cleanLower.replace(/\s+/g, '') === '197903202005011003') {
+      setIsTeacherLogin(false);
+      setIsMasterDataLogin(true);
+      setSsoSystem('Sarpras');
+      return;
+    }
+
+    if (isMasterOrAdminAccount) {
+      setIsTeacherLogin(false);
+      setIsMasterDataLogin(true);
+      setSsoSystem('Administrator');
+      return;
+    }
+
+    if (matchedLoginAccount && matchedLoginAccount.role) {
+      const roleLower = matchedLoginAccount.role.toLowerCase();
+      if (roleLower.includes('guru') || roleLower.includes('pengampu') || roleLower.includes('pendidik')) {
+        setIsTeacherLogin(true);
+        setIsMasterDataLogin(false);
+        setSsoSystem('Guru');
+        setEncryptionCode('');
+      } else {
+        setIsTeacherLogin(false);
+        setIsMasterDataLogin(true);
+        if (roleLower.includes('kepala')) setSsoSystem('Kepala Sekolah');
+        else if (roleLower.includes('kurikulum')) setSsoSystem('Kurikulum');
+        else if (roleLower.includes('tu') || roleLower.includes('tata usaha')) setSsoSystem('TU');
+        else if (roleLower.includes('sarpras')) setSsoSystem('Sarpras');
+        else if (roleLower.includes('keuangan') || roleLower.includes('bendahara')) setSsoSystem('Keuangan');
+        else if (roleLower.includes('kesiswaan')) setSsoSystem('Kesiswaan');
+        else if (roleLower.includes('admin') || roleLower.includes('master')) setSsoSystem('Administrator');
+      }
+    } else {
+      if (!isStudentLogin) {
+        setIsTeacherLogin(true);
+        setIsMasterDataLogin(false);
+        setSsoSystem('Guru');
+        setEncryptionCode('');
+      }
+    }
+  }, [email, isMasterOrAdminAccount, matchedLoginAccount, isStudentLogin]);
+
+  const shouldShowAccessAndEncryption = useMemo(() => {
+    if (isStudentLogin) return false;
+
+    const cleanInput = email.trim();
+    // When email is empty/deleted, NEVER show access & encryption fields
+    if (!cleanInput) {
+      return false;
+    }
+
+    // ALWAYS show access & encryption code for Administrator email like shahrurrobby17@gmail.com
+    if (isMasterOrAdminAccount) {
+      return true;
+    }
+
+    // If teacher mode is active OR ssoSystem is selected as 'Guru' OR detected account is a teacher:
+    if (isTeacherLogin || ssoSystem === 'Guru' || isTeacherAccount) {
+      return false;
+    }
+
+    // If account is registered in system or an SSO role is active:
+    if (matchedLoginAccount || Boolean(ssoSystem)) {
+      return true;
+    }
+
+    return false;
+  }, [isStudentLogin, email, isMasterOrAdminAccount, isTeacherLogin, ssoSystem, isTeacherAccount, matchedLoginAccount]);
 
   // Encryption Code State & Listener
   const [activeEncryptionCode, setActiveEncryptionCode] = useState<string>(() => {
@@ -728,9 +1121,64 @@ export const LoginView: React.FC<LoginViewProps> = ({
     };
   }, []);
 
+  // Registered Schools State
+  const [liveSchools, setLiveSchools] = useState<RegisteredSchool[]>(() => {
+    if (propsRegisteredSchools && propsRegisteredSchools.length > 0) return propsRegisteredSchools;
+    return initialRegisteredSchools;
+  });
+
+  useEffect(() => {
+    if (propsRegisteredSchools && propsRegisteredSchools.length > 0) {
+      setLiveSchools(propsRegisteredSchools);
+    } else {
+      const unsub = subscribeToRegisteredSchools((list) => {
+        if (list && list.length > 0) setLiveSchools(list);
+      });
+      return () => unsub();
+    }
+  }, [propsRegisteredSchools]);
+
   // Register Form States
   const [regName, setRegName] = useState<string>('');
+  const [regJenjang, setRegJenjang] = useState<string>('');
   const [regSchool, setRegSchool] = useState<string>('');
+
+  const filteredLiveSchools = useMemo(() => {
+    if (!regJenjang) return [];
+    const target = regJenjang.split('/')[0].trim().toLowerCase();
+    const list = deduplicateSchools(liveSchools);
+    
+    return list.filter(s => {
+      const nameLower = (s.name || '').toLowerCase();
+      const jenjangLower = (s.jenjang || '').toLowerCase();
+      
+      if (target === 'sd') {
+        return jenjangLower.includes('sd') || jenjangLower.includes('mi') || nameLower.startsWith('sd') || nameLower.startsWith('mi');
+      }
+      if (target === 'smp') {
+        return jenjangLower.includes('smp') || jenjangLower.includes('mts') || nameLower.startsWith('smp') || nameLower.startsWith('mts');
+      }
+      if (target === 'sma') {
+        return jenjangLower.includes('sma') || jenjangLower.includes('ma') || jenjangLower.includes('smk') || nameLower.startsWith('sma') || nameLower.startsWith('ma') || nameLower.startsWith('smk') || (!jenjangLower && !nameLower.startsWith('sd') && !nameLower.startsWith('smp'));
+      }
+      return true;
+    });
+  }, [liveSchools, regJenjang]);
+
+  const selectedRegSchoolObj = useMemo(() => {
+    return liveSchools.find(s => s.name === regSchool) || filteredLiveSchools[0] || liveSchools[0];
+  }, [liveSchools, regSchool, filteredLiveSchools]);
+
+  useEffect(() => {
+    if (regJenjang && filteredLiveSchools.length > 0) {
+      if (!regSchool || !filteredLiveSchools.some(s => s.name === regSchool)) {
+        setRegSchool(filteredLiveSchools[0].name);
+      }
+    } else if (!regJenjang) {
+      setRegSchool('');
+    }
+  }, [regJenjang, filteredLiveSchools]);
+
   const [regRole, setRegRole] = useState<string>('Guru Pengampu');
   const [regEmail, setRegEmail] = useState<string>('');
   const [regNip, setRegNip] = useState<string>('');
@@ -912,7 +1360,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const faqItems = [
     {
       question: 'Bagaimana cara masuk (login) ke aplikasi SIMAK Guru?',
-      answer: 'Klik tombol dropdown "Masuk ke Sistem" lalu pilih "Masuk Guru/GTK" untuk langsung diarahkan ke halaman khusus guru (Sistem Guru & Administrasi GTK). Anda juga dapat memilih "Masuk Akun SSO" untuk akses peran lainnya, atau memilih akun guru dari daftar contoh yang tersedia.'
+      answer: 'Klik tombol dropdown "Masuk ke Sistem" lalu pilih "Masuk/Login" untuk langsung diarahkan ke halaman login.'
     },
     {
       question: 'Bagaimana jika saya Lupa Kata Sandi?',
@@ -991,7 +1439,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
     if (norm.includes('kurikulum')) {
       return { targetTab: 'system-kurikulum', userRole: 'Tim Kurikulum / Pengelola KSP', systemName: 'Sistem Kurikulum Merdeka' };
     }
-    if (norm.includes('kepala') || norm.includes('principal')) {
+    if (norm.includes('kepala') || norm.includes('principal') || norm.includes('kepsek') || norm === 'ks') {
       return { targetTab: 'validasi', userRole: 'Kepala Sekolah', systemName: 'Sistem Manajemen Kepala Sekolah' };
     }
     if (norm.includes('tu') || norm.includes('tata usaha')) {
@@ -1386,6 +1834,15 @@ export const LoginView: React.FC<LoginViewProps> = ({
         targetTab = 'master-data';
       }
       
+      recordUserLoginLog({
+        userId: loggedUser.uid,
+        name: loggedUser.name,
+        email: loggedUser.email,
+        role: loggedUser.role,
+        schoolName: loggedUser.schoolName,
+        status: 'Berhasil',
+        authMethod: 'Google SSO'
+      });
       setSuccessNotification(`Berhasil masuk dengan Google sebagai ${loggedUser.name}! Mengarahkan...`);
       setTimeout(() => {
         setIsLoading(false);
@@ -1477,6 +1934,16 @@ export const LoginView: React.FC<LoginViewProps> = ({
           status: 'Aktif',
           isMaintenance: false
         };
+        recordUserLoginLog({
+          userId: adminUser.uid,
+          name: adminUser.name,
+          email: adminUser.email,
+          nip: adminUser.nip,
+          role: adminUser.role,
+          schoolName: adminUser.schoolName,
+          status: 'Berhasil',
+          authMethod: 'SSO Administrator & Enkripsi'
+        });
         setSuccessNotification(`Berhasil masuk ke ${dest.systemName}! Mengarahkan...`);
         setTimeout(() => {
           onLoginSuccess(adminUser, 'PROF-ADMIN', dest.targetTab);
@@ -1544,6 +2011,16 @@ export const LoginView: React.FC<LoginViewProps> = ({
           role: roleToUse
         };
 
+        recordUserLoginLog({
+          userId: userToLogin.uid,
+          name: userToLogin.name,
+          email: userToLogin.email,
+          nip: userToLogin.nip,
+          role: userToLogin.role,
+          schoolName: userToLogin.schoolName,
+          status: 'Berhasil',
+          authMethod: 'Email Resmi & Kata Sandi'
+        });
         const destInfo = getSystemDestination(roleToUse);
         setSuccessNotification(`Berhasil masuk ke ${destInfo.systemName} sebagai ${userToLogin.name}! Mengarahkan...`);
         setTimeout(() => {
@@ -1595,6 +2072,16 @@ export const LoginView: React.FC<LoginViewProps> = ({
             status: 'Aktif',
             isMaintenance: false
           };
+          recordUserLoginLog({
+            userId: studentUser.uid,
+            name: studentUser.name,
+            email: studentUser.email,
+            nip: studentUser.nip,
+            role: 'Siswa / Peserta Didik',
+            schoolName: studentUser.schoolName,
+            status: 'Berhasil',
+            authMethod: 'NISN Siswa (LMS)'
+          });
           setSuccessNotification(`Berhasil masuk sebagai Siswa: ${matchedStudent.name} (${matchedStudent.className})! Mengarahkan ke LMS Learning Management System Siswa...`);
           setTimeout(() => {
             onLoginSuccess(studentUser, studentUser.profileId, 'system-kesiswaan');
@@ -1641,6 +2128,16 @@ export const LoginView: React.FC<LoginViewProps> = ({
           status: 'Aktif',
           isMaintenance: false
         };
+        recordUserLoginLog({
+          userId: user.uid,
+          name: user.name,
+          email: user.email,
+          nip: user.nip,
+          role: user.role,
+          schoolName: user.schoolName,
+          status: 'Berhasil',
+          authMethod: 'Email Resmi & Kata Sandi'
+        });
         const destInfo = getSystemDestination(roleToUse);
         setSuccessNotification(`Berhasil masuk ke ${destInfo.systemName} sebagai ${matchedProfile.name}! Mengarahkan...`);
         setTimeout(() => {
@@ -1924,20 +2421,15 @@ export const LoginView: React.FC<LoginViewProps> = ({
         fontFamily: 'Arial, Helvetica, sans-serif'
       }}
     >
-      {/* Mobile Dedicated Blue Background Layer (Only on Mobile HP: sm:hidden) */}
+      {/* Dynamic Background Image & Color Base Layer */}
       <div 
-        className="sm:hidden fixed inset-0 pointer-events-none z-0 bg-[#164e63]"
-      />
-
-      {/* Dynamic Background Image & Color Base Layer (Desktop: hidden sm:block) */}
-      <div 
-        className={`hidden sm:block ${effectiveBgConfig.backgroundScrollMode === 'fixed' ? 'fixed' : 'absolute'} inset-0 min-h-full pointer-events-none z-0 transition-all duration-300`}
+        className={`${effectiveBgConfig.backgroundScrollMode === 'fixed' ? 'fixed' : 'absolute'} inset-0 min-h-full pointer-events-none z-0 transition-all duration-300`}
         style={dynamicBgStyle}
       />
       
-      {/* Dimmer & Blur Overlay Layer (Desktop: hidden sm:block) */}
+      {/* Dimmer & Blur Overlay Layer */}
       <div 
-        className={`hidden sm:block ${effectiveBgConfig.backgroundScrollMode === 'fixed' ? 'fixed' : 'absolute'} inset-0 min-h-full pointer-events-none z-0 transition-all duration-300`}
+        className={`${effectiveBgConfig.backgroundScrollMode === 'fixed' ? 'fixed' : 'absolute'} inset-0 min-h-full pointer-events-none z-0 transition-all duration-300`}
         style={{
           backgroundColor: effectiveBgConfig.overlayDarkness ? `rgba(0, 0, 0, ${effectiveBgConfig.overlayDarkness / 100})` : 'transparent',
           backdropFilter: effectiveBgConfig.overlayBlur ? `blur(${effectiveBgConfig.overlayBlur}px)` : undefined
@@ -2101,27 +2593,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     type="button"
                     onClick={() => {
                       setActiveTab('login');
-                      setIsMasterDataLogin(true);
-                      setIsStudentLogin(false);
-                      setIsTeacherLogin(false);
-                      setEmail('');
-                      setPassword('');
-                      setEncryptionCode('');
-                      setPreAuthAccepted(true);
-                      setShowActivationStep(false);
-                      setShowActivationSearch(false);
-                      setShowLoginModal(true);
-                      setShowLoginDropdown(false);
-                      setSuccessNotification(null);
-                    }}
-                    className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#164e63]"
-                  >
-                    Masuk Akun SSO
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setActiveTab('login');
                       setIsMasterDataLogin(false);
                       setIsStudentLogin(false);
                       setIsTeacherLogin(true);
@@ -2138,7 +2609,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     }}
                     className="w-full text-left px-4 py-2.5 hover:bg-slate-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#164e63]"
                   >
-                    Masuk Guru/GTK
+                    Masuk/Login
                   </button>
                   <button
                     type="button"
@@ -2267,28 +2738,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       type="button"
                       onClick={() => {
                         setActiveTab('login');
-                        setIsMasterDataLogin(true);
-                        setIsStudentLogin(false);
-                        setIsTeacherLogin(false);
-                        setEmail('');
-                        setPassword('');
-                        setEncryptionCode('');
-                        setPreAuthAccepted(true);
-                        setShowActivationStep(false);
-                        setShowActivationSearch(false);
-                        setShowLoginModal(true);
-                        setShowLoginDropdown(false);
-                        setSuccessNotification(null);
-                      }}
-                      className="w-full text-left px-4 py-3 hover:bg-cyan-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#164e63] flex items-center justify-between border-b border-slate-100"
-                    >
-                      <span>Masuk Akun SSO (Guru & Tendik)</span>
-                      <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setActiveTab('login');
                         setIsMasterDataLogin(false);
                         setIsStudentLogin(false);
                         setIsTeacherLogin(true);
@@ -2305,7 +2754,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       }}
                       className="w-full text-left px-4 py-3 hover:bg-cyan-50 transition-colors cursor-pointer text-xs font-bold text-slate-800 hover:text-[#164e63] flex items-center justify-between border-b border-slate-100"
                     >
-                      <span>Masuk Guru/GTK</span>
+                      <span>Masuk/Login</span>
                       <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                     </button>
                     <button
@@ -3871,25 +4320,19 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 <div className="flex items-center gap-2">
                   <h1 className="font-bold text-sm sm:text-base text-white leading-tight">Sistem Informasi Akademik, Siswa & Staf berbasis LMS Kurikulum Merdeka</h1>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider hidden sm:inline-block ${
-                    isMasterDataLogin
-                      ? 'bg-amber-400 text-slate-950'
-                      : isStudentLogin
-                        ? 'bg-emerald-400 text-slate-950'
-                        : showActivationStep
-                          ? 'bg-white text-sky-700 font-extrabold shadow-2xs'
-                          : activeTab === 'register'
-                            ? 'bg-cyan-300 text-slate-950'
-                            : 'bg-white/20 text-white border border-white/30'
+                    isStudentLogin
+                      ? 'bg-emerald-400 text-slate-950'
+                      : showActivationStep
+                        ? 'bg-white text-sky-700 font-extrabold shadow-2xs'
+                        : activeTab === 'register'
+                          ? 'bg-cyan-300 text-slate-950'
+                          : 'bg-white/20 text-white border border-white/30'
                   }`}>
-                    {isMasterDataLogin 
-                      ? 'Administrator SSO' 
-                      : isStudentLogin 
-                        ? 'LMS Siswa' 
-                        : isTeacherLogin
-                          ? 'Portal Guru / GTK'
-                          : activeTab === 'register'
-                            ? (showActivationStep ? 'Cek Aktivasi' : 'Daftar Akun')
-                            : 'Portal Masuk Guru'}
+                    {isStudentLogin 
+                      ? 'LMS Siswa' 
+                      : activeTab === 'register'
+                        ? (showActivationStep ? 'Cek Aktivasi' : 'Daftar Akun')
+                        : 'Masuk Portal Simak'}
                   </span>
                 </div>
                 <p className="text-[11px] text-white font-medium">
@@ -4056,33 +4499,25 @@ export const LoginView: React.FC<LoginViewProps> = ({
           {/* Main Full-Screen Body Container (Unboxed, Pure White Background) */}
           <main className="flex-1 w-full px-4 sm:px-8 py-6 sm:py-10 flex flex-col items-center bg-white relative z-10">
             <div className={`w-full flex flex-col transition-all duration-300 ${
-              (activeTab === 'register' && !preAuthAccepted) || isMasterDataLogin
+              (activeTab === 'register' && !preAuthAccepted)
                 ? 'max-w-5xl lg:max-w-6xl'
                 : showActivationStep
                   ? 'max-w-xl'
-                  : 'max-w-2xl sm:max-w-3xl'
+                  : 'max-w-md sm:max-w-lg'
             } mt-0 sm:mt-4 mb-auto`}>
               
               {/* Form Title & Description (Open Page Typography) */}
               <div className="mb-6 sm:mb-8 text-center sm:text-left flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4 sm:pb-6 border-b border-slate-200">
                 <div className="flex items-center gap-3.5 sm:gap-4">
                   <div className={`p-2.5 sm:p-3 flex items-center justify-center shrink-0 rounded-2xl shadow-xs ${
-                    isMasterDataLogin
-                      ? 'bg-cyan-50 border border-cyan-200'
-                      : isStudentLogin 
-                        ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white' 
-                        : isTeacherLogin
-                          ? 'bg-sky-600 text-white shadow-md shadow-sky-500/25'
-                          : showActivationStep
-                            ? isAccountActive ? 'bg-emerald-600 text-white' : 'bg-sky-600 text-white shadow-md shadow-sky-500/25'
-                            : 'bg-[#164e63] text-white'
+                    isStudentLogin 
+                      ? 'bg-gradient-to-br from-emerald-600 to-teal-700 text-white' 
+                      : showActivationStep
+                        ? isAccountActive ? 'bg-emerald-600 text-white' : 'bg-sky-600 text-white shadow-md shadow-sky-500/25'
+                        : 'bg-sky-600 text-white shadow-md shadow-sky-500/25'
                   }`}>
-                    {isMasterDataLogin ? (
-                      <SSOCloudKeyLogo className="w-7 h-7 sm:w-8 sm:h-8" cloudColor="#2563eb" keyColor="#ffffff" keyHoleColor="#2563eb" />
-                    ) : isStudentLogin ? (
+                    {isStudentLogin ? (
                       <GraduationCap className="w-6 h-6 sm:w-7 sm:h-7 text-amber-300" />
-                    ) : isTeacherLogin ? (
-                      <GraduationCap className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                     ) : showActivationStep ? (
                       isAccountActive ? (
                         <CheckCircle2 className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
@@ -4092,37 +4527,31 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     ) : activeTab === 'register' ? (
                       <UserPlus className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                     ) : (
-                      <LogIn className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
+                      <GraduationCap className="w-6 h-6 sm:w-7 sm:h-7 text-white" />
                     )}
                   </div>
                   <div>
                     <h2 className="font-extrabold text-xl sm:text-2xl md:text-3xl text-slate-900 leading-tight tracking-tight">
-                      {isMasterDataLogin 
-                        ? 'Masuk Administrator SSO' 
-                        : isStudentLogin 
-                          ? 'LMS Learning Management System Siswa' 
-                          : isTeacherLogin
-                            ? 'Masuk Portal Guru / GTK'
-                            : activeTab === 'register'
-                              ? (showActivationStep 
-                                  ? 'Status Aktivasi Akun Pengguna' 
-                                  : preAuthAccepted 
-                                    ? `Lengkapi Biodata Akun (${regRole})` 
-                                    : 'Daftar Akun Baru SIMAK')
-                              : 'Masuk ke Sistem SIMAK Guru'}
+                      {isStudentLogin 
+                        ? 'LMS Learning Management System Siswa' 
+                        : activeTab === 'register'
+                          ? (showActivationStep 
+                              ? 'Status Aktivasi Akun Pengguna' 
+                              : preAuthAccepted 
+                                ? `Lengkapi Biodata Akun (${regRole})` 
+                                : 'Daftar Akun Baru SIMAK')
+                          : 'Masuk Portal Simak'}
                     </h2>
                     <p className="text-xs sm:text-sm text-slate-500 font-medium mt-1">
                       {isStudentLogin 
                         ? 'Akses Pembelajaran Digital, Modul Materi, Tugas Mandiri & Presensi Siswa' 
-                        : isTeacherLogin
-                          ? 'Akses Halaman Khusus Guru: Jurnal Mengajar, Upload Modul & Administrasi Pendidik'
-                          : activeTab === 'register'
-                            ? (showActivationStep 
-                                ? 'Status akun pendaftaran terbaru dalam sistem' 
-                                : preAuthAccepted 
-                                  ? 'Silakan isi data identitas pengguna dan keamanan akun dengan benar' 
-                                  : 'Pendaftaran Akun Guru, Tenaga Kependidikan & Siswa')
-                            : 'Sistem Informasi Manajemen Akademik Guru Kurikulum Merdeka'}
+                        : activeTab === 'register'
+                          ? (showActivationStep 
+                              ? 'Status akun pendaftaran terbaru dalam sistem' 
+                              : preAuthAccepted 
+                                ? 'Silakan isi data identitas pengguna dan keamanan akun dengan benar' 
+                                : 'Pendaftaran Akun Guru, Tenaga Kependidikan & Siswa')
+                          : 'Akses Masuk Halaman Simak Merdeka'}
                     </p>
                   </div>
                 </div>
@@ -4140,8 +4569,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
               </div>
 
-            {!preAuthAccepted ? (
-              activeTab === 'register' ? (
+            {(!preAuthAccepted && activeTab === 'register') ? (
                 /* 2-COLUMN UNBOXED LAYOUT (NO CARDS) */
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start animate-fadeIn">
                   {/* LEFT COLUMN: Deskripsi Singkat & Informasi Perhatian (Unboxed) */}
@@ -4189,8 +4617,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                           { title: 'Keuangan', label: 'Bendahara / Pengelola Keuangan', desc: 'Akses pengelolaan pos anggaran, rekap SPP/keuangan, dan pembukuan sekolah.' },
                           { title: 'Kesiswaan', label: 'Wakasek / Tim Kesiswaan', desc: 'Akses rekapitulasi kedisiplinan, data prestasi, kegiatan ekstrakurikuler, dan konseling.' },
                           { title: 'Guru BK', label: 'Guru BK (Bimbingan Konseling)', desc: 'Akses catatan bimbingan konseling, rekam perkembangan karakter, dan laporan siswa.' },
-                          { title: 'Kepala Sekolah', label: 'Kepala Sekolah / Manajemen', desc: 'Akses laporan eksekutif, rekapitulasi sekolah, dan evaluasi capaian kinerja guru.' },
-                          { title: 'Administrator', label: 'Administrator / Operator Sekolah', desc: 'Akses konfigurasi tingkat tinggi, master data akun, dan pengaturan SSO sistem.' }
+                          { title: 'Kepala Sekolah', label: 'Kepala Sekolah / Manajemen', desc: 'Akses laporan eksekutif, rekapitulasi sekolah, dan evaluasi capaian kinerja guru.' }
                         ].map((item) => {
                           const isSelected = regRole === item.title;
                           return (
@@ -4238,41 +4665,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     </div>
                   </div>
                 </div>
-              ) : (
-                /* SINGLE-COLUMN UNBOXED LAYOUT FOR LOGIN PRE-AUTH */
-                <div className="text-slate-800 space-y-6 animate-fadeIn">
-                  <div className="text-center sm:text-left">
-                    <h3 className="text-lg sm:text-xl font-bold text-[#164e63] mb-1">
-                      Autentikasi Akun
-                    </h3>
-                    <p className="text-xs sm:text-sm text-slate-500 font-medium max-w-xl">
-                      Silakan lakukan konfirmasi autentikasi sebelum masuk ke formulir.
-                    </p>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={() => setPreAuthAccepted(true)}
-                    className="w-full bg-[#164e63] hover:bg-[#003d6d] text-white font-bold text-sm sm:text-base py-3.5 sm:py-4 px-6 rounded-xl transition-all shadow-md hover:shadow-lg flex items-center justify-center gap-2.5 cursor-pointer active:scale-[0.99]"
-                  >
-                    <LogIn className="w-5 h-5 shrink-0" />
-                    <span>Lanjutkan ke Formulir Masuk</span>
-                  </button>
-
-                  <div className="pt-4 border-t border-slate-200 space-y-3">
-                    <h4 className="text-sm font-bold text-slate-800 flex items-center gap-2">
-                      <Info className="w-4 h-4 shrink-0 text-[#164e63]" />
-                      <span>Perhatian Sebelum Melanjutkan:</span>
-                    </h4>
-                    <ul className="text-xs sm:text-sm text-slate-600 space-y-2 list-decimal pl-5 marker:font-bold marker:text-[#164e63]">
-                      <li>Pastikan menggunakan email resmi / NISN yang aktif dan terdaftar</li>
-                      <li>Pilih hak akses sesuai tugas dan wewenang resmi di satuan pendidikan</li>
-                      <li>Tidak diperkenankan menggunakan data/akun milik pihak lain</li>
-                      <li>Jika didapati menggunakan data/akun lain maka akan di-blacklist/diblokir</li>
-                    </ul>
-                  </div>
-                </div>
-              )
             ) : (
               <div className="text-slate-800 animate-fadeIn">
                 
@@ -4294,40 +4686,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
                 {/* TAB 1: FORM LOGIN */}
                 {activeTab === 'login' && (
-                  <div className={isMasterDataLogin ? "grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-start animate-fadeIn" : ""}>
-                    {isMasterDataLogin && (
-                      <div className="lg:col-span-6 space-y-6">
-                        {/* Deskripsi Singkat */}
-                        <div className="space-y-3">
-                          <div className="flex items-center gap-2 text-[#164e63]">
-                            <BookOpen className="w-5 h-5" />
-                            <h3 className="font-extrabold text-base sm:text-lg text-slate-900">
-                              Pendaftaran Akun SIMAK Merdeka
-                            </h3>
-                          </div>
-                          <p className="text-xs sm:text-sm text-slate-600 leading-relaxed">
-                            Sistem Informasi Manajemen Akademik terintegrasi untuk Guru, Tenaga Kependidikan, Staf Sekolah, dan Peserta Didik dengan standar Kurikulum Merdeka.
-                          </p>
-                        </div>
-
-                        {/* Informasi Perhatian Sebelum Melanjutkan */}
-                        <div className="pt-4 border-t border-slate-200 space-y-3">
-                          <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                            <Info className="w-4 h-4 shrink-0 text-[#164e63]" />
-                            <span>Perhatian Sebelum Melanjutkan:</span>
-                          </h4>
-                          <ul className="text-xs sm:text-sm text-slate-600 space-y-2.5 list-decimal pl-5 marker:font-bold marker:text-[#164e63] leading-relaxed">
-                            <li>Pastikan menggunakan email resmi / NISN yang aktif dan terdaftar</li>
-                            <li>Pilih hak akses sesuai tugas dan wewenang resmi di satuan pendidikan</li>
-                            <li>Tidak diperkenankan menggunakan data/akun milik pihak lain</li>
-                            <li>Jika didapati menggunakan data/akun lain maka akan di-blacklist/diblokir</li>
-                          </ul>
-                        </div>
-                      </div>
-                    )}
-                    
-                    <div className={isMasterDataLogin ? "lg:col-span-6 lg:pl-4 lg:border-l lg:border-slate-200" : ""}>
-                      <form onSubmit={handleLoginSubmit} className="space-y-5 sm:space-y-6">
+                  <div className="animate-fadeIn w-full">
+                    <form onSubmit={handleLoginSubmit} className="space-y-5 sm:space-y-6">
                     {isStudentLogin ? (
                       <>
                         <div>
@@ -4351,20 +4711,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       <div>
                         <div className="flex items-center justify-between mb-2">
                           <label className="block text-xs sm:text-sm font-bold text-slate-800">
-                            {isTeacherLogin ? 'Email Resmi Guru / NIP Pendidik *' : 'Email Resmi Guru / NIP *'}
+                            Email Resmi *
                           </label>
-                          {isTeacherLogin && (
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEmail('19750312 200212 2 001');
-                                setPassword('password123');
-                              }}
-                              className="text-[11px] font-bold text-sky-700 hover:text-sky-800 hover:underline cursor-pointer"
-                            >
-                              Gunakan Akun Contoh Guru
-                            </button>
-                          )}
                         </div>
                         <div className="relative">
                           <User className="w-5 h-5 text-slate-400 absolute left-4 top-3.5 sm:top-4" />
@@ -4415,33 +4763,28 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       </div>
                     </div>
 
-                    {!isStudentLogin && (isMasterDataLogin || email.trim().toLowerCase().includes('shahrur') || email.trim().toLowerCase().includes('master') || email.trim().toLowerCase().includes('admin') || email.trim().toLowerCase() === 'shahrurrobby17@gmail.com' || email.trim().replace(/\s+/g, '') === '199001012015011001') && (
+                    {shouldShowAccessAndEncryption && (
                       <div className="space-y-4 pt-2">
                         <div>
                           <label className="block text-xs sm:text-sm font-bold text-slate-800 mb-2">
-                            Akses Sistem Administrasi SSO *
+                            Akses Sistem SSO *
                           </label>
                           <div className="relative">
                             <Building2 className="w-5 h-5 text-slate-400 absolute left-4 top-3.5 sm:top-4 pointer-events-none" />
-                            <select
-                              value={ssoSystem}
-                              onChange={(e) => setSsoSystem(e.target.value as any)}
-                              className="w-full pl-12 pr-10 py-3.5 sm:py-4 bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] transition-all appearance-none cursor-pointer shadow-xs"
-                            >
-                              <option value="Administrator">Administrator (Master Data & Monitoring)</option>
-                              <option value="Kepala Sekolah">Kepala Sekolah (Sistem Manajemen & Monitoring)</option>
-                              <option value="Kurikulum">Kurikulum (Sistem Kurikulum Merdeka)</option>
-                              <option value="TU">TU (Sistem Tata Usaha & Persuratan)</option>
-                              <option value="Sarpras">Sarpras (Sistem Sarana & Prasarana)</option>
-                              <option value="Kesiswaan">Kesiswaan (Sistem Kesiswaan)</option>
-                            </select>
-                            <ChevronDown className="w-5 h-5 text-slate-400 absolute right-4 top-3.5 sm:top-4 pointer-events-none" />
+                            <input
+                              type="text"
+                              readOnly
+                              value={ssoSystem === 'TU' ? 'Tata Usaha (TU) SSO' : `${ssoSystem} SSO`}
+                              className="w-full pl-12 pr-12 py-3.5 sm:py-4 bg-slate-100 border border-slate-300 rounded-xl text-sm sm:text-base font-semibold text-slate-700 cursor-not-allowed select-none shadow-xs focus:outline-none"
+                              title={`Hak akses dikunci sebagai ${ssoSystem} SSO`}
+                            />
+                            <Lock className="w-5 h-5 text-slate-400 absolute right-4 top-3.5 sm:top-4 pointer-events-none" />
                           </div>
                         </div>
 
                         <div>
                           <label className="block text-xs sm:text-sm font-bold text-slate-800 mb-2">
-                            Kode Enkripsi Administrator *
+                            Kode Enkripsi {ssoSystem === 'TU' ? 'Tata Usaha' : ssoSystem} *
                           </label>
                           <div className="relative">
                             <KeyRound className="w-5 h-5 text-slate-400 absolute left-4 top-3.5 sm:top-4" />
@@ -4483,15 +4826,10 @@ export const LoginView: React.FC<LoginViewProps> = ({
                               <GraduationCap className="w-5 h-5 text-white" />
                               <span>Masuk ke LMS Siswa</span>
                             </>
-                          ) : isTeacherLogin ? (
-                            <>
-                              <GraduationCap className="w-5 h-5 text-white" />
-                              <span>Masuk ke Halaman Khusus Guru</span>
-                              <ArrowRight className="w-5 h-5 text-white" />
-                            </>
                           ) : (
                             <>
-                              <span>Masuk ke Dashboard SIMAK</span>
+                              <GraduationCap className="w-5 h-5 text-white" />
+                              <span>Masuk ke halaman</span>
                               <ArrowRight className="w-5 h-5 text-white" />
                             </>
                           )}
@@ -4499,7 +4837,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       )}
                     </button>
 
-                    {!isStudentLogin && !isMasterDataLogin && (
+                    {!isStudentLogin && (
                       <div className="text-center mt-3 pt-3 border-t border-slate-100">
                         <p className="text-xs text-slate-500 font-medium">
                           Belum memiliki akun?{' '}
@@ -4517,9 +4855,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       </div>
                     )}
                   </form>
-                    </div>
-                  </div>
-                )}
+                </div>
+              )}
 
                 {activeTab === 'register' && (
                   showActivationStep ? (
@@ -4929,15 +5266,53 @@ export const LoginView: React.FC<LoginViewProps> = ({
                         </div>
 
                         <div>
-                          <label className="block text-xs sm:text-sm font-bold text-slate-800 mb-2">Nama Sekolah / Instansi *</label>
-                          <input
-                            type="text"
-                            required
-                            value={regSchool}
-                            onChange={(e) => setRegSchool(e.target.value)}
-                            placeholder="Contoh: SMA Negeri 3 Bandung"
-                            className="w-full px-4 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm sm:text-base font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] shadow-2xs transition-all"
-                          />
+                          <label className="block text-xs sm:text-sm font-bold text-slate-800 mb-2">Jenjang Pendidikan / Tingkat Sekolah *</label>
+                          <div className="relative">
+                            <select
+                              required
+                              value={regJenjang}
+                              onChange={(e) => setRegJenjang(e.target.value)}
+                              className="w-full pl-4 pr-10 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] shadow-2xs cursor-pointer appearance-none"
+                            >
+                              <option value="">-- Pilih Jenjang Pendidikan --</option>
+                              <option value="SD / MI">SD / MI (Sekolah Dasar / Madrasah Ibtidaiyah)</option>
+                              <option value="SMP / MTs">SMP / MTs (Sekolah Menengah Pertama / Madrasah Tsanawiyah)</option>
+                              <option value="SMA / MA">SMA / MA (Sekolah Menengah Atas / Madrasah Aliyah / SMK)</option>
+                            </select>
+                            <GraduationCap className="w-5 h-5 text-slate-400 absolute right-4 top-3.5 pointer-events-none" />
+                          </div>
+                        </div>
+
+                        <div>
+                          <label className="block text-xs sm:text-sm font-bold text-slate-800 mb-2">Nama Sekolah / Instansi Terdaftar *</label>
+                          <div className="relative">
+                            <select
+                              required
+                              disabled={!regJenjang}
+                              value={regSchool}
+                              onChange={(e) => setRegSchool(e.target.value)}
+                              className="w-full pl-4 pr-10 py-3.5 bg-slate-50/50 hover:bg-slate-50 focus:bg-white border border-slate-300 rounded-xl text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] shadow-2xs cursor-pointer appearance-none disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed"
+                            >
+                              {!regJenjang ? (
+                                <option value="">-- Pilih Jenjang Pendidikan Terlebih Dahulu --</option>
+                              ) : filteredLiveSchools.length === 0 ? (
+                                <option value="">-- Data Kosong (Belum Ada Sekolah Terdaftar) --</option>
+                              ) : (
+                                filteredLiveSchools.map((sch) => (
+                                  <option key={sch.id || sch.name} value={sch.name}>
+                                    {sch.name}
+                                  </option>
+                                ))
+                              )}
+                            </select>
+                            <Building2 className="w-5 h-5 text-slate-400 absolute right-4 top-3.5 pointer-events-none" />
+                          </div>
+
+                          <p className="text-[11px] text-slate-500 font-medium mt-1">
+                            {!regJenjang 
+                              ? '* Silakan pilih jenjang pendidikan terlebih dahulu untuk mengaktifkan pilihan sekolah.' 
+                              : '* Pilihan sekolah terdaftar diatur dan hanya dapat ditambahkan oleh Administrator.'}
+                          </p>
                         </div>
                       </div>
 
@@ -4959,7 +5334,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
                             <option value="Kesiswaan">Wakasek / Tim Kesiswaan</option>
                             <option value="Guru BK">Guru BK (Bimbingan Konseling)</option>
                             <option value="Kepala Sekolah">Kepala Sekolah / Manajemen</option>
-                            <option value="Administrator">Administrator / Operator Sekolah</option>
                           </select>
                           <ChevronDown className="w-5 h-5 text-slate-400 absolute right-4 top-3.5 sm:top-4 pointer-events-none" />
                         </div>

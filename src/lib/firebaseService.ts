@@ -60,12 +60,69 @@ export const getActiveSchoolContext = () => ({
   schoolId: currentActiveSchoolId
 });
 
-export const initialRegisteredSchools: RegisteredSchool[] = [
+export const deduplicateSchools = (schools: RegisteredSchool[]): RegisteredSchool[] => {
+  const seen = new Set<string>();
+  const result: RegisteredSchool[] = [];
+  for (const s of schools) {
+    if (!s || !s.name) continue;
+    const norm = s.name.trim().toLowerCase().replace(/\s+/g, ' ');
+    if (!seen.has(norm)) {
+      seen.add(norm);
+      result.push(s);
+    }
+  }
+  return result;
+};
+
+export const initialRegisteredSchools: RegisteredSchool[] = deduplicateSchools([
+  {
+    id: 'sma_diponegoro_wagir',
+    name: 'SMA Diponegoro Wagir',
+    npsn: '20521404',
+    principalName: 'H. Moh. Ridwan, S.Pd., M.Si.',
+    address: 'Jl. Raya Parangargo No. 1, Wagir',
+    city: 'Kab. Malang',
+    province: 'Jawa Timur',
+    jenjang: 'SMA',
+    statusSekolah: 'Swasta',
+    akreditasi: 'A',
+    academicYear: '2026/2027',
+    semester: 'Ganjil'
+  },
+  {
+    id: 'sd_negeri_1_wagir',
+    name: 'SD Negeri 1 Wagir',
+    npsn: '20518001',
+    principalName: 'Siti Aminah, S.Pd.SD',
+    address: 'Jl. Raya Parangargo, Wagir',
+    city: 'Kab. Malang',
+    province: 'Jawa Timur',
+    jenjang: 'SD',
+    statusSekolah: 'Negeri',
+    akreditasi: 'A',
+    academicYear: '2026/2027',
+    semester: 'Ganjil'
+  },
+  {
+    id: 'mi_diponegoro_wagir',
+    name: 'MI Diponegoro Wagir',
+    npsn: '20518002',
+    principalName: 'M. Ali Fikri, S.Pd.I',
+    address: 'Jl. Raya Parangargo No. 3, Wagir',
+    city: 'Kab. Malang',
+    province: 'Jawa Timur',
+    jenjang: 'SD',
+    statusSekolah: 'Swasta',
+    akreditasi: 'A',
+    academicYear: '2026/2027',
+    semester: 'Ganjil'
+  },
   {
     id: 'sman_1_indonesia',
     name: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
     npsn: '20500000',
     principalName: 'Dr. Hj. Sri Wahyuni, M.Si.',
+    jenjang: 'SMA',
     academicYear: '2026/2027',
     semester: 'Ganjil'
   },
@@ -74,6 +131,7 @@ export const initialRegisteredSchools: RegisteredSchool[] = [
     name: 'SMA Negeri 2 Surabaya',
     npsn: '20512345',
     principalName: 'Dra. Endang Sulistyowati',
+    jenjang: 'SMA',
     academicYear: '2026/2027',
     semester: 'Ganjil'
   },
@@ -82,10 +140,11 @@ export const initialRegisteredSchools: RegisteredSchool[] = [
     name: 'SMA Muhammadiyah 1 Jakarta',
     npsn: '20198765',
     principalName: 'H. Suryadi, M.Pd.',
+    jenjang: 'SMA',
     academicYear: '2026/2027',
     semester: 'Ganjil'
   }
-];
+]);
 
 export const subscribeToRegisteredSchools = (callback: (schools: RegisteredSchool[]) => void) => {
   return onSnapshot(collection(db, 'schools'), (snap) => {
@@ -97,13 +156,13 @@ export const subscribeToRegisteredSchools = (callback: (schools: RegisteredSchoo
       }
     });
     if (list.length > 0) {
-      callback(list);
+      callback(deduplicateSchools(list));
     } else {
-      callback(initialRegisteredSchools);
+      callback(deduplicateSchools(initialRegisteredSchools));
     }
   }, (err) => {
     console.warn('Error subscribing to schools collection:', err);
-    callback(initialRegisteredSchools);
+    callback(deduplicateSchools(initialRegisteredSchools));
   });
 };
 

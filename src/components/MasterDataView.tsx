@@ -61,6 +61,9 @@ import { LibrarySystemView } from './systems/LibrarySystemView';
 import { StudentSystemView } from './systems/StudentSystemView';
 import { FinanceSystemView } from './systems/FinanceSystemView';
 import { SchoolDetailSystemView } from './systems/SchoolDetailSystemView';
+import { RegisteredSchoolsTableView } from './systems/RegisteredSchoolsTableView';
+
+export type MasterDataCategory = 'Semua' | 'DetailSekolah' | 'DaftarSekolahTabel' | 'Penyimpanan' | 'Pengumuman' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa';
 
 interface MasterDataViewProps {
   registeredUsers: UserAccount[];
@@ -78,8 +81,8 @@ interface MasterDataViewProps {
   onUpdateInfoAnnouncement?: (updated: InfoAnnouncement) => void;
   renderUserModule?: (user: UserAccount, tab: string) => React.ReactNode;
   onNavigateTab?: (tab: string) => void;
-  activeCategory?: 'Semua' | 'DetailSekolah' | 'Penyimpanan' | 'Pengumuman' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa';
-  onCategoryChange?: (category: 'Semua' | 'DetailSekolah' | 'Penyimpanan' | 'Pengumuman' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa') => void;
+  activeCategory?: MasterDataCategory;
+  onCategoryChange?: (category: MasterDataCategory) => void;
 }
 
 export const MasterDataView: React.FC<MasterDataViewProps> = ({
@@ -105,10 +108,10 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
   const [statusFilter, setStatusFilter] = useState<string>('Semua');
   const [schoolFilter, setSchoolFilter] = useState<string>('Semua');
   const [roleFilter, setRoleFilter] = useState<string>('Semua');
-  const [internalCategory, setInternalCategory] = useState<'Semua' | 'DetailSekolah' | 'Penyimpanan' | 'Pengumuman' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa'>('Semua');
-  const selectedCategory = activeCategory !== undefined ? activeCategory : internalCategory;
+  const [internalCategory, setInternalCategory] = useState<MasterDataCategory>('Semua');
+  const selectedCategory: MasterDataCategory = activeCategory !== undefined ? activeCategory : internalCategory;
 
-  const setSelectedCategory = (cat: 'Semua' | 'DetailSekolah' | 'Penyimpanan' | 'Pengumuman' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa') => {
+  const setSelectedCategory = (cat: MasterDataCategory) => {
     setInternalCategory(cat);
     onCategoryChange?.(cat);
   };
@@ -234,7 +237,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
     const matchesSchool = schoolFilter === 'Semua' || (u.schoolName || 'SD Negeri 1 SIMAK') === schoolFilter;
     const matchesRole = roleFilter === 'Semua' || (u.role || 'Guru Pengampu') === roleFilter;
     const userCategory = getUserCategory(u);
-    const matchesCategory = selectedCategory === 'Semua' || userCategory === selectedCategory;
+    const matchesCategory = selectedCategory === 'Semua' || (userCategory as string) === (selectedCategory as string);
 
     return matchesSearch && matchesStatus && matchesSchool && matchesRole && matchesCategory;
   });
@@ -257,13 +260,13 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
 
   // Handle header category navigation / filtering
   const handleCategoryDropdownChange = (value: string) => {
-    setSelectedCategory(value as 'Semua' | 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa');
+    setSelectedCategory(value as MasterDataCategory);
   };
 
   // Helper for quick navigation to dedicated system pages
   const handleQuickNavigate = (
     tab: 'system-kurikulum' | 'system-guru' | 'system-tu' | 'system-sarpras' | 'system-keuangan' | 'system-kesiswaan' | 'system-perpustakaan',
-    cat: 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Keuangan' | 'Perpustakaan' | 'Siswa'
+    cat: MasterDataCategory
   ) => {
     if (onNavigateTab) {
       onNavigateTab(tab);
@@ -524,8 +527,9 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
         </div>
       )}
 
-      {/* Persistent Sticky Navigation Bar Akses Sistem Administrator - Tetap ada & tidak hilang ketika menu diklik */}
-      <div className="sticky top-0 z-30 bg-white/95 backdrop-blur-sm border border-slate-200 px-3.5 pt-3 pb-2.5 shadow-xs">
+      {/* Header Navigation Bar Akses Sistem Administrator - Disembunyikan pada halaman Data Sekolah & Daftar Sekolah */}
+      {selectedCategory !== 'DetailSekolah' && selectedCategory !== 'DaftarSekolahTabel' && (
+        <div className="bg-white border border-slate-200 px-3.5 pt-3 pb-2.5 shadow-xs">
         <div className="flex items-center justify-between gap-3 mb-2.5 pb-2 border-b border-slate-100 flex-wrap">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-[#164e63] text-white">
@@ -551,6 +555,20 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                 <span>Tambah Akun</span>
               </button>
             )}
+
+            {(selectedCategory as string) === 'DetailSekolah' && (
+              <button
+                type="button"
+                onClick={() => {
+                  const modalBtn = document.getElementById('btn-open-add-school-modal');
+                  if (modalBtn) modalBtn.click();
+                }}
+                className="px-3.5 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
+              >
+                <Plus className="w-3.5 h-3.5" />
+                <span>Tambah Sekolah</span>
+              </button>
+            )}
           </div>
         </div>
 
@@ -559,7 +577,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             type="button"
             onClick={() => setSelectedCategory('Semua')}
             className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              selectedCategory === 'Semua'
+              (selectedCategory as string) === 'Semua'
                 ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
                 : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
             }`}
@@ -572,13 +590,26 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             type="button"
             onClick={() => setSelectedCategory('DetailSekolah')}
             className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              selectedCategory === 'DetailSekolah'
+              (selectedCategory as string) === 'DetailSekolah'
                 ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
                 : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
             }`}
           >
             <School className="w-3.5 h-3.5 text-sky-600" />
-            <span>Detail Sekolah</span>
+            <span>Data Sekolah</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setSelectedCategory('DaftarSekolahTabel')}
+            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
+              (selectedCategory as string) === 'DaftarSekolahTabel'
+                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
+                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+            }`}
+          >
+            <Building2 className="w-3.5 h-3.5 text-cyan-800" />
+            <span>Daftar Sekolah ({registeredSchools.length})</span>
           </button>
 
           {/* Menu Penyimpanan - Di Atas Menu Pengumuman Sistem */}
@@ -701,9 +732,29 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
           </button>
         </div>
       </div>
+      )}
 
       {/* CONDITIONAL RENDERING OF DEDICATED SYSTEMS */}
-      {selectedCategory === 'DetailSekolah' ? (
+      {selectedCategory === 'DaftarSekolahTabel' ? (
+        <RegisteredSchoolsTableView
+          registeredSchools={registeredSchools}
+          activeSchoolName={activeSchoolName || 'SMA Diponegoro Wagir'}
+          onSelectSchoolStorage={(sch) => {
+            if (onRegisterSchool) onRegisterSchool(sch);
+            setSelectedCategory('DetailSekolah');
+          }}
+          onRegisterSchool={onRegisterSchool}
+          onDeleteSchoolStorage={onDeleteSchoolStorage}
+          onNavigateToDetail={(schName) => {
+            if (onUpdateTeacherProfile && teacher) {
+              onUpdateTeacherProfile({ ...teacher, schoolName: schName });
+            }
+            setSelectedCategory('DetailSekolah');
+          }}
+          currentUser={currentUser}
+          teacher={teacher}
+        />
+      ) : selectedCategory === 'DetailSekolah' ? (
         <SchoolDetailSystemView
           teacher={teacher}
           currentUser={currentUser}
