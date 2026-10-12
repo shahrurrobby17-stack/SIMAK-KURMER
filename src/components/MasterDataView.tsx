@@ -54,6 +54,7 @@ import { UserAccount, TeacherProfile, RegisteredSchool, InfoAnnouncement, InfoAn
 import { normalizeSchoolId, deleteSchoolFromFirebase } from '../lib/firebaseService';
 import { SaveSuccessModal } from './SaveSuccessModal';
 import { UserLoginLog, subscribeToUserLoginLogs, getLocalLoginLogs } from '../lib/userLoginLogService';
+import { UserPresence, subscribeToUserPresence, getLocalPresenceMap } from '../lib/userPresenceService';
 import { CurriculumSystemView } from './systems/CurriculumSystemView';
 import { TeacherSystemView } from './systems/TeacherSystemView';
 import { AdministrationSystemView } from './systems/AdministrationSystemView';
@@ -113,7 +114,13 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
   const [internalCategory, setInternalCategory] = useState<MasterDataCategory>('Semua');
   const selectedCategory: MasterDataCategory = activeCategory !== undefined ? activeCategory : internalCategory;
 
-  // Realtime Login Logs to determine user session online/offline status
+  // Realtime Presence & Login Logs to determine user session online/offline status
+  const [presenceMap, setPresenceMap] = useState<Record<string, UserPresence>>(() => {
+    return getLocalPresenceMap();
+  });
+  const [liveTicker, setLiveTicker] = useState<number>(Date.now());
+  const [isRealtimeConnected, setIsRealtimeConnected] = useState<boolean>(true);
+
   const [loginLogs, setLoginLogs] = useState<UserLoginLog[]>(() => {
     try {
       return getLocalLoginLogs();
@@ -123,10 +130,27 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
   });
 
   useEffect(() => {
-    const unsub = subscribeToUserLoginLogs((logs) => {
+    // 1. Subscribe to real-time presence tracking
+    const unsubPresence = subscribeToUserPresence((map) => {
+      setPresenceMap(map);
+      setIsRealtimeConnected(true);
+    });
+
+    // 2. Subscribe to login logs
+    const unsubLogs = subscribeToUserLoginLogs((logs) => {
       setLoginLogs(logs);
     });
-    return () => unsub();
+
+    // 3. Live timer ticker every 2.5 seconds to refresh relative times and expired statuses in real-time
+    const tickerInterval = setInterval(() => {
+      setLiveTicker(Date.now());
+    }, 2500);
+
+    return () => {
+      unsubPresence();
+      unsubLogs();
+      clearInterval(tickerInterval);
+    };
   }, []);
 
   const setSelectedCategory = (cat: MasterDataCategory) => {
@@ -220,13 +244,21 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
     return e === 'shahrurrobby17@gmail.com' || n.includes('shahrur robby') || n.includes('shahrur');
   };
 
-  // Helper to determine if an account is actively online or offline
-  const getUserOnlineStatus = (u: UserAccount): { isOnline: boolean; label: string; lastSeenText: string } => {
-    // Current user logged in is definitively online
+  // Helper to determine if an account is actively online or offline in REALTIME
+  const getUserOnlineStatus = (u: UserAccount): { 
+    isOnline: boolean; 
+    label: string; 
+    lastSeenText: string; 
+    isRealtime: boolean;
+    deviceInfo?: string;
+  } => {
+    const emailNorm = (u.email || '').toLowerCase().trim();
+
+    // 1. Current user logged in is definitively online (active in this browser session)
     const isCurrent = Boolean(
       currentUser && (
         (u.uid && currentUser.uid && u.uid === currentUser.uid) ||
-        (u.email && currentUser.email && u.email.toLowerCase().trim() === currentUser.email.toLowerCase().trim())
+        (emailNorm && currentUser.email && emailNorm === currentUser.email.toLowerCase().trim())
       )
     );
 
@@ -234,48 +266,96 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
       return {
         isOnline: true,
         label: 'Sedang Online',
-        lastSeenText: 'Aktif saat ini (Sesi Anda)'
+        lastSeenText: 'Aktif saat ini (Sesi Anda • Realtime)',
+        isRealtime: true
       };
     }
 
+    // 2. Realtime presence map evaluation from Firestore & BroadcastChannel
+    const presence = presenceMap[emailNorm];
+    if (presence) {
+      const elapsed = liveTicker - (presence.lastSeenMillis || 0);
+      const isPresenceActive = presence.isOnline && elapsed < 60000; // 60s threshold for active presence
+
+      if (isPresenceActive) {
+        let recency = 'Aktif sekarang (Realtime)';
+        const elapsedSec = Math.floor(elapsed / 1000);
+        if (elapsedSec < 5) {
+          recency = 'Aktif barusan (Realtime)';
+        } else if (elapsedSec < 60) {
+          recency = `Aktif ${elapsedSec} dtk lalu (Realtime)`;
+        }
+
+        return {
+          isOnline: true,
+          label: 'Sedang Online',
+          lastSeenText: recency,
+          isRealtime: true,
+          deviceInfo: `${presence.deviceType || 'Desktop'} • ${presence.browser || 'Browser'}`
+        };
+      } else {
+        // If presence was logged but expired (user idle > 60s or closed tab)
+        let offlineDesc = presence.lastSeenFormatted || 'Sesi berakhir';
+        const elapsedMinutes = Math.floor(elapsed / 60000);
+        if (elapsedMinutes < 60) {
+          offlineDesc = `Offline sejak ${elapsedMinutes} mnt lalu`;
+        } else {
+          offlineDesc = `Terakhir aktif: ${presence.lastSeenFormatted}`;
+        }
+
+        return {
+          isOnline: false,
+          label: 'Offline',
+          lastSeenText: offlineDesc,
+          isRealtime: true,
+          deviceInfo: `${presence.deviceType || 'Desktop'} • ${presence.browser || 'Browser'}`
+        };
+      }
+    }
+
+    // 3. Explicit isOnline flag on UserAccount if set
     if (u.isOnline !== undefined) {
       return {
         isOnline: Boolean(u.isOnline),
         label: u.isOnline ? 'Sedang Online' : 'Offline',
-        lastSeenText: u.isOnline ? 'Sedang aktif di sistem' : 'Tidak aktif saat ini'
+        lastSeenText: u.isOnline ? 'Sedang aktif di sistem' : 'Tidak aktif saat ini',
+        isRealtime: false
       };
     }
 
-    // Match against login logs
+    // 4. Fallback against recent login logs
     const userLogs = loginLogs.filter(l => 
-      l.email && u.email && l.email.toLowerCase().trim() === u.email.toLowerCase().trim() && l.status === 'Berhasil'
+      l.email && l.email.toLowerCase().trim() === emailNorm && l.status === 'Berhasil'
     );
 
     if (userLogs.length > 0) {
       const latest = [...userLogs].sort((a, b) => new Date(b.loginTime).getTime() - new Date(a.loginTime).getTime())[0];
       const logTime = new Date(latest.loginTime).getTime();
-      const diffMinutes = Math.floor((Date.now() - logTime) / 60000);
+      const diffMinutes = Math.floor((liveTicker - logTime) / 60000);
 
-      // If logged in within the last 120 minutes (2 hours), consider online
-      if (diffMinutes >= 0 && diffMinutes <= 120) {
+      // If logged in within the last 30 minutes, consider online
+      if (diffMinutes >= 0 && diffMinutes <= 30) {
         return {
           isOnline: true,
           label: 'Sedang Online',
-          lastSeenText: diffMinutes < 1 ? 'Aktif baru saja' : `Aktif ${diffMinutes} mnt lalu`
+          lastSeenText: diffMinutes < 1 ? 'Aktif baru saja' : `Aktif ${diffMinutes} mnt lalu`,
+          isRealtime: false
         };
       }
 
       return {
         isOnline: false,
         label: 'Offline',
-        lastSeenText: latest.loginTimeFormatted ? `Terakhir login: ${latest.loginTimeFormatted}` : 'Sesi berakhir'
+        lastSeenText: latest.loginTimeFormatted ? `Terakhir login: ${latest.loginTimeFormatted}` : 'Sesi berakhir',
+        isRealtime: false
       };
     }
 
     return {
       isOnline: false,
       label: 'Offline',
-      lastSeenText: 'Belum ada riwayat aktivitas sesi'
+      lastSeenText: 'Belum ada riwayat aktivitas sesi',
+      isRealtime: false
     };
   };
 
@@ -1037,6 +1117,53 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
         />
       ) : (
         <>
+          {/* Status Sesi Online/Offline Realtime Header Bar */}
+          <div className="bg-white border border-emerald-200/90 p-3.5 shadow-2xs flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0 relative">
+                <span className="relative flex h-3 w-3">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                </span>
+              </div>
+              <div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <h3 className="text-xs sm:text-sm font-black text-slate-800 tracking-wide uppercase">
+                    Monitoring Sesi Pengguna Realtime
+                  </h3>
+                  <span className="px-2 py-0.5 text-[9px] font-black bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-none uppercase tracking-wider flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 animate-pulse inline-block" />
+                    <span>Realtime Cloud Sync</span>
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-500 font-medium mt-0.5">
+                  Status online/offline diperbarui secara realtime ({onlineCount} akun sedang aktif saat ini).
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
+              <div className="text-right hidden sm:block">
+                <div className="text-[10px] text-slate-400 font-semibold uppercase">Waktu Server</div>
+                <div className="text-[11px] font-mono font-bold text-slate-700">
+                  {new Date(liveTicker).toLocaleTimeString('id-ID')} WIB
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setLiveTicker(Date.now());
+                  showToast('Sinkronisasi sesi realtime berhasil diperbarui.', 'success');
+                }}
+                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer active:scale-95"
+                title="Segarkan data sesi realtime sekarang"
+              >
+                <RefreshCw className="w-3.5 h-3.5" />
+                <span>Segarkan Sesi</span>
+              </button>
+            </div>
+          </div>
+
           {/* KPI Metrics Summary */}
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
             <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
@@ -1341,7 +1468,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                         </div>
                       </td>
 
-                      {/* Status Sesi (Online / Offline) */}
+                      {/* Status Sesi (Online / Offline) Realtime */}
                       <td className="py-3.5 px-4 text-center whitespace-nowrap">
                         {userOnline.isOnline ? (
                           <div className="inline-flex flex-col items-center">
@@ -1352,7 +1479,14 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                               </span>
                               <span>SEDANG ONLINE</span>
                             </span>
-                            <span className="text-[10px] text-slate-400 font-medium mt-0.5">{userOnline.lastSeenText}</span>
+                            <span className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                              {userOnline.lastSeenText}
+                            </span>
+                            {userOnline.deviceInfo && (
+                              <span className="text-[9px] text-slate-400 font-mono mt-0.5">
+                                {userOnline.deviceInfo}
+                              </span>
+                            )}
                           </div>
                         ) : (
                           <div className="inline-flex flex-col items-center">
@@ -1360,7 +1494,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                               <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
                               <span>OFFLINE</span>
                             </span>
-                            <span className="text-[10px] text-slate-400 font-medium mt-0.5 max-w-[130px] truncate" title={userOnline.lastSeenText}>
+                            <span className="text-[10px] text-slate-400 font-medium mt-0.5 max-w-[140px] truncate" title={userOnline.lastSeenText}>
                               {userOnline.lastSeenText}
                             </span>
                           </div>
@@ -1988,13 +2122,18 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                   </div>
                 </div>
 
-                {/* Status Sesi Pengguna */}
+                {/* Status Sesi Pengguna Realtime */}
                 <div className="bg-slate-50 border border-slate-200 p-3.5 flex items-center justify-between text-xs mt-3">
                   <div className="flex items-center gap-2.5">
                     <span className={`w-2.5 h-2.5 rounded-full ${getUserOnlineStatus(selectedUserForEdit).isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
                     <div>
-                      <span className="font-bold text-slate-800 block">Keterangan Aktivitas Sesi:</span>
-                      <span className="text-[11px] text-slate-500">{getUserOnlineStatus(selectedUserForEdit).lastSeenText}</span>
+                      <span className="font-bold text-slate-800 block">Keterangan Aktivitas Sesi (Realtime):</span>
+                      <span className="text-[11px] text-slate-600 font-semibold">{getUserOnlineStatus(selectedUserForEdit).lastSeenText}</span>
+                      {getUserOnlineStatus(selectedUserForEdit).deviceInfo && (
+                        <span className="text-[10px] text-slate-400 block font-mono">
+                          Perangkat: {getUserOnlineStatus(selectedUserForEdit).deviceInfo}
+                        </span>
+                      )}
                     </div>
                   </div>
                   <span className={`font-black px-2.5 py-1 rounded text-[11px] ${

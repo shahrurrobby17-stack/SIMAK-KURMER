@@ -106,6 +106,7 @@ import { SchoolStorageSelectorModal } from './components/SchoolStorageSelectorMo
 import { InfoBannerCard } from './components/InfoBannerCard';
 import { MobileDeviceRestricted, checkIsMobileDevice } from './components/MobileDeviceRestricted';
 import { syncToGoogleSheets } from './lib/googleSheetsService';
+import { startPresenceHeartbeat, setUserOnlinePresence } from './lib/userPresenceService';
 import { Lock, RefreshCw, CheckCircle2, CloudDownload, Clock, Sparkles } from 'lucide-react';
 
 export default function App() {
@@ -1080,7 +1081,20 @@ export default function App() {
     saveTeacherProfilesToFirebase(updatedProfiles);
   };
 
+  // Start real-time presence heartbeat when currentUser is active
+  useEffect(() => {
+    if (currentUser && currentUser.email) {
+      const stopHeartbeat = startPresenceHeartbeat(currentUser);
+      return () => {
+        stopHeartbeat();
+      };
+    }
+  }, [currentUser]);
+
   const handleLogout = () => {
+    if (currentUser) {
+      setUserOnlinePresence(currentUser, false).catch(() => {});
+    }
     setCurrentUser(null);
     setShowLoginScreen(true);
     try {
