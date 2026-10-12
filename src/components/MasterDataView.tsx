@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Users,
   UserCheck,
@@ -53,6 +53,7 @@ import {
 import { UserAccount, TeacherProfile, RegisteredSchool, InfoAnnouncement, InfoAnnouncementItem, getAnnouncementItems } from '../types';
 import { normalizeSchoolId, deleteSchoolFromFirebase } from '../lib/firebaseService';
 import { SaveSuccessModal } from './SaveSuccessModal';
+import { UserLoginLog, subscribeToUserLoginLogs, getLocalLoginLogs } from '../lib/userLoginLogService';
 import { CurriculumSystemView } from './systems/CurriculumSystemView';
 import { TeacherSystemView } from './systems/TeacherSystemView';
 import { AdministrationSystemView } from './systems/AdministrationSystemView';
@@ -106,10 +107,27 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
 }) => {
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('Semua');
+  const [onlineFilter, setOnlineFilter] = useState<'Semua' | 'Online' | 'Offline'>('Semua');
   const [schoolFilter, setSchoolFilter] = useState<string>('Semua');
   const [roleFilter, setRoleFilter] = useState<string>('Semua');
   const [internalCategory, setInternalCategory] = useState<MasterDataCategory>('Semua');
   const selectedCategory: MasterDataCategory = activeCategory !== undefined ? activeCategory : internalCategory;
+
+  // Realtime Login Logs to determine user session online/offline status
+  const [loginLogs, setLoginLogs] = useState<UserLoginLog[]>(() => {
+    try {
+      return getLocalLoginLogs();
+    } catch {
+      return [];
+    }
+  });
+
+  useEffect(() => {
+    const unsub = subscribeToUserLoginLogs((logs) => {
+      setLoginLogs(logs);
+    });
+    return () => unsub();
+  }, []);
 
   const setSelectedCategory = (cat: MasterDataCategory) => {
     setInternalCategory(cat);
@@ -202,6 +220,65 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
     return e === 'shahrurrobby17@gmail.com' || n.includes('shahrur robby') || n.includes('shahrur');
   };
 
+  // Helper to determine if an account is actively online or offline
+  const getUserOnlineStatus = (u: UserAccount): { isOnline: boolean; label: string; lastSeenText: string } => {
+    // Current user logged in is definitively online
+    const isCurrent = Boolean(
+      currentUser && (
+        (u.uid && currentUser.uid && u.uid === currentUser.uid) ||
+        (u.email && currentUser.email && u.email.toLowerCase().trim() === currentUser.email.toLowerCase().trim())
+      )
+    );
+
+    if (isCurrent) {
+      return {
+        isOnline: true,
+        label: 'Sedang Online',
+        lastSeenText: 'Aktif saat ini (Sesi Anda)'
+      };
+    }
+
+    if (u.isOnline !== undefined) {
+      return {
+        isOnline: Boolean(u.isOnline),
+        label: u.isOnline ? 'Sedang Online' : 'Offline',
+        lastSeenText: u.isOnline ? 'Sedang aktif di sistem' : 'Tidak aktif saat ini'
+      };
+    }
+
+    // Match against login logs
+    const userLogs = loginLogs.filter(l => 
+      l.email && u.email && l.email.toLowerCase().trim() === u.email.toLowerCase().trim() && l.status === 'Berhasil'
+    );
+
+    if (userLogs.length > 0) {
+      const latest = [...userLogs].sort((a, b) => new Date(b.loginTime).getTime() - new Date(a.loginTime).getTime())[0];
+      const logTime = new Date(latest.loginTime).getTime();
+      const diffMinutes = Math.floor((Date.now() - logTime) / 60000);
+
+      // If logged in within the last 120 minutes (2 hours), consider online
+      if (diffMinutes >= 0 && diffMinutes <= 120) {
+        return {
+          isOnline: true,
+          label: 'Sedang Online',
+          lastSeenText: diffMinutes < 1 ? 'Aktif baru saja' : `Aktif ${diffMinutes} mnt lalu`
+        };
+      }
+
+      return {
+        isOnline: false,
+        label: 'Offline',
+        lastSeenText: latest.loginTimeFormatted ? `Terakhir login: ${latest.loginTimeFormatted}` : 'Sesi berakhir'
+      };
+    }
+
+    return {
+      isOnline: false,
+      label: 'Offline',
+      lastSeenText: 'Belum ada riwayat aktivitas sesi'
+    };
+  };
+
   // Helper to categorize user into Kurikulum, Guru, TU, Sarpras, Perpustakaan, Siswa
   const getUserCategory = (u: UserAccount): 'Kurikulum' | 'Guru' | 'TU' | 'Sarpras' | 'Perpustakaan' | 'Siswa' => {
     const r = (u.role || '').toLowerCase();
@@ -234,16 +311,24 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
       (statusFilter === 'Aktif' && !isNonaktif && !isPending) ||
       (statusFilter === 'Nonaktif' && isNonaktif);
 
+    const userOnline = getUserOnlineStatus(u);
+    const matchesOnline =
+      onlineFilter === 'Semua' ||
+      (onlineFilter === 'Online' && userOnline.isOnline) ||
+      (onlineFilter === 'Offline' && !userOnline.isOnline);
+
     const matchesSchool = schoolFilter === 'Semua' || (u.schoolName || 'SD Negeri 1 SIMAK') === schoolFilter;
     const matchesRole = roleFilter === 'Semua' || (u.role || 'Guru Pengampu') === roleFilter;
     const userCategory = getUserCategory(u);
     const matchesCategory = selectedCategory === 'Semua' || (userCategory as string) === (selectedCategory as string);
 
-    return matchesSearch && matchesStatus && matchesSchool && matchesRole && matchesCategory;
+    return matchesSearch && matchesStatus && matchesOnline && matchesSchool && matchesRole && matchesCategory;
   });
 
   // Calculate statistics
   const totalCount = registeredUsers.length;
+  const onlineCount = registeredUsers.filter(u => getUserOnlineStatus(u).isOnline).length;
+  const offlineCount = Math.max(0, registeredUsers.length - onlineCount);
   const pendingCount = registeredUsers.filter(u => u.status === 'Menunggu Aktivasi').length;
   const activeCount = registeredUsers.filter(u => !u.isMaintenance && u.status !== 'Nonaktif' && u.status !== 'Menunggu Aktivasi').length;
   const nonActiveCount = registeredUsers.filter(u => u.isMaintenance || u.status === 'Nonaktif').length;
@@ -952,7 +1037,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
       ) : (
         <>
           {/* KPI Metrics Summary */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3.5">
             <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
               <div className="p-3 bg-cyan-50 text-[#164e63] rounded-none shrink-0">
                 <Users className="w-5 h-5" />
@@ -963,33 +1048,55 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
               </div>
             </div>
 
-            <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
-              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-none shrink-0">
-                <UserCheck className="w-5 h-5" />
+            {/* KPI: Sedang Online */}
+            <div className="bg-white p-4 rounded-none border border-emerald-200/80 shadow-xs flex items-center gap-3.5 ring-1 ring-emerald-500/10">
+              <div className="p-3 bg-emerald-50 text-emerald-600 rounded-none shrink-0 relative">
+                <span className="relative flex h-2 w-2 absolute top-1 right-1">
+                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                  <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <UserCheck className="w-5 h-5 text-emerald-600" />
               </div>
               <div>
-                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Akun Aktif</div>
-                <div className="text-xl font-black text-emerald-700">{activeCount} <span className="text-xs font-semibold text-emerald-600">Aktif</span></div>
+                <div className="text-[11px] font-bold text-emerald-800 uppercase tracking-wider flex items-center gap-1.5">
+                  <span>Sedang Online</span>
+                </div>
+                <div className="text-xl font-black text-emerald-700">
+                  {onlineCount} <span className="text-xs font-semibold text-emerald-600">Aktif</span>
+                </div>
               </div>
             </div>
 
+            {/* KPI: Akun Offline */}
             <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
-              <div className={`p-3 rounded-none shrink-0 ${pendingCount > 0 ? 'bg-amber-100 text-amber-900 ring-2 ring-amber-400' : 'bg-rose-50 text-rose-600'}`}>
-                {pendingCount > 0 ? <Clock className="w-5 h-5" /> : <UserX className="w-5 h-5" />}
+              <div className="p-3 bg-slate-100 text-slate-500 rounded-none shrink-0">
+                <UserX className="w-5 h-5" />
+              </div>
+              <div>
+                <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Akun Offline</div>
+                <div className="text-xl font-black text-slate-700">{offlineCount} <span className="text-xs font-semibold text-slate-500">Pengguna</span></div>
+              </div>
+            </div>
+
+            {/* KPI: Status Akun Aktif / Antrean */}
+            <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
+              <div className={`p-3 rounded-none shrink-0 ${pendingCount > 0 ? 'bg-amber-100 text-amber-900 ring-2 ring-amber-400' : 'bg-cyan-50 text-[#164e63]'}`}>
+                {pendingCount > 0 ? <Clock className="w-5 h-5" /> : <ShieldCheck className="w-5 h-5" />}
               </div>
               <div>
                 <div className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                  {pendingCount > 0 ? 'Antrean Aktivasi' : 'Akun Nonaktif'}
+                  {pendingCount > 0 ? 'Antrean Aktivasi' : 'Akun Terverifikasi'}
                 </div>
-                <div className={`text-xl font-black ${pendingCount > 0 ? 'text-amber-900' : 'text-rose-700'}`}>
-                  {pendingCount > 0 ? pendingCount : nonActiveCount}{' '}
-                  <span className={`text-xs font-semibold ${pendingCount > 0 ? 'text-amber-800' : 'text-rose-600'}`}>
-                    {pendingCount > 0 ? 'Menunggu' : 'Dibatasi'}
+                <div className={`text-xl font-black ${pendingCount > 0 ? 'text-amber-900' : 'text-[#164e63]'}`}>
+                  {pendingCount > 0 ? pendingCount : activeCount}{' '}
+                  <span className={`text-xs font-semibold ${pendingCount > 0 ? 'text-amber-800' : 'text-cyan-700'}`}>
+                    {pendingCount > 0 ? 'Menunggu' : 'Aktif'}
                   </span>
                 </div>
               </div>
             </div>
 
+            {/* KPI: Unit Sekolah */}
             <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">
               <div className="p-3 bg-indigo-50 text-indigo-600 rounded-none shrink-0">
                 <Building2 className="w-5 h-5" />
@@ -1063,6 +1170,18 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
 
           {/* Controls: Filter Selects + View Mode */}
           <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+            {/* Online / Offline Filter */}
+            <select
+              value={onlineFilter}
+              onChange={(e) => setOnlineFilter(e.target.value as any)}
+              className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-none text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-600 cursor-pointer"
+              title="Filter Status Sesi Online/Offline"
+            >
+              <option value="Semua">Semua Sesi ({totalCount})</option>
+              <option value="Online">● Sedang Online ({onlineCount})</option>
+              <option value="Offline">○ Offline ({offlineCount})</option>
+            </select>
+
             {/* Status Filter */}
             <select
               value={statusFilter}
@@ -1115,14 +1234,15 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
 
         <div className="flex items-center justify-between text-[11px] text-slate-500 px-1 pt-1 border-t border-slate-100">
           <div>
-            Menampilkan <span className="font-bold text-slate-800">{filteredUsers.length}</span> dari <span className="font-bold text-slate-800">{registeredUsers.length}</span> akun terdaftar.
+            Menampilkan <span className="font-bold text-slate-800">{filteredUsers.length}</span> dari <span className="font-bold text-slate-800">{registeredUsers.length}</span> akun terdaftar (<span className="text-emerald-700 font-bold">{onlineCount} online</span>, <span className="text-slate-600 font-bold">{offlineCount} offline</span>).
           </div>
-          {(searchTerm || statusFilter !== 'Semua' || schoolFilter !== 'Semua' || roleFilter !== 'Semua' || selectedCategory !== 'Semua') && (
+          {(searchTerm || statusFilter !== 'Semua' || onlineFilter !== 'Semua' || schoolFilter !== 'Semua' || roleFilter !== 'Semua' || selectedCategory !== 'Semua') && (
             <button
               type="button"
               onClick={() => {
                 setSearchTerm('');
                 setStatusFilter('Semua');
+                setOnlineFilter('Semua');
                 setSchoolFilter('Semua');
                 setRoleFilter('Semua');
                 setSelectedCategory('Semua');
@@ -1150,6 +1270,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             onClick={() => {
               setSearchTerm('');
               setStatusFilter('Semua');
+              setOnlineFilter('Semua');
               setSchoolFilter('Semua');
             }}
             className="px-4 py-2 bg-[#164e63] text-white text-xs font-bold rounded-none hover:bg-cyan-800 transition-colors cursor-pointer"
@@ -1166,10 +1287,11 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                 <tr className="bg-slate-50 border-b border-slate-200 text-[11px] font-extrabold text-slate-600 uppercase tracking-wider">
                   <th className="py-3.5 px-4 w-12 text-center">No</th>
                   <th className="py-3.5 px-4">Pengguna & Email</th>
+                  <th className="py-3.5 px-4 text-center">Status Sesi</th>
                   <th className="py-3.5 px-4">NIP / Identitas</th>
                   <th className="py-3.5 px-4">Unit Sekolah</th>
                   <th className="py-3.5 px-4">Peran / Hak Akses</th>
-                  <th className="py-3.5 px-4 text-center">Status</th>
+                  <th className="py-3.5 px-4 text-center">Status Akun</th>
                   <th className="py-3.5 px-4 text-right">Aksi</th>
                 </tr>
               </thead>
@@ -1177,6 +1299,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                 {filteredUsers.map((user, idx) => {
                   const isMaster = isMasterAccount(user.email, user.name);
                   const isUserDisabled = user.isMaintenance || user.status === 'Nonaktif';
+                  const userOnline = getUserOnlineStatus(user);
 
                   return (
                     <tr key={user.uid || idx} className="hover:bg-cyan-50/40 transition-colors">
@@ -1184,14 +1307,22 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                         {idx + 1}
                       </td>
 
-                      {/* Name & Email & Badge */}
+                      {/* Name & Email & Badge with Online indicator */}
                       <td className="py-3.5 px-4">
                         <div className="flex items-center gap-3">
-                          <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs text-white shrink-0 shadow-xs ${
-                            isMaster ? 'bg-gradient-to-br from-amber-500 to-amber-700' :
-                            isUserDisabled ? 'bg-slate-400' : 'bg-[#164e63]'
-                          }`}>
-                            {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                          <div className="relative shrink-0">
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center font-black text-xs text-white shadow-xs ${
+                              isMaster ? 'bg-gradient-to-br from-amber-500 to-amber-700' :
+                              isUserDisabled ? 'bg-slate-400' : 'bg-[#164e63]'
+                            }`}>
+                              {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                            </div>
+                            <span 
+                              className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${
+                                userOnline.isOnline ? 'bg-emerald-500 ring-1 ring-emerald-300' : 'bg-slate-300'
+                              }`}
+                              title={userOnline.isOnline ? 'Sedang Online' : 'Offline'}
+                            />
                           </div>
                           <div className="min-w-0">
                             <div className="font-bold text-slate-800 flex items-center gap-1.5 truncate">
@@ -1207,6 +1338,32 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                             </div>
                           </div>
                         </div>
+                      </td>
+
+                      {/* Status Sesi (Online / Offline) */}
+                      <td className="py-3.5 px-4 text-center whitespace-nowrap">
+                        {userOnline.isOnline ? (
+                          <div className="inline-flex flex-col items-center">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-2xs">
+                              <span className="relative flex h-2 w-2">
+                                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                              </span>
+                              <span>SEDANG ONLINE</span>
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-medium mt-0.5">{userOnline.lastSeenText}</span>
+                          </div>
+                        ) : (
+                          <div className="inline-flex flex-col items-center">
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
+                              <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                              <span>OFFLINE</span>
+                            </span>
+                            <span className="text-[10px] text-slate-400 font-medium mt-0.5 max-w-[130px] truncate" title={userOnline.lastSeenText}>
+                              {userOnline.lastSeenText}
+                            </span>
+                          </div>
+                        )}
                       </td>
 
                       {/* NIP */}
@@ -1233,7 +1390,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                         </span>
                       </td>
 
-                      {/* Status */}
+                      {/* Status Akun */}
                       <td className="py-3.5 px-4 text-center">
                         {user.status === 'Menunggu Aktivasi' ? (
                           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-amber-50 text-amber-900 border border-amber-300 shadow-2xs">
@@ -1328,17 +1485,26 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
           {filteredUsers.map((user, idx) => {
             const isMaster = isMasterAccount(user.email, user.name);
             const isUserDisabled = user.isMaintenance || user.status === 'Nonaktif';
+            const userOnline = getUserOnlineStatus(user);
 
             return (
               <div key={user.uid || idx} className="bg-white rounded-none border border-slate-200/80 p-5 shadow-xs space-y-4 relative hover:border-cyan-300 transition-all">
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-3">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm text-white shrink-0 shadow-xs ${
-                      isMaster ? 'bg-gradient-to-br from-amber-500 to-amber-700' :
-                      user.status === 'Menunggu Aktivasi' ? 'bg-amber-600' :
-                      isUserDisabled ? 'bg-slate-400' : 'bg-[#164e63]'
-                    }`}>
-                      {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                    <div className="relative shrink-0">
+                      <div className={`w-12 h-12 rounded-full flex items-center justify-center font-black text-sm text-white shadow-xs ${
+                        isMaster ? 'bg-gradient-to-br from-amber-500 to-amber-700' :
+                        user.status === 'Menunggu Aktivasi' ? 'bg-amber-600' :
+                        isUserDisabled ? 'bg-slate-400' : 'bg-[#164e63]'
+                      }`}>
+                        {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                      <span 
+                        className={`absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 rounded-full border-2 border-white ${
+                          userOnline.isOnline ? 'bg-emerald-500 ring-1 ring-emerald-300' : 'bg-slate-300'
+                        }`}
+                        title={userOnline.isOnline ? 'Sedang Online' : 'Offline'}
+                      />
                     </div>
                     <div className="min-w-0">
                       <h4 className="font-extrabold text-slate-800 text-sm truncate flex items-center gap-1.5">
@@ -1348,21 +1514,48 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                     </div>
                   </div>
 
-                  {user.status === 'Menunggu Aktivasi' ? (
-                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300 shrink-0">
-                      <Clock className="w-3 h-3 text-amber-600" />
-                      <span>MENUNGGU AKTIVASI</span>
-                    </span>
-                  ) : (
-                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold shrink-0 ${
-                      isUserDisabled ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                    }`}>
-                      {isUserDisabled ? 'BELUM AKTIF' : 'Aktif'}
-                    </span>
-                  )}
+                  <div className="flex flex-col items-end gap-1 shrink-0">
+                    {/* Session Online/Offline Badge */}
+                    {userOnline.isOnline ? (
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
+                        <span className="relative flex h-1.5 w-1.5">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                        </span>
+                        <span>SEDANG ONLINE</span>
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                        <span>OFFLINE</span>
+                      </span>
+                    )}
+
+                    {/* Account status badge */}
+                    {user.status === 'Menunggu Aktivasi' ? (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-900 border border-amber-300">
+                        <Clock className="w-3 h-3 text-amber-600" />
+                        <span>MENUNGGU AKTIVASI</span>
+                      </span>
+                    ) : (
+                      <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        isUserDisabled ? 'bg-rose-50 text-rose-700 border border-rose-200' : 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                      }`}>
+                        {isUserDisabled ? 'BELUM AKTIF' : 'Aktif'}
+                      </span>
+                    )}
+                  </div>
                 </div>
 
                 <div className="space-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
+                  <div className="flex items-center justify-between">
+                    <span className="text-slate-400 font-medium">Status Sesi:</span>
+                    <span className={`font-semibold flex items-center gap-1.5 ${userOnline.isOnline ? 'text-emerald-700 font-bold' : 'text-slate-500'}`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${userOnline.isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                      {userOnline.isOnline ? 'Sedang Online' : 'Offline'} 
+                      <span className="text-[10px] text-slate-400 font-normal">({userOnline.lastSeenText})</span>
+                    </span>
+                  </div>
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400 font-medium">NIP/NUPTK:</span>
                     <span className="font-mono font-semibold text-slate-700">{user.nip || '-'}</span>
@@ -1792,6 +1985,24 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                       <option value="Nonaktif">Nonaktif (Akses Dibatasi)</option>
                     </select>
                   </div>
+                </div>
+
+                {/* Status Sesi Pengguna */}
+                <div className="bg-slate-50 border border-slate-200 p-3.5 flex items-center justify-between text-xs mt-3">
+                  <div className="flex items-center gap-2.5">
+                    <span className={`w-2.5 h-2.5 rounded-full ${getUserOnlineStatus(selectedUserForEdit).isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                    <div>
+                      <span className="font-bold text-slate-800 block">Keterangan Aktivitas Sesi:</span>
+                      <span className="text-[11px] text-slate-500">{getUserOnlineStatus(selectedUserForEdit).lastSeenText}</span>
+                    </div>
+                  </div>
+                  <span className={`font-black px-2.5 py-1 rounded text-[11px] ${
+                    getUserOnlineStatus(selectedUserForEdit).isOnline 
+                      ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' 
+                      : 'bg-slate-200 text-slate-700'
+                  }`}>
+                    {getUserOnlineStatus(selectedUserForEdit).isOnline ? '● SEDANG ONLINE' : '○ OFFLINE'}
+                  </span>
                 </div>
               </div>
 

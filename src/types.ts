@@ -224,6 +224,8 @@ export interface UserAccount {
   selfieFile?: string;
   registeredAt?: string;
   isMaintenance?: boolean;
+  isOnline?: boolean;
+  lastActiveAt?: string;
   status?: 'Aktif' | 'Nonaktif' | 'Maintenance' | 'Menunggu Aktivasi';
   employmentStatus?: 'PPPK' | 'PNS' | 'Non-ASN' | 'Honorer' | 'GTY' | string;
 }
