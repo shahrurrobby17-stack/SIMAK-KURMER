@@ -98,14 +98,33 @@ export interface PemeliharaanTiket {
 interface SarprasSystemViewProps {
   registeredUsers?: UserAccount[];
   teacher?: TeacherProfile | null;
+  currentUser?: UserAccount | null;
   onNavigateTab?: (tab: any) => void;
 }
 
 export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
   registeredUsers = [],
   teacher,
+  currentUser,
   onNavigateTab
 }) => {
+  const isAdministrator = Boolean(
+    currentUser?.role === 'Administrator' || 
+    currentUser?.role === 'Super Admin' || 
+    currentUser?.role === 'Admin' ||
+    currentUser?.email?.toLowerCase().includes('admin')
+  );
+  const isKepalaSekolah = Boolean(
+    currentUser?.role?.toLowerCase().includes('kepala') || 
+    currentUser?.role?.toLowerCase().includes('kepsek') ||
+    currentUser?.role?.toLowerCase().includes('principal')
+  );
+  const roleLabel = isAdministrator 
+    ? 'Administrator SIMAK' 
+    : isKepalaSekolah 
+    ? 'Kepala Sekolah' 
+    : currentUser?.role || 'Pengelola Sarpras';
+
   const [activeTab, setActiveTab] = useState<'inventaris' | 'ruang' | 'peminjaman' | 'pemeliharaan'>('inventaris');
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [selectedCategoryFilter, setSelectedCategoryFilter] = useState<string>('Semua');
@@ -114,11 +133,19 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
 
   // Modal states
   const [showAddItemModal, setShowAddItemModal] = useState<boolean>(false);
+  const [showAddRuangModal, setShowAddRuangModal] = useState<boolean>(false);
   const [showAddLoanModal, setShowAddLoanModal] = useState<boolean>(false);
   const [showAddTicketModal, setShowAddTicketModal] = useState<boolean>(false);
   const [showReturnModal, setShowReturnModal] = useState<boolean>(false);
   const [selectedLoanForReturn, setSelectedLoanForReturn] = useState<PeminjamanBarang | null>(null);
   const [returnCondition, setReturnCondition] = useState<'Baik' | 'Rusak' | 'Ada Kendala'>('Baik');
+
+  // Delete confirm modal state
+  const [deleteConfirmTarget, setDeleteConfirmTarget] = useState<{
+    type: 'barang' | 'ruang' | 'peminjaman' | 'tiket';
+    id: string;
+    title: string;
+  } | null>(null);
 
   // Detail / Print preview modal
   const [selectedItemForDetail, setSelectedItemForDetail] = useState<SarprasItem | null>(null);
@@ -537,6 +564,18 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
   const [formPJ, setFormPJ] = useState('');
   const [formCatatan, setFormCatatan] = useState('');
 
+  // Form states for new Room / Ruangan & Gedung
+  const [roomKode, setRoomKode] = useState('');
+  const [roomNama, setRoomNama] = useState('');
+  const [roomKategori, setRoomKategori] = useState<SarprasRuang['kategoriRuang']>('Ruang Kelas');
+  const [roomLuas, setRoomLuas] = useState<number>(64);
+  const [roomKapasitas, setRoomKapasitas] = useState<number>(36);
+  const [roomGedung, setRoomGedung] = useState('Gedung A - Lantai 1');
+  const [roomKondisi, setRoomKondisi] = useState<SarprasRuang['kondisiRuang']>('Baik');
+  const [roomFasilitasText, setRoomFasilitasText] = useState('32 Set Meja-Kursi Siswa, Whiteboard 240cm, Smart TV / LCD, Kipas Angin');
+  const [roomPJ, setRoomPJ] = useState('');
+  const [roomStatus, setRoomStatus] = useState<SarprasRuang['statusPemakaian']>('Tersedia');
+
   // Form states for new Loan
   const [loanNamaPeminjam, setLoanNamaPeminjam] = useState('');
   const [loanPeran, setLoanPeran] = useState<'Guru' | 'Siswa' | 'Staf TU / Karyawan'>('Guru');
@@ -623,12 +662,82 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
     setFormCatatan('');
   };
 
-  const handleDeleteItem = (id: string, name: string) => {
-    if (window.confirm(`Apakah Anda yakin ingin menghapus data inventaris "${name}"?`)) {
+  const handleSaveNewRoom = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!roomNama.trim()) {
+      showToast('Nama ruangan wajib diisi!');
+      return;
+    }
+
+    const fasArray = roomFasilitasText
+      .split(',')
+      .map(s => s.trim())
+      .filter(Boolean);
+
+    const newRoom: SarprasRuang = {
+      id: `RNG-${Date.now().toString().slice(-4)}`,
+      kodeRuang: roomKode.trim() || `R-${Date.now().toString().slice(-5)}`,
+      namaRuang: roomNama.trim(),
+      kategoriRuang: roomKategori,
+      luasM2: Number(roomLuas) || 0,
+      kapasitasSiswa: Number(roomKapasitas) || 0,
+      lokasiGedung: roomGedung.trim() || 'Gedung Utama',
+      kondisiRuang: roomKondisi,
+      fasilitasUtama: fasArray.length > 0 ? fasArray : ['Fasilitas Standar Kelas'],
+      penanggungJawab: roomPJ.trim() || teacher?.name || 'Staf Sarpras',
+      statusPemakaian: roomStatus
+    };
+
+    saveRooms([newRoom, ...rooms]);
+    setShowAddRuangModal(false);
+    showToast(`Ruangan baru "${newRoom.namaRuang}" berhasil ditambahkan.`);
+
+    setRoomKode('');
+    setRoomNama('');
+    setRoomFasilitasText('32 Set Meja-Kursi Siswa, Whiteboard 240cm, Smart TV / LCD, Kipas Angin');
+    setRoomPJ('');
+  };
+
+  // Delete Handlers with safe custom confirmation modal
+  const handleConfirmDelete = () => {
+    if (!deleteConfirmTarget) return;
+    const { type, id, title } = deleteConfirmTarget;
+
+    if (type === 'barang') {
       const updated = items.filter(i => i.id !== id);
       saveItems(updated);
-      showToast(`Barang "${name}" berhasil dihapus.`);
+      showToast(`Aset barang "${title}" berhasil dihapus dari inventaris.`);
+    } else if (type === 'ruang') {
+      const updated = rooms.filter(r => r.id !== id);
+      saveRooms(updated);
+      showToast(`Ruangan "${title}" berhasil dihapus.`);
+    } else if (type === 'peminjaman') {
+      const updated = loans.filter(l => l.id !== id);
+      saveLoans(updated);
+      showToast(`Data peminjaman "${title}" berhasil dihapus.`);
+    } else if (type === 'tiket') {
+      const updated = tickets.filter(t => t.id !== id);
+      saveTickets(updated);
+      showToast(`Tiket perbaikan "${title}" berhasil dihapus.`);
     }
+
+    setDeleteConfirmTarget(null);
+  };
+
+  const handleDeleteItem = (id: string, name: string) => {
+    setDeleteConfirmTarget({ type: 'barang', id, title: name });
+  };
+
+  const handleDeleteRoom = (id: string, name: string) => {
+    setDeleteConfirmTarget({ type: 'ruang', id, title: name });
+  };
+
+  const handleDeleteLoan = (id: string, noTransaksi: string, namaBarang: string) => {
+    setDeleteConfirmTarget({ type: 'peminjaman', id, title: `${noTransaksi} (${namaBarang})` });
+  };
+
+  const handleDeleteTicket = (id: string, noTiket: string, fasilitas: string) => {
+    setDeleteConfirmTarget({ type: 'tiket', id, title: `${noTiket} - ${fasilitas}` });
   };
 
   const handleSaveLoan = (e: React.FormEvent) => {
@@ -778,6 +887,12 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
               <p className="text-xs sm:text-sm text-cyan-100/90 mt-0.5 font-medium">
                 Manajemen inventaris aset, fasilitas gedung/ruangan, peminjaman barang KBM, dan pemeliharaan sarpras.
               </p>
+              <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+                <span className="inline-flex items-center gap-1.5 bg-cyan-950/70 border border-cyan-400/40 text-cyan-100 text-[10px] font-bold px-2 py-0.5 shadow-2xs">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Akses Otoritas: {roleLabel} (Hak Penuh Tambah & Hapus)</span>
+                </span>
+              </div>
             </div>
           </div>
 
@@ -806,11 +921,22 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
             </button>
             <button
               type="button"
-              onClick={() => setShowAddItemModal(true)}
-              className="bg-amber-400 hover:bg-amber-300 text-cyan-950 font-black px-3 py-1.5 rounded-none text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
+              onClick={() => {
+                if (activeTab === 'inventaris') setShowAddItemModal(true);
+                else if (activeTab === 'ruang') setShowAddRuangModal(true);
+                else if (activeTab === 'peminjaman') setShowAddLoanModal(true);
+                else if (activeTab === 'pemeliharaan') setShowAddTicketModal(true);
+              }}
+              className="bg-amber-400 hover:bg-amber-300 text-cyan-950 font-black px-3.5 py-1.5 rounded-none text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs active:scale-95"
+              title="Tambah Data Baru ke Modul Sarpras Aktif"
             >
               <Plus className="w-4 h-4 stroke-[3]" />
-              <span>Tambah Aset Barang</span>
+              <span>
+                {activeTab === 'inventaris' && 'Tambah Barang Inventaris'}
+                {activeTab === 'ruang' && 'Tambah Ruang & Gedung'}
+                {activeTab === 'peminjaman' && 'Tambah Peminjaman KBM'}
+                {activeTab === 'pemeliharaan' && 'Tambah Tiket Perbaikan'}
+              </span>
             </button>
           </div>
         </div>
@@ -943,6 +1069,16 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setShowAddItemModal(true)}
+                className="bg-[#164e63] hover:bg-[#0e3846] text-white font-bold px-3 py-1.5 rounded-none text-xs flex items-center gap-1.5 cursor-pointer shadow-xs shrink-0 active:scale-95 transition-all"
+                title="Tambah Barang Baru ke Inventaris"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                <span>Tambah Barang</span>
+              </button>
+
               <div className="flex items-center gap-1.5 text-xs text-slate-600">
                 <Filter className="w-3.5 h-3.5 text-slate-400" />
                 <span className="font-semibold text-[11px]">Kategori:</span>
@@ -1065,7 +1201,7 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
                           <button
                             type="button"
                             onClick={() => setSelectedItemForDetail(item)}
-                            className="p-1.5 text-cyan-700 hover:bg-cyan-50 border border-slate-200 transition-colors"
+                            className="p-1.5 text-cyan-700 hover:bg-cyan-50 border border-slate-200 transition-colors cursor-pointer"
                             title="Lihat Detail & Cetak Label"
                           >
                             <Eye className="w-3.5 h-3.5" />
@@ -1073,10 +1209,11 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
                           <button
                             type="button"
                             onClick={() => handleDeleteItem(item.id, item.namaBarang)}
-                            className="p-1.5 text-rose-600 hover:bg-rose-50 border border-slate-200 transition-colors"
-                            title="Hapus Barang"
+                            className="px-2 py-1 text-rose-600 hover:bg-rose-50 border border-slate-200 hover:border-rose-300 rounded-none text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer"
+                            title="Hapus Barang Inventaris"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
+                            <span>Hapus</span>
                           </button>
                         </div>
                       </td>
@@ -1116,6 +1253,15 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
                   Pemetaan kapasitas rombel, kondisi fisik ruang, fasilitas pendukung pembelajaran, dan penanggung jawab.
                 </p>
               </div>
+              <button
+                type="button"
+                onClick={() => setShowAddRuangModal(true)}
+                className="bg-[#164e63] hover:bg-[#0e3846] text-white font-bold px-3.5 py-1.5 rounded-none text-xs flex items-center gap-1.5 cursor-pointer shadow-xs self-start sm:self-auto shrink-0 active:scale-95 transition-all"
+                title="Tambah Ruangan / Gedung Baru"
+              >
+                <Plus className="w-3.5 h-3.5 stroke-[3]" />
+                <span>Tambah Ruang & Gedung</span>
+              </button>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -1166,8 +1312,19 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
                   </div>
 
                   <div className="pt-2 border-t border-slate-200 flex items-center justify-between text-[10px] text-slate-500">
-                    <span>PJ: <strong className="text-slate-700">{room.penanggungJawab}</strong></span>
-                    <span className="text-emerald-700 font-bold">Kondisi: {room.kondisiRuang}</span>
+                    <div className="min-w-0 pr-2">
+                      <span>PJ: <strong className="text-slate-700">{room.penanggungJawab}</strong></span>
+                      <span className="text-emerald-700 font-bold block sm:inline sm:ml-2">Kondisi: {room.kondisiRuang}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteRoom(room.id, room.namaRuang)}
+                      className="px-2 py-1 text-rose-600 hover:bg-rose-50 border border-rose-200 hover:border-rose-400 rounded-none text-[11px] font-bold flex items-center gap-1 transition-colors cursor-pointer shrink-0"
+                      title="Hapus Ruangan / Gedung"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Hapus</span>
+                    </button>
                   </div>
                 </div>
               ))}
@@ -1249,19 +1406,31 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
                       </span>
                     </td>
                     <td className="py-2.5 px-3 text-right">
-                      {loan.status === 'Dipinjam' ? (
+                      <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                        {loan.status === 'Dipinjam' ? (
+                          <button
+                            type="button"
+                            onClick={() => handleOpenReturnModal(loan)}
+                            className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-none shadow-xs transition-colors cursor-pointer"
+                            title="Konfirmasi Pengembalian Barang"
+                          >
+                            Konfirmasi Kembali
+                          </button>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 font-medium mr-1">
+                            Selesai ({loan.kondisiSaatKembali || 'Baik'})
+                          </span>
+                        )}
                         <button
                           type="button"
-                          onClick={() => handleOpenReturnModal(loan)}
-                          className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-none shadow-xs transition-colors cursor-pointer"
+                          onClick={() => handleDeleteLoan(loan.id, loan.noTransaksi, loan.namaBarang)}
+                          className="px-2 py-1 text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 hover:border-rose-300 rounded-none text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs active:scale-95"
+                          title="Hapus Catatan Peminjaman Ini"
                         >
-                          Konfirmasi Kembali
+                          <Trash2 className="w-3 h-3" />
+                          <span>Hapus</span>
                         </button>
-                      ) : (
-                        <span className="text-[10px] text-slate-400 font-medium">
-                          Selesai ({loan.kondisiSaatKembali || 'Baik'})
-                        </span>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -1287,10 +1456,11 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
             <button
               type="button"
               onClick={() => setShowAddTicketModal(true)}
-              className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-none text-xs flex items-center gap-1.5 cursor-pointer shadow-xs self-start sm:self-auto"
+              className="bg-rose-600 hover:bg-rose-700 text-white font-bold px-3.5 py-1.5 rounded-none text-xs flex items-center gap-1.5 cursor-pointer shadow-xs self-start sm:self-auto active:scale-95 transition-all"
+              title="Tambah Tiket / Laporan Kerusakan Baru"
             >
               <Plus className="w-3.5 h-3.5 stroke-[3]" />
-              <span>Buat Laporan Kerusakan</span>
+              <span>Tambah Tiket Perbaikan</span>
             </button>
           </div>
 
@@ -1338,7 +1508,7 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-slate-200 flex items-center justify-between">
+                <div className="pt-2 border-t border-slate-200 flex items-center justify-between gap-2 flex-wrap">
                   <div className="text-[10px]">
                     <span className="text-slate-400 block">Status Saat Ini:</span>
                     <span className={`font-bold ${
@@ -1348,26 +1518,37 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
                     </span>
                   </div>
 
-                  {ticket.status !== 'Selesai Perbaikan' && (
-                    <div className="flex items-center gap-1">
-                      {ticket.status === 'Menunggu Antrean' && (
-                        <button
-                          type="button"
-                          onClick={() => handleUpdateTicketStatus(ticket.id, 'Sedang Diperbaiki')}
-                          className="px-2 py-1 bg-cyan-700 hover:bg-cyan-800 text-white font-bold text-[10px] rounded-none cursor-pointer"
-                        >
-                          Mulai Servis
-                        </button>
-                      )}
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    {ticket.status === 'Menunggu Antrean' && (
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateTicketStatus(ticket.id, 'Sedang Diperbaiki')}
+                        className="px-2 py-1 bg-cyan-700 hover:bg-cyan-800 text-white font-bold text-[10px] rounded-none cursor-pointer shadow-2xs transition-colors"
+                        title="Mulai Proses Servis & Perbaikan"
+                      >
+                        Mulai Servis
+                      </button>
+                    )}
+                    {ticket.status !== 'Selesai Perbaikan' && (
                       <button
                         type="button"
                         onClick={() => handleUpdateTicketStatus(ticket.id, 'Selesai Perbaikan')}
-                        className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-none cursor-pointer"
+                        className="px-2 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[10px] rounded-none cursor-pointer shadow-2xs transition-colors"
+                        title="Tandai Servis Telah Selesai"
                       >
                         Selesai
                       </button>
-                    </div>
-                  )}
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteTicket(ticket.id, ticket.noTiket, ticket.fasilitasBarang)}
+                      className="px-2 py-1 text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 hover:border-rose-300 rounded-none text-[10px] font-bold flex items-center gap-1 transition-all cursor-pointer shadow-2xs active:scale-95"
+                      title="Hapus Tiket Pemeliharaan Ini"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>Hapus</span>
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -1564,6 +1745,168 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
                 >
                   <Save className="w-4 h-4" />
                   <span>Simpan ke Inventaris</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL TAMBAH RUANG & GEDUNG FASILITAS */}
+      {showAddRuangModal && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 overflow-y-auto">
+          <div className="bg-white border border-slate-300 w-full max-w-xl shadow-2xl p-5 space-y-4 my-8 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center justify-between border-b border-slate-200 pb-3">
+              <div className="flex items-center gap-2">
+                <Building2 className="w-5 h-5 text-[#164e63]" />
+                <h3 className="font-bold text-sm sm:text-base text-slate-800">
+                  Tambah Ruang Belajar & Fasilitas Gedung
+                </h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowAddRuangModal(false)}
+                className="text-slate-400 hover:text-slate-700 p-1 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSaveNewRoom} className="space-y-3.5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Kode Ruangan (Otomatis jika kosong)</label>
+                  <input
+                    type="text"
+                    value={roomKode}
+                    onChange={(e) => setRoomKode(e.target.value)}
+                    placeholder="Contoh: R-LAB-KOMP-02"
+                    className="w-full p-2 border border-slate-300 rounded-none focus:outline-none focus:border-[#164e63]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Nama Ruangan <span className="text-rose-500">*</span></label>
+                  <input
+                    type="text"
+                    required
+                    value={roomNama}
+                    onChange={(e) => setRoomNama(e.target.value)}
+                    placeholder="Contoh: Lab Komputer Multimedia / Ruang OSIS"
+                    className="w-full p-2 border border-slate-300 rounded-none focus:outline-none focus:border-[#164e63]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Kategori Ruang</label>
+                  <select
+                    value={roomKategori}
+                    onChange={(e) => setRoomKategori(e.target.value as any)}
+                    className="w-full p-2 border border-slate-300 rounded-none bg-white focus:outline-none focus:border-[#164e63]"
+                  >
+                    <option value="Ruang Kelas">Ruang Kelas</option>
+                    <option value="Laboratorium">Laboratorium</option>
+                    <option value="Perpustakaan">Perpustakaan</option>
+                    <option value="Kantor & Guru">Kantor & Guru</option>
+                    <option value="Fasilitas Umum">Fasilitas Umum</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Luas (m²)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={roomLuas}
+                    onChange={(e) => setRoomLuas(Number(e.target.value))}
+                    className="w-full p-2 border border-slate-300 rounded-none focus:outline-none focus:border-[#164e63]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Kapasitas (Orang)</label>
+                  <input
+                    type="number"
+                    min={1}
+                    value={roomKapasitas}
+                    onChange={(e) => setRoomKapasitas(Number(e.target.value))}
+                    className="w-full p-2 border border-slate-300 rounded-none focus:outline-none focus:border-[#164e63]"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Lokasi Gedung / Lantai</label>
+                  <input
+                    type="text"
+                    value={roomGedung}
+                    onChange={(e) => setRoomGedung(e.target.value)}
+                    placeholder="Contoh: Gedung A - Lantai 2"
+                    className="w-full p-2 border border-slate-300 rounded-none focus:outline-none focus:border-[#164e63]"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Kondisi Fisik</label>
+                  <select
+                    value={roomKondisi}
+                    onChange={(e) => setRoomKondisi(e.target.value as any)}
+                    className="w-full p-2 border border-slate-300 rounded-none bg-white focus:outline-none focus:border-[#164e63]"
+                  >
+                    <option value="Sangat Baik">Sangat Baik</option>
+                    <option value="Baik">Baik</option>
+                    <option value="Perlu Renovasi">Perlu Renovasi</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Status Pemakaian</label>
+                  <select
+                    value={roomStatus}
+                    onChange={(e) => setRoomStatus(e.target.value as any)}
+                    className="w-full p-2 border border-slate-300 rounded-none bg-white focus:outline-none focus:border-[#164e63]"
+                  >
+                    <option value="Tersedia">Tersedia</option>
+                    <option value="Sedang Digunakan">Sedang Digunakan</option>
+                    <option value="Perbaikan">Perbaikan</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Fasilitas Utama (Pisahkan dengan tanda koma)</label>
+                <input
+                  type="text"
+                  value={roomFasilitasText}
+                  onChange={(e) => setRoomFasilitasText(e.target.value)}
+                  placeholder="32 Set Meja-Kursi, Whiteboard 240cm, Smart TV / LCD, Kipas Angin"
+                  className="w-full p-2 border border-slate-300 rounded-none focus:outline-none focus:border-[#164e63]"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Penanggung Jawab Ruangan</label>
+                <input
+                  type="text"
+                  value={roomPJ}
+                  onChange={(e) => setRoomPJ(e.target.value)}
+                  placeholder="Nama Guru Pengampu / Petugas Sarpras"
+                  className="w-full p-2 border border-slate-300 rounded-none focus:outline-none focus:border-[#164e63]"
+                />
+              </div>
+
+              <div className="pt-3 border-t border-slate-200 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowAddRuangModal(false)}
+                  className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 font-bold cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 bg-[#164e63] hover:bg-[#0e3846] text-white font-bold flex items-center gap-1.5 shadow-sm cursor-pointer"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Simpan Ruang & Gedung</span>
                 </button>
               </div>
             </form>
@@ -1966,6 +2309,65 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
               >
                 <Printer className="w-3.5 h-3.5" />
                 <span>Cetak Label Barang</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* MODAL: KONFIRMASI HAPUS DATA SARPRAS */}
+      {deleteConfirmTarget && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4">
+          <div className="bg-white border border-rose-200 w-full max-w-md shadow-2xl p-5 space-y-4 animate-in fade-in zoom-in-95 duration-200">
+            <div className="flex items-center gap-3 border-b border-slate-100 pb-3">
+              <div className="w-10 h-10 rounded-full bg-rose-100 flex items-center justify-center text-rose-600 shrink-0">
+                <AlertTriangle className="w-5 h-5 stroke-[2.5]" />
+              </div>
+              <div>
+                <h3 className="font-bold text-sm sm:text-base text-slate-900">
+                  Konfirmasi Hapus Data Sarpras
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Penghapusan data oleh {roleLabel}
+                </p>
+              </div>
+            </div>
+
+            <div className="bg-slate-50 p-3.5 border border-slate-200 space-y-1.5 text-xs">
+              <div className="text-slate-500 font-medium">Data yang akan dihapus:</div>
+              <div className="font-black text-slate-800 text-sm break-words">
+                {deleteConfirmTarget.title}
+              </div>
+              <div className="text-[11px] text-slate-600 mt-1">
+                Kategori Modul: <span className="font-bold uppercase text-[#164e63]">
+                  {deleteConfirmTarget.type === 'barang' && 'Daftar Inventaris Barang (KIR)'}
+                  {deleteConfirmTarget.type === 'ruang' && 'Ruang & Fasilitas Gedung'}
+                  {deleteConfirmTarget.type === 'peminjaman' && 'Log Peminjaman Sarpras KBM'}
+                  {deleteConfirmTarget.type === 'tiket' && 'Tiket Perbaikan & Pemeliharaan'}
+                </span>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-rose-600 font-semibold bg-rose-50 p-2.5 border border-rose-100 flex items-center gap-1.5">
+              <AlertTriangle className="w-4 h-4 shrink-0 text-rose-500" />
+              <span>Perhatian: Data ini akan dihapus secara permanen dari basis data sarana & prasarana sekolah dan tidak dapat dikembalikan.</span>
+            </p>
+
+            <div className="pt-2 border-t border-slate-200 flex items-center justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setDeleteConfirmTarget(null)}
+                className="px-4 py-2 border border-slate-300 text-slate-700 hover:bg-slate-100 text-xs font-bold cursor-pointer transition-colors"
+              >
+                Batalkan
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmDelete}
+                className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm cursor-pointer transition-all active:scale-95"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Ya, Hapus Sekarang</span>
               </button>
             </div>
           </div>

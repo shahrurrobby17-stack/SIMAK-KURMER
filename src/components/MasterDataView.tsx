@@ -1008,6 +1008,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
         <SarprasSystemView
           registeredUsers={registeredUsers}
           teacher={teacher}
+          currentUser={currentUser}
           onNavigateTab={onNavigateTab}
         />
       ) : selectedCategory === 'Perpustakaan' ? (

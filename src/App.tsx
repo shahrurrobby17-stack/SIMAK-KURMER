@@ -2566,6 +2566,7 @@ export default function App() {
                     <SarprasSystemView 
                       registeredUsers={registeredUsers}
                       teacher={teacher}
+                      currentUser={currentUser}
                       onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
                     />
                   )}
