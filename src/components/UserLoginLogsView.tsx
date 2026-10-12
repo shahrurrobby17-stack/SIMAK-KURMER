@@ -35,21 +35,24 @@ import {
   restoreDefaultDemoLogs,
   INITIAL_SEED_LOGIN_LOGS
 } from '../lib/userLoginLogService';
-import { UserAccount } from '../types';
+import { UserAccount, RegisteredSchool } from '../types';
 
 interface UserLoginLogsViewProps {
   currentUser?: UserAccount | null;
   activeSchoolName?: string;
+  registeredSchools?: RegisteredSchool[];
   onNavigateTab?: (tab: string) => void;
 }
 
 export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
   currentUser,
   activeSchoolName = 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+  registeredSchools = [],
   onNavigateTab
 }) => {
   const [logs, setLogs] = useState<UserLoginLog[]>(() => getLocalLoginLogs());
   const [searchQuery, setSearchQuery] = useState<string>('');
+  const [selectedSchoolFilter, setSelectedSchoolFilter] = useState<string>('Semua');
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>('Semua');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<'Semua' | 'Berhasil' | 'Gagal'>('Semua');
   const [selectedDeviceFilter, setSelectedDeviceFilter] = useState<'Semua' | 'Desktop' | 'Mobile' | 'Tablet'>('Semua');
@@ -66,11 +69,30 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
     return () => unsub();
   }, []);
 
+  // Compute all available school names for filtering
+  const allSchoolOptions = useMemo(() => {
+    const set = new Set<string>();
+    if (registeredSchools && registeredSchools.length > 0) {
+      registeredSchools.forEach(s => {
+        if (s.name) set.add(s.name);
+      });
+    }
+    logs.forEach(l => {
+      if (l.schoolName) set.add(l.schoolName);
+    });
+    set.add('SMA Diponegoro Wagir');
+    set.add('SD Negeri 1 Wagir');
+    set.add('MI Diponegoro Wagir');
+    set.add('SMP Diponegoro Wagir');
+    set.add('SMA Negeri 1 Indonesia - Sekolah Penggerak');
+    return Array.from(set).filter(Boolean).sort();
+  }, [registeredSchools, logs]);
+
   const handleRefresh = () => {
     setIsRefreshing(true);
     setTimeout(() => {
       setIsRefreshing(false);
-      setNotificationMsg('Data riwayat login berhasil disinkronkan.');
+      setNotificationMsg('Data riwayat login semua pengguna dari seluruh sekolah berhasil disinkronkan.');
       setTimeout(() => setNotificationMsg(null), 3000);
     }, 600);
   };
@@ -86,7 +108,7 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
   const handleRestoreDemo = () => {
     const restored = restoreDefaultDemoLogs();
     setLogs(restored);
-    setNotificationMsg('Data sampel riwayat login berhasil dimuat.');
+    setNotificationMsg('Data sampel riwayat login multi-sekolah berhasil dimuat.');
     setTimeout(() => setNotificationMsg(null), 3000);
   };
 
@@ -101,9 +123,17 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
         const matchesNip = (log.nip || '').toLowerCase().includes(q);
         const matchesRole = (log.role || '').toLowerCase().includes(q);
         const matchesIp = (log.ipAddress || '').toLowerCase().includes(q);
-        if (!matchesName && !matchesEmail && !matchesNip && !matchesRole && !matchesIp) {
+        const matchesSchool = (log.schoolName || '').toLowerCase().includes(q);
+        if (!matchesName && !matchesEmail && !matchesNip && !matchesRole && !matchesIp && !matchesSchool) {
           return false;
         }
+      }
+
+      // School filter
+      if (selectedSchoolFilter !== 'Semua') {
+        const sLower = (log.schoolName || '').toLowerCase().trim();
+        const fLower = selectedSchoolFilter.toLowerCase().trim();
+        if (sLower !== fLower) return false;
       }
 
       // Role filter
@@ -125,7 +155,7 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
 
       return true;
     });
-  }, [logs, searchQuery, selectedRoleFilter, selectedStatusFilter, selectedDeviceFilter]);
+  }, [logs, searchQuery, selectedSchoolFilter, selectedRoleFilter, selectedStatusFilter, selectedDeviceFilter]);
 
   // Statistics calculation
   const stats = useMemo(() => {
@@ -133,10 +163,11 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
     const successCount = logs.filter(l => l.status === 'Berhasil').length;
     const failedCount = logs.filter(l => l.status === 'Gagal').length;
     const uniqueUsers = new Set(logs.map(l => l.email.toLowerCase())).size;
+    const uniqueSchools = new Set(logs.map(l => (l.schoolName || 'Multi-Sekolah').trim().toLowerCase())).size;
     const adminLogins = logs.filter(l => (l.role || '').toLowerCase().includes('admin')).length;
     const successRate = total > 0 ? ((successCount / total) * 100).toFixed(1) : '100';
 
-    return { total, successCount, failedCount, uniqueUsers, adminLogins, successRate };
+    return { total, successCount, failedCount, uniqueUsers, uniqueSchools, adminLogins, successRate };
   }, [logs]);
 
   const getRoleBadgeStyle = (role: string) => {
@@ -186,21 +217,25 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div className="space-y-1.5">
             <div className="flex items-center gap-2.5">
-              <span className="p-2.5 bg-slate-100 text-[#164e63] rounded-xl border border-slate-200 shadow-2xs">
+              <span className="p-2.5 bg-cyan-50 text-[#164e63] rounded-xl border border-cyan-200 shadow-2xs">
                 <Clock className="w-5 h-5" />
               </span>
               <div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
                     Log / Riwayat Pengguna Login
                   </h1>
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-cyan-50 text-[#164e63] border border-cyan-200">
+                    <Building2 className="w-3.5 h-3.5 text-[#164e63]" />
+                    Audit Semua Sekolah
+                  </span>
                   <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-amber-100 text-amber-800 border border-amber-300">
                     <ShieldCheck className="w-3.5 h-3.5" />
                     Khusus Administrator
                   </span>
                 </div>
                 <p className="text-xs sm:text-sm text-slate-500 font-medium">
-                  Audit jejak autentikasi, perangkat, waktu masuk, dan histori sesi login seluruh pengguna SIMAK Merdeka
+                  Mencatat seluruh aktivitas login dan jejak autentikasi pengguna dari semua sekolah / satuan pendidikan terdaftar secara realtime.
                 </p>
               </div>
             </div>
@@ -257,14 +292,14 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
       </div>
 
       {/* KPI Metric Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
           <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Aktivitas Login</p>
             <h3 className="text-2xl font-black text-slate-900 mt-1">{stats.total}</h3>
             <span className="text-[11px] font-medium text-emerald-600 flex items-center gap-1 mt-0.5">
               <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-              Realtime tercatat di Firestore
+              Realtime di Firestore
             </span>
           </div>
           <div className="w-12 h-12 rounded-xl bg-cyan-50 border border-cyan-100 flex items-center justify-center text-[#164e63]">
@@ -300,6 +335,19 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
 
         <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
           <div>
+            <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Sekolah Terpantau</p>
+            <h3 className="text-2xl font-black text-cyan-700 mt-1">{stats.uniqueSchools}</h3>
+            <span className="text-[11px] font-medium text-slate-500 mt-0.5 block">
+              Satuan pendidikan aktif
+            </span>
+          </div>
+          <div className="w-12 h-12 rounded-xl bg-cyan-50 border border-cyan-100 flex items-center justify-center text-[#164e63]">
+            <Building2 className="w-6 h-6" />
+          </div>
+        </div>
+
+        <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex items-center justify-between">
+          <div>
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Login Administrator</p>
             <h3 className="text-2xl font-black text-amber-600 mt-1">{stats.adminLogins}</h3>
             <span className="text-[11px] font-medium text-slate-500 mt-0.5 block">
@@ -314,7 +362,7 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
 
       {/* Filter and Search Bar */}
       <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-xs space-y-3.5">
-        <div className="flex flex-col md:flex-row items-stretch md:items-center gap-3">
+        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-3">
           {/* Search Box */}
           <div className="relative flex-1">
             <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5 pointer-events-none" />
@@ -322,7 +370,7 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Cari nama pengguna, email resmi, NIP, peran, atau alamat IP..."
+              placeholder="Cari nama pengguna, asal sekolah, email resmi, NIP, peran, atau IP..."
               className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-medium text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63] transition-all"
             />
             {searchQuery && (
@@ -336,8 +384,24 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
             )}
           </div>
 
-          {/* Role Filter */}
-          <div className="flex items-center gap-2">
+          {/* Filters Group */}
+          <div className="flex flex-wrap items-center gap-2">
+            {/* School Filter */}
+            <select
+              value={selectedSchoolFilter}
+              onChange={(e) => setSelectedSchoolFilter(e.target.value)}
+              className="px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/30 focus:border-[#164e63]"
+              title="Pilih filter asal sekolah"
+            >
+              <option value="Semua">Semua Asal Sekolah ({allSchoolOptions.length} Sekolah)</option>
+              {allSchoolOptions.map((sch) => (
+                <option key={sch} value={sch}>
+                  {sch}
+                </option>
+              ))}
+            </select>
+
+            {/* Role Filter */}
             <select
               value={selectedRoleFilter}
               onChange={(e) => setSelectedRoleFilter(e.target.value)}
@@ -345,7 +409,7 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
             >
               <option value="Semua">Semua Hak Akses</option>
               <option value="Administrator">Administrator</option>
-              <option value="Kepala Sekolah">Kepala Sekolah</option>
+              <option value="Kepala Sekolah">Kepala Sekolah / Madrasah</option>
               <option value="Guru">Guru / Pendidik</option>
               <option value="Kurikulum">Kurikulum</option>
               <option value="Tata Usaha">Tata Usaha (TU)</option>
@@ -380,12 +444,13 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
         </div>
 
         <div className="flex items-center justify-between text-xs text-slate-500 font-medium pt-1 border-t border-slate-100">
-          <span>Menampilkan <strong>{filteredLogs.length}</strong> dari total <strong>{logs.length}</strong> riwayat login tercatat</span>
-          {(searchQuery || selectedRoleFilter !== 'Semua' || selectedStatusFilter !== 'Semua' || selectedDeviceFilter !== 'Semua') && (
+          <span>Menampilkan <strong>{filteredLogs.length}</strong> dari total <strong>{logs.length}</strong> riwayat login tercatat lintas seluruh sekolah</span>
+          {(searchQuery || selectedSchoolFilter !== 'Semua' || selectedRoleFilter !== 'Semua' || selectedStatusFilter !== 'Semua' || selectedDeviceFilter !== 'Semua') && (
             <button
               type="button"
               onClick={() => {
                 setSearchQuery('');
+                setSelectedSchoolFilter('Semua');
                 setSelectedRoleFilter('Semua');
                 setSelectedStatusFilter('Semua');
                 setSelectedDeviceFilter('Semua');
@@ -405,6 +470,7 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
             <thead>
               <tr className="bg-white border-b border-slate-200 text-slate-700 font-bold uppercase tracking-wider text-[11px]">
                 <th className="py-3.5 px-4">Pengguna</th>
+                <th className="py-3.5 px-4">Asal Sekolah / Satuan Pendidikan</th>
                 <th className="py-3.5 px-4">Hak Akses / Peran</th>
                 <th className="py-3.5 px-4">Waktu Login</th>
                 <th className="py-3.5 px-4">Perangkat & Browser</th>
@@ -431,6 +497,16 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
                             <p className="text-[10px] text-slate-400 font-mono">NIP: {log.nip}</p>
                           )}
                         </div>
+                      </div>
+                    </td>
+
+                    {/* School Identity */}
+                    <td className="py-3.5 px-4 whitespace-nowrap">
+                      <div className="flex items-center gap-1.5 max-w-[220px]" title={log.schoolName || 'Multi-Sekolah'}>
+                        <Building2 className="w-3.5 h-3.5 text-cyan-700 shrink-0" />
+                        <span className="font-semibold text-slate-800 text-xs truncate">
+                          {log.schoolName || 'SMA Diponegoro Wagir'}
+                        </span>
                       </div>
                     </td>
 
@@ -506,7 +582,7 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
                 ))
               ) : (
                 <tr>
-                  <td colSpan={8} className="py-14 text-center text-slate-400">
+                  <td colSpan={9} className="py-14 text-center text-slate-400">
                     <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
                       <Clock className="w-6 h-6" />
                     </div>
@@ -555,6 +631,13 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
                 <div className="flex justify-between">
                   <span className="text-slate-500">Nama Pengguna:</span>
                   <span className="font-bold text-slate-900">{selectedDetailLog.name}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-500">Asal Sekolah:</span>
+                  <span className="font-bold text-slate-900 flex items-center gap-1.5 text-right">
+                    <Building2 className="w-3.5 h-3.5 text-cyan-700 shrink-0" />
+                    <span>{selectedDetailLog.schoolName || '-'}</span>
+                  </span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-slate-500">Email Resmi:</span>

@@ -2441,6 +2441,7 @@ export default function App() {
                     <UserLoginLogsView 
                       currentUser={currentUser}
                       activeSchoolName={activeSchoolName}
+                      registeredSchools={registeredSchools}
                       onNavigateTab={handleTabChange}
                     />
                   )}

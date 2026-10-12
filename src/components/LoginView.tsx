@@ -3809,31 +3809,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 </button>
               </div>
             </div>
-
-            {/* Sub-Analytics Summary Box */}
-            <div className="bg-white p-5 sm:p-6 rounded-2xl border border-slate-200/90 shadow-xs">
-              <h3 className="text-sm font-bold text-slate-900 mb-3 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4 text-sky-600" />
-                <span>Rincian Verifikasi Perangkat & Database Real-Time</span>
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
-                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                  <div className="text-slate-500 font-medium">Capaian & Alur Tujuan Pembelajaran (TP)</div>
-                  <div className="text-sm font-black text-slate-800 mt-1">{classAnalyticsMetrics.modulePercentage} Lengkap</div>
-                  <div className="text-[11px] text-sky-600 font-bold mt-0.5">{classAnalyticsMetrics.cpTpSubtext} • {classAnalyticsMetrics.totalTeachingLogs} Jurnal KBM</div>
-                </div>
-                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                  <div className="text-slate-500 font-medium">Status Cloud Firestore</div>
-                  <div className="text-sm font-black text-slate-800 mt-1">Tersinkron Otomatis (Live)</div>
-                  <div className="text-[11px] text-emerald-600 font-bold mt-0.5">Google Cloud Firestore • Real-Time Data Mirror</div>
-                </div>
-                <div className="bg-slate-50 p-3.5 rounded-xl border border-slate-100">
-                  <div className="text-slate-500 font-medium">Rekapitulasi Kehadiran Siswa</div>
-                  <div className="text-sm font-black text-slate-800 mt-1">{classAnalyticsMetrics.attPercentage} Hadir</div>
-                  <div className="text-[11px] text-sky-600 font-bold mt-0.5">{classAnalyticsMetrics.presentCount} dari {classAnalyticsMetrics.totalAtt} sesi kehadiran tersimpan di cloud</div>
-                </div>
-              </div>
-            </div>
           </div>
         </section>
 
