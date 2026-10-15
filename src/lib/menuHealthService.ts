@@ -662,6 +662,7 @@ export function computeMenuHealthMap(params: SystemDataHealthParams): Record<Nav
     'ai-assistant': aiAssistantHealth,
     settings: settingsHealth,
     sync: syncHealth,
+    'ppdb-spmb': studentsHealth,
     'master-data': masterDataHealth,
     'system-schools': masterDataHealth,
     'system-registered-schools': masterDataHealth,

@@ -531,22 +531,34 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
   // Save to localStorage when state changes
   const saveItems = (newItems: SarprasItem[]) => {
     setItems(newItems);
-    localStorage.setItem('simak_sarpras_items', JSON.stringify(newItems));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_sarpras_items', JSON.stringify(newItems));
+      window.dispatchEvent(new Event('simak_sarpras_reset'));
+    }
   };
 
   const saveRooms = (newRooms: SarprasRuang[]) => {
     setRooms(newRooms);
-    localStorage.setItem('simak_sarpras_rooms', JSON.stringify(newRooms));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_sarpras_rooms', JSON.stringify(newRooms));
+      window.dispatchEvent(new Event('simak_sarpras_reset'));
+    }
   };
 
   const saveLoans = (newLoans: PeminjamanBarang[]) => {
     setLoans(newLoans);
-    localStorage.setItem('simak_sarpras_loans', JSON.stringify(newLoans));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_sarpras_loans', JSON.stringify(newLoans));
+      window.dispatchEvent(new Event('simak_sarpras_reset'));
+    }
   };
 
   const saveTickets = (newTickets: PemeliharaanTiket[]) => {
     setTickets(newTickets);
-    localStorage.setItem('simak_sarpras_tickets', JSON.stringify(newTickets));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_sarpras_tickets', JSON.stringify(newTickets));
+      window.dispatchEvent(new Event('simak_sarpras_reset'));
+    }
   };
 
   // Form states for adding new asset
@@ -896,63 +908,26 @@ export const SarprasSystemView: React.FC<SarprasSystemViewProps> = ({
             </div>
           </div>
 
-          <div className="flex items-center gap-2 self-start md:self-auto shrink-0 flex-wrap">
-            <button
-              type="button"
-              onClick={() => {
-                if (onNavigateTab) {
-                  onNavigateTab('settings');
-                }
-              }}
-              className="bg-white/10 hover:bg-white/20 text-white border border-white/25 px-3 py-1.5 rounded-none text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-              title="Kelola Pengaturan Halaman Sarpras"
-            >
-              <Settings className="w-3.5 h-3.5 text-cyan-200" />
-              <span>Pengaturan Sarpras</span>
-            </button>
-            <button
-              type="button"
-              onClick={handlePrintKIR}
-              className="bg-white/10 hover:bg-white/20 text-white border border-white/25 px-3 py-1.5 rounded-none text-xs font-bold flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs"
-              title="Cetak Buku Inventaris & Laporan KIR"
-            >
-              <Printer className="w-3.5 h-3.5 text-cyan-200" />
-              <span>Cetak Rekap KIR</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                if (activeTab === 'inventaris') setShowAddItemModal(true);
-                else if (activeTab === 'ruang') setShowAddRuangModal(true);
-                else if (activeTab === 'peminjaman') setShowAddLoanModal(true);
-                else if (activeTab === 'pemeliharaan') setShowAddTicketModal(true);
-              }}
-              className="bg-amber-400 hover:bg-amber-300 text-cyan-950 font-black px-3.5 py-1.5 rounded-none text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs active:scale-95"
-              title="Tambah Data Baru ke Modul Sarpras Aktif"
-            >
-              <Plus className="w-4 h-4 stroke-[3]" />
-              <span>
-                {activeTab === 'inventaris' && 'Tambah Barang Inventaris'}
-                {activeTab === 'ruang' && 'Tambah Ruang & Gedung'}
-                {activeTab === 'peminjaman' && 'Tambah Peminjaman KBM'}
-                {activeTab === 'pemeliharaan' && 'Tambah Tiket Perbaikan'}
-              </span>
-            </button>
-          </div>
         </div>
 
         {/* Quick Metric Cards */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3 mt-4 pt-4 border-t border-cyan-700/60 text-xs">
+        <div className={`grid gap-2 sm:gap-3 mt-4 pt-4 border-t border-cyan-700/60 text-xs ${
+          (isAdministrator || isKepalaSekolah) 
+            ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5' 
+            : 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-6'
+        }`}>
           <div className="bg-cyan-950/60 p-2.5 border border-cyan-700/40">
             <div className="text-[10px] text-cyan-300 font-semibold uppercase tracking-wider">Total Item Fisik</div>
             <div className="text-base sm:text-lg font-black text-white mt-0.5">{totalItemCount} <span className="text-xs font-normal text-cyan-200">Unit</span></div>
           </div>
-          <div className="bg-cyan-950/60 p-2.5 border border-cyan-700/40">
-            <div className="text-[10px] text-cyan-300 font-semibold uppercase tracking-wider">Nilai Estimasi Aset</div>
-            <div className="text-sm sm:text-base font-black text-amber-300 mt-0.5 truncate">
-              Rp {totalAssetValue.toLocaleString('id-ID')}
+          {!isAdministrator && !isKepalaSekolah && (
+            <div className="bg-cyan-950/60 p-2.5 border border-cyan-700/40">
+              <div className="text-[10px] text-cyan-300 font-semibold uppercase tracking-wider">Nilai Estimasi Aset</div>
+              <div className="text-sm sm:text-base font-black text-amber-300 mt-0.5 truncate">
+                Rp {totalAssetValue.toLocaleString('id-ID')}
+              </div>
             </div>
-          </div>
+          )}
           <div className="bg-cyan-950/60 p-2.5 border border-cyan-700/40">
             <div className="text-[10px] text-cyan-300 font-semibold uppercase tracking-wider">Kondisi Baik</div>
             <div className="text-base sm:text-lg font-black text-emerald-400 mt-0.5">{baikCount} <span className="text-xs font-normal text-cyan-200">Unit</span></div>

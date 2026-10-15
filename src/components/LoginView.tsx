@@ -38,6 +38,7 @@ import {
   BookOpen,
   BarChart3,
   LogIn,
+  Home,
   GraduationCap,
   UserCheck,
   Info,
@@ -65,13 +66,14 @@ import {
   Award,
   Zap
 } from 'lucide-react';
-import { UserAccount, TeacherProfile, TeachingScheduleItem, Student, StudentGrade, Subject, AttendanceRecord, TeachingLog, InfoAnnouncement, LoginBackgroundConfig, RegisteredSchool, defaultLoginBackgroundConfig } from '../types';
+import { UserAccount, TeacherProfile, TeachingScheduleItem, Student, StudentGrade, Subject, AttendanceRecord, TeachingLog, InfoAnnouncement, LoginBackgroundConfig, RegisteredSchool, defaultLoginBackgroundConfig, PpdbRegistration } from '../types';
 import { PRESET_THEMES } from './LoginBackgroundSettings';
 import { TutWuriHandayaniLogo } from './TutWuriHandayaniLogo';
 import { DashboardAnalytics } from './DashboardAnalytics';
 import { SscasnRegisterForm } from './SscasnRegisterForm';
-import { subscribeToEncryptionCode, subscribeToRegisteredSchools, initialRegisteredSchools, deduplicateSchools } from '../lib/firebaseService';
+import { subscribeToEncryptionCode, subscribeToRegisteredSchools, initialRegisteredSchools, deduplicateSchools, filterDeletedSchools } from '../lib/firebaseService';
 import { recordUserLoginLog } from '../lib/userLoginLogService';
+import { setUserOnlinePresence } from '../lib/userPresenceService';
 import { 
   allDefaultStudents, 
   initialSubjects, 
@@ -128,6 +130,7 @@ interface LoginViewProps {
   registeredUsers?: UserAccount[];
   registeredSchools?: RegisteredSchool[];
   onRegisterNewAccount?: (user: UserAccount, newProfile?: TeacherProfile) => void;
+  onRegisterPpdb?: (record: PpdbRegistration) => void;
   onResetPassword?: (email: string, newPassword: string) => void;
   students?: Student[];
   grades?: StudentGrade[];
@@ -139,6 +142,7 @@ interface LoginViewProps {
   onUpdateInfoAnnouncement?: (updated: InfoAnnouncement) => void;
   loginBackgroundConfig?: LoginBackgroundConfig;
   isMasterUser?: boolean;
+  isPpdbAccessOpen?: boolean;
 }
 
 export const LoginView: React.FC<LoginViewProps> = ({ 
@@ -147,6 +151,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   registeredUsers = [],
   registeredSchools: propsRegisteredSchools,
   onRegisterNewAccount,
+  onRegisterPpdb,
   onResetPassword,
   students,
   grades,
@@ -157,15 +162,18 @@ export const LoginView: React.FC<LoginViewProps> = ({
   infoAnnouncement,
   onUpdateInfoAnnouncement,
   loginBackgroundConfig,
-  isMasterUser = false
+  isMasterUser = false,
+  isPpdbAccessOpen = true
 }) => {
   // Navigation & Active View State
-  const [portalTab, setPortalTab] = useState<'beranda' | 'analitik' | 'aktivasi' | 'tentang' | 'faq' | 'helpdesk'>('beranda');
+  const [portalTab, setPortalTab] = useState<'beranda' | 'ppdb' | 'aktivasi' | 'tentang' | 'faq' | 'helpdesk' | 'analitik'>('beranda');
   const [showLoginDropdown, setShowLoginDropdown] = useState<boolean>(false);
   const [selectedAnalyticsClass, setSelectedAnalyticsClass] = useState<string>('Semua Kelas');
   const [showLoginModal, setShowLoginModal] = useState<boolean>(false);
+  const [showPpdb404, setShowPpdb404] = useState<boolean>(false);
   const [preAuthAccepted, setPreAuthAccepted] = useState<boolean>(true);
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'demo'>('login');
+  const [isPpdbRegistration, setIsPpdbRegistration] = useState<boolean>(false);
   const [isHeaderLight, setIsHeaderLight] = useState<boolean>(false);
 
   // Detect when scrolled down even slightly to immediately change header style and text colors
@@ -197,6 +205,58 @@ export const LoginView: React.FC<LoginViewProps> = ({
     handleScroll(); // Initial check on load
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  // Guard: Jika akses PPDB ditutup, batalkan modal SPMB dan tampilkan 404
+  useEffect(() => {
+    if (!isPpdbAccessOpen && (portalTab === 'ppdb' || isPpdbRegistration)) {
+      setIsPpdbRegistration(false);
+      setShowLoginModal(false);
+      setShowPpdb404(true);
+    }
+  }, [isPpdbAccessOpen, portalTab, isPpdbRegistration]);
+
+  // Otomatis Tampilkan Formulir PPDB/SPMB ketika membuka link PPDB/SPMB dari Google atau URL browser
+  useEffect(() => {
+    if (!isPpdbAccessOpen) return;
+
+    try {
+      if (typeof window === 'undefined') return;
+
+      const href = window.location.href.toLowerCase();
+      const searchParams = new URLSearchParams(window.location.search);
+      
+      const pageParam = (searchParams.get('page') || '').toLowerCase();
+      const ppdbParam = (searchParams.get('ppdb') || '').toLowerCase();
+      const formParam = (searchParams.get('form') || '').toLowerCase();
+      const viewParam = (searchParams.get('view') || '').toLowerCase();
+      const spmbParam = (searchParams.get('spmb') || '').toLowerCase();
+
+      const isPpdbQuery = 
+        pageParam === 'ppdb' || pageParam === 'ppdb-public' || pageParam === 'spmb' ||
+        ppdbParam === 'true' || ppdbParam === '1' || ppdbParam === 'open' ||
+        formParam === 'ppdb' || formParam === 'spmb' ||
+        viewParam === 'ppdb' || viewParam === 'spmb' ||
+        spmbParam === 'true' || spmbParam === '1';
+
+      const isPpdbUrl = 
+        isPpdbQuery || 
+        href.includes('/ppdb') || 
+        href.includes('#ppdb') || 
+        href.includes('/spmb') || 
+        href.includes('#spmb') || 
+        href.includes('spmbsimakmerdeka');
+
+      if (isPpdbUrl) {
+        setPortalTab('ppdb');
+        setIsPpdbRegistration(true);
+        setShowLoginModal(true);
+        setActiveTab('register');
+        setShowActivationStep(false);
+      }
+    } catch (e) {
+      console.warn('Error detecting PPDB link parameter:', e);
+    }
+  }, [isPpdbAccessOpen]);
 
   // Lock background page scrolling when the full-screen form is active
   useEffect(() => {
@@ -589,42 +649,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
   // Search Bar State
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [showSearchResults, setShowSearchResults] = useState<boolean>(false);
-  const [metricCardIndex, setMetricCardIndex] = useState<number>(0);
-  const [metricSlideDir, setMetricSlideDir] = useState<number>(1); // 1 = right, -1 = left
-
-  const heroMetricCards = useMemo(() => [
-    {
-      id: 'sync',
-      label: 'Persentase Sinkronisasi',
-      value: realTimeSyncPercentage,
-      subtitle: 'Tingkat Sinkronisasi Cloud Firestore Realtime',
-      icon: BarChart3
-    },
-    {
-      id: 'presensi',
-      label: 'Kehadiran Siswa',
-      value: classAnalyticsMetrics.attPercentage,
-      subtitle: 'Tingkat Presensi & Keaktifan Harian Siswa',
-      icon: UserCheck
-    },
-    {
-      id: 'modul',
-      label: 'Kelengkapan Modul',
-      value: classAnalyticsMetrics.modulePercentage,
-      subtitle: 'Perangkat Pembelajaran & Modul Ajar Terverifikasi',
-      icon: FileText
-    }
-  ], [realTimeSyncPercentage, classAnalyticsMetrics.attPercentage, classAnalyticsMetrics.modulePercentage]);
-
-  // Otomatis berganti kartu persentase setiap 3 detik
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setMetricSlideDir(1);
-      setMetricCardIndex(prev => (prev + 1) % heroMetricCards.length);
-    }, 3000);
-
-    return () => clearInterval(timer);
-  }, [heroMetricCards.length]);
 
   // Today Active Schedules State
   const DAYS_INDONESIAN = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
@@ -1123,16 +1147,37 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
   // Registered Schools State
   const [liveSchools, setLiveSchools] = useState<RegisteredSchool[]>(() => {
-    if (propsRegisteredSchools && propsRegisteredSchools.length > 0) return propsRegisteredSchools;
-    return initialRegisteredSchools;
+    if (propsRegisteredSchools && propsRegisteredSchools.length > 0) return filterDeletedSchools(propsRegisteredSchools);
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('simak_registered_schools') : null;
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return filterDeletedSchools(parsed);
+      } catch (e) {}
+    }
+    return filterDeletedSchools(initialRegisteredSchools);
   });
 
   useEffect(() => {
     if (propsRegisteredSchools && propsRegisteredSchools.length > 0) {
-      setLiveSchools(propsRegisteredSchools);
+      setLiveSchools(filterDeletedSchools(propsRegisteredSchools));
     } else {
       const unsub = subscribeToRegisteredSchools((list) => {
-        if (list && list.length > 0) setLiveSchools(list);
+        if (list && list.length > 0) {
+          setLiveSchools(filterDeletedSchools(list));
+        } else {
+          const saved = typeof window !== 'undefined' ? localStorage.getItem('simak_registered_schools') : null;
+          if (saved) {
+            try {
+              const parsed = JSON.parse(saved);
+              if (Array.isArray(parsed) && parsed.length > 0) {
+                setLiveSchools(filterDeletedSchools(parsed));
+                return;
+              }
+            } catch (e) {}
+          }
+          setLiveSchools(filterDeletedSchools(initialRegisteredSchools));
+        }
       });
       return () => unsub();
     }
@@ -1146,7 +1191,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const filteredLiveSchools = useMemo(() => {
     if (!regJenjang) return [];
     const target = regJenjang.split('/')[0].trim().toLowerCase();
-    const list = deduplicateSchools(liveSchools);
+    const list = filterDeletedSchools(liveSchools);
     
     return list.filter(s => {
       const nameLower = (s.name || '').toLowerCase();
@@ -1507,40 +1552,63 @@ export const LoginView: React.FC<LoginViewProps> = ({
     return true;
   };
 
-  const handleDirectMasterDataLogin = () => {
+  const handleQuickAdminLogin = () => {
     setIsLoading(true);
     setErrorMessage(null);
     
-    const localRegUsersJson = ((k: string) => null as any)('simak_registered_users');
-    const localRegUsers: UserAccount[] = localRegUsersJson ? JSON.parse(localRegUsersJson) : [];
+    let localRegUsers: UserAccount[] = [];
+    try {
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('simak_registered_users');
+        if (stored) localRegUsers = JSON.parse(stored);
+      }
+    } catch (e) {}
+
     const allRegistered = [...registeredUsers, ...localRegUsers];
     const matchedRegistered = allRegistered.find(u => 
       u.email?.toLowerCase() === 'shahrurrobby17@gmail.com' ||
-      u.nip?.replace(/\s+/g, '') === '199001012015011001'
+      u.nip?.replace(/\s+/g, '') === '199001012015011001' ||
+      u.uid === 'USER-ADMIN' ||
+      (u.role && (u.role.toLowerCase().includes('admin') || u.role.toLowerCase().includes('master')))
     );
+
     const activeName = matchedRegistered?.name || 'Shahrur Robby, S.Pd.';
     const activeNip = matchedRegistered?.nip || '19900101 201501 1 001';
     const activeSchool = matchedRegistered?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak';
+    const activeEmail = matchedRegistered?.email || 'shahrurrobby17@gmail.com';
 
-    setSuccessNotification(`Berhasil masuk sebagai Akun Master Data SIMAK (${activeName} - Admin Utama)!`);
-    
-    const masterDataUser: UserAccount = {
-      uid: 'USER-ADMIN',
-      email: 'shahrurrobby17@gmail.com',
-      password: '12345678',
+    const adminUser: UserAccount = {
+      uid: matchedRegistered?.uid || 'USER-ADMIN',
+      email: activeEmail,
+      password: matchedRegistered?.password || '12345678',
       name: activeName,
       schoolName: activeSchool,
-      role: 'Admin Utama / Guru (Master Data)',
+      role: 'Administrator',
       nip: activeNip,
-      profileId: 'PROF-ADMIN',
+      profileId: matchedRegistered?.profileId || 'PROF-ADMIN',
       status: 'Aktif',
       isMaintenance: false
     };
 
+    recordUserLoginLog({
+      userId: adminUser.uid,
+      name: adminUser.name,
+      email: adminUser.email,
+      nip: adminUser.nip,
+      role: adminUser.role,
+      schoolName: adminUser.schoolName,
+      status: 'Berhasil',
+      authMethod: 'Masuk Cepat (Khusus Administrator)'
+    });
+
+    setUserOnlinePresence(adminUser, true).catch(() => {});
+
+    setSuccessNotification(`Masuk Cepat Berhasil: Selamat datang, ${activeName}! Mengarahkan ke Dashboard Administrator...`);
+
     setTimeout(() => {
       setIsLoading(false);
-      onLoginSuccess(masterDataUser, 'PROF-ADMIN', 'master-data');
-    }, 600);
+      onLoginSuccess(adminUser, 'PROF-ADMIN', 'master-data');
+    }, 450);
   };
 
   const handleDirectStudentLogin = (studentToLogin?: Student) => {
@@ -2482,19 +2550,24 @@ export const LoginView: React.FC<LoginViewProps> = ({
             <button
               type="button"
               onClick={() => {
-                setPortalTab('analitik');
-                const el = document.getElementById('analytics-section');
-                if (el) {
-                  el.scrollIntoView({ behavior: 'smooth' });
+                if (!isPpdbAccessOpen) {
+                  setShowPpdb404(true);
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                  return;
                 }
+                setPortalTab('ppdb');
+                setIsPpdbRegistration(true);
+                setShowLoginModal(true);
+                setActiveTab('register');
+                setShowActivationStep(false);
               }}
               className={`px-2 py-1 text-xs lg:text-sm transition-colors cursor-pointer ${
                 isHeaderLight
-                  ? (portalTab === 'analitik' ? 'text-sky-500 font-extrabold' : 'text-black/80 hover:text-sky-500 font-semibold')
-                  : (portalTab === 'analitik' ? 'text-white font-extrabold' : 'text-white/85 hover:text-white font-semibold')
+                  ? (portalTab === 'ppdb' ? 'text-sky-500 font-extrabold' : 'text-black/80 hover:text-sky-500 font-semibold')
+                  : (portalTab === 'ppdb' ? 'text-white font-extrabold' : 'text-white/85 hover:text-white font-semibold')
               }`}
             >
-              Analitik
+              PPDB/SPMB
             </button>
             <button
               type="button"
@@ -2715,6 +2788,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
             {/* Tombol Masuk ke Sistem Mobile */}
             <div className="mt-7 w-full max-w-xs relative space-y-2.5">
+
               <button
                 type="button"
                 onClick={() => setShowLoginDropdown(prev => !prev)}
@@ -2794,11 +2868,12 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-12">
                 
                 {/* Left: Title, Description, Laptop note, Timestamp, Action Buttons */}
-                <div className="space-y-2 sm:space-y-2.5 max-w-xl lg:max-w-2xl pl-4 sm:pl-12 lg:pl-16 xl:pl-20">
+                <div className="space-y-2 sm:space-y-2.5 max-w-xl lg:max-w-3xl pl-4 sm:pl-12 lg:pl-16 xl:pl-20">
                   {/* Main Display Headline */}
                   <h1 className="font-jakarta text-xl sm:text-2xl lg:text-3xl xl:text-[2.25rem] font-black text-white tracking-tight leading-[1.15]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900 }}>
                     Sistem Informasi Akademik <br />
-                    Guru, Siswa & Staf berbasis LMS Kurikulum Merdeka
+                    Guru, Staf, Karyawan, dan PPDB/SPMB <br />
+                    Kurikulum Merdeka
                   </h1>
 
                   {/* Subtitle Description */}
@@ -2818,101 +2893,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   {/* Last Update Date */}
                   <div className="flex items-center space-x-2 text-xs lg:text-sm text-white/95 font-semibold whitespace-nowrap pt-1">
                     <Calendar className="w-4 h-4 text-white shrink-0" />
-                    <span className="whitespace-nowrap">Pembaruan Terakhir : Kamis, 8 Oktober 2026</span>
+                    <span className="whitespace-nowrap">Pembaruan Terakhir : Kamis, 15 Oktober 2026</span>
                   </div>
-                </div>
-
-                {/* Right: Tingkat Sinkronisasi Data Card with Navigation Buttons */}
-                <div className="flex flex-col items-center shrink-0 lg:mr-2 xl:mr-6 select-none">
-                  {(() => {
-                    const currentMetricCard = heroMetricCards[metricCardIndex] || heroMetricCards[0];
-                    const CardIcon = currentMetricCard.icon;
-                    return (
-                      <>
-                        <div className="relative w-60 sm:w-64 h-[148px] sm:h-[156px] overflow-hidden">
-                          <AnimatePresence initial={false} custom={metricSlideDir} mode="popLayout">
-                            <motion.div
-                              key={metricCardIndex}
-                              custom={metricSlideDir}
-                              initial={{ x: metricSlideDir > 0 ? '50%' : '-50%', opacity: 0, scale: 0.96 }}
-                              animate={{ x: '0%', opacity: 1, scale: 1 }}
-                              exit={{ x: metricSlideDir > 0 ? '-50%' : '50%', opacity: 0, scale: 0.96 }}
-                              transition={{
-                                duration: 0.55,
-                                ease: [0.16, 1, 0.3, 1]
-                              }}
-                              className="absolute inset-0 w-full h-full px-4 py-4 text-center flex flex-col items-center justify-center"
-                            >
-                              {/* Icon with Header Gradient + Label beside it */}
-                              <div className="flex items-center gap-2 mb-2">
-                                <div className="p-1.5 bg-white/20 text-white rounded-xl w-8 h-8 flex items-center justify-center shadow-sm border border-white/30">
-                                  <CardIcon className="w-4 h-4 text-white" />
-                                </div>
-                                <span className="text-xs font-bold text-white tracking-tight whitespace-nowrap drop-shadow-sm">
-                                  {currentMetricCard.label}
-                                </span>
-                              </div>
-                              {/* Percentage Value */}
-                              <div className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight leading-none drop-shadow-md">
-                                {currentMetricCard.value}
-                              </div>
-                              {/* Bottom Subtitle */}
-                              <div className="text-[11px] sm:text-xs text-white/90 font-medium mt-1.5 leading-tight drop-shadow-sm">
-                                {currentMetricCard.subtitle}
-                              </div>
-                            </motion.div>
-                          </AnimatePresence>
-                        </div>
-
-                        {/* Navigation Buttons: Kiri & Kanan di bawah kartu */}
-                        <div className="flex items-center justify-center gap-2.5 mt-2.5">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setMetricSlideDir(-1);
-                              setMetricCardIndex(prev => (prev - 1 + heroMetricCards.length) % heroMetricCards.length);
-                            }}
-                            className="p-1.5 rounded-full bg-white/20 hover:bg-white/35 text-white transition-all shadow-xs border border-white/30 active:scale-90 cursor-pointer flex items-center justify-center"
-                            aria-label="Sebelumnya"
-                            title="Sebelumnya"
-                          >
-                            <ChevronLeft className="w-3.5 h-3.5 text-white stroke-[2.5]" />
-                          </button>
-
-                          {/* Indicator dots */}
-                          <div className="flex items-center gap-1.5">
-                            {heroMetricCards.map((_, idx) => (
-                              <button
-                                key={idx}
-                                type="button"
-                                onClick={() => {
-                                  setMetricSlideDir(idx > metricCardIndex ? 1 : -1);
-                                  setMetricCardIndex(idx);
-                                }}
-                                className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                                  idx === metricCardIndex ? 'w-4 bg-white shadow-xs' : 'w-1.5 bg-white/40 hover:bg-white/70'
-                                }`}
-                                aria-label={`Pilih kartu ${idx + 1}`}
-                              />
-                            ))}
-                          </div>
-
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setMetricSlideDir(1);
-                              setMetricCardIndex(prev => (prev + 1) % heroMetricCards.length);
-                            }}
-                            className="p-1.5 rounded-full bg-white/20 hover:bg-white/35 text-white transition-all shadow-xs border border-white/30 active:scale-90 cursor-pointer flex items-center justify-center"
-                            aria-label="Selanjutnya"
-                            title="Selanjutnya"
-                          >
-                            <ChevronRight className="w-3.5 h-3.5 text-white stroke-[2.5]" />
-                          </button>
-                        </div>
-                      </>
-                    );
-                  })()}
                 </div>
 
               </div>
@@ -3822,7 +3804,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
                 Sistem Informasi Akademik <br className="hidden sm:block" />
-                Guru, Siswa & Staf berbasis LMS Kurikulum Merdeka
+                Guru, Staf, Karyawan, dan PPDB/SPMB <br className="hidden sm:block" />
+                Kurikulum Merdeka
               </h2>
               <p className="text-xs sm:text-sm text-slate-600 mt-2 max-w-2xl mx-auto font-medium leading-relaxed">
                 Platform digital terpadu Kurikulum Merdeka yang dirancang khusus untuk efisiensi administrasi, penilaian otomatis, jurnal mengajar, serta analisis perkembangan siswa secara real-time.
@@ -4087,7 +4070,16 @@ export const LoginView: React.FC<LoginViewProps> = ({
         activeTab === 'register' && !showActivationStep ? (
           <div className="fixed inset-0 z-50 overflow-y-auto bg-[#f0f4f8]">
             <SscasnRegisterForm
-              onClose={() => setShowLoginModal(false)}
+              isPpdbMode={isPpdbRegistration}
+              onClose={() => {
+                setShowLoginModal(false);
+                setIsPpdbRegistration(false);
+                setPortalTab('beranda');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              registeredSchools={propsRegisteredSchools && propsRegisteredSchools.length > 0 ? propsRegisteredSchools : liveSchools}
+              registeredUsers={registeredUsers}
+              onRegisterPpdb={onRegisterPpdb}
               onSwitchToLogin={(prefilledEmail, prefilledNip) => {
                 setActiveTab('login');
                 setIsMasterDataLogin(false);
@@ -4118,7 +4110,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 setShowLoginModal(false);
                 setPortalTab('helpdesk');
               }}
-              registeredUsers={registeredUsers}
             />
           </div>
         ) : (
@@ -4138,7 +4129,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               </div>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="font-bold text-sm sm:text-base text-white leading-tight">Sistem Informasi Akademik, Siswa & Staf berbasis LMS Kurikulum Merdeka</h1>
+                  <h1 className="font-bold text-sm sm:text-base text-white leading-tight">Sistem Informasi Akademik Guru, Staf, Karyawan, dan PPDB/SPMB Kurikulum Merdeka</h1>
                   <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider hidden sm:inline-block ${
                     isStudentLogin
                       ? 'bg-emerald-400 text-slate-950'
@@ -4656,6 +4647,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
                         </>
                       )}
                     </button>
+
+
 
                     {!isStudentLogin && (
                       <div className="text-center mt-3 pt-3 border-t border-slate-100">
@@ -5411,6 +5404,32 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   </button>
                 </div>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 404 NOT FOUND VIEW - KETIKA AKSES SPMB DITUTUP OLEH ADMINISTRATOR */}
+      {showPpdb404 && (
+        <div className="fixed inset-0 z-50 bg-white text-slate-900 flex flex-col items-start justify-start p-6 sm:p-12 text-left select-none animate-fadeIn">
+          <div className="max-w-lg w-full flex flex-col items-start justify-start text-left space-y-2">
+            <h1 className="text-5xl sm:text-7xl font-black text-slate-900 tracking-tight font-mono">
+              404 Not Found
+            </h1>
+            <h2 className="text-lg sm:text-xl font-bold text-slate-700 tracking-tight">
+              Halaman Tidak Ditemukan
+            </h2>
+            <div className="pt-3">
+              <button
+                type="button"
+                onClick={() => {
+                  window.location.reload();
+                }}
+                className="px-5 py-2 bg-sky-600 hover:bg-sky-700 text-white font-bold text-xs sm:text-sm rounded-xl transition-all shadow-md hover:shadow-lg flex items-center gap-2 cursor-pointer active:scale-95"
+              >
+                <RefreshCw className="w-4 h-4" />
+                <span>Reload</span>
+              </button>
             </div>
           </div>
         </div>

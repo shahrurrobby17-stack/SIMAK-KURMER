@@ -358,4 +358,54 @@ export const defaultLoginBackgroundConfig: LoginBackgroundConfig = {
   headerGradient: 'default'
 };
 
+export interface PpdbRegistration {
+  id: string;
+  registrationNumber: string; // e.g. REG-SPMB-2026-4821
+  fullName: string;
+  gender: 'Laki-laki' | 'Perempuan';
+  birthPlace: string;
+  birthDate: string;
+  phone: string;
+  email?: string;
+  nisn: string;
+  nik: string;
+  sekolahAsal: string;
+  jalurPpdb: string; // Zonasi, Prestasi, Afirmasi, Mutasi/Perpindahan Tugas Orang Tua
+  schoolTarget: string; // Satuan Pendidikan Tujuan
+  jenjangPendidikan?: string; // SD, SMP, SMA/SMK
+  religion?: string;
+  childOrder?: string;
+  siblingCount?: string;
+  
+  // Data Orang Tua
+  parentName?: string;
+  parentPhone?: string;
+  fatherName?: string;
+  fatherBirthPlaceDate?: string;
+  fatherJob?: string;
+  fatherEdu?: string;
+  fatherAddress?: string;
+  motherName?: string;
+  motherBirthPlaceDate?: string;
+  motherJob?: string;
+  motherEdu?: string;
+  motherAddress?: string;
+
+  // Alamat Calon Siswa
+  studentAddress: string;
+  rt: string;
+  rw: string;
+  village: string;
+  district: string;
+  regency: string;
+
+  // Status & Timestamps
+  status: 'Menunggu Verifikasi' | 'Diterima' | 'Ditolak' | 'Cadangan';
+  notes?: string;
+  registeredAt: string;
+  verifiedAt?: string;
+  verifiedBy?: string;
+}
+
+
 

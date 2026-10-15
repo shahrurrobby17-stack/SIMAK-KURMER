@@ -35,6 +35,7 @@ import {
   restoreDefaultDemoLogs,
   INITIAL_SEED_LOGIN_LOGS
 } from '../lib/userLoginLogService';
+import { subscribeToUserPresence, UserPresence, getLocalPresenceMap } from '../lib/userPresenceService';
 import { UserAccount, RegisteredSchool } from '../types';
 
 interface UserLoginLogsViewProps {
@@ -63,10 +64,13 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
 
   // Subscribe to realtime logs
   useEffect(() => {
-    const unsub = subscribeToUserLoginLogs((data) => {
+    const unsubLogs = subscribeToUserLoginLogs((data) => {
       setLogs(Array.isArray(data) ? data : []);
     });
-    return () => unsub();
+
+    return () => {
+      unsubLogs();
+    };
   }, []);
 
   // Compute all available school names for filtering
@@ -243,18 +247,6 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
 
           {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-2 shrink-0">
-            {logs.length === 0 && (
-              <button
-                type="button"
-                onClick={handleRestoreDemo}
-                className="flex items-center gap-1.5 px-3.5 py-2 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 text-xs sm:text-sm font-bold rounded-xl transition-all cursor-pointer shadow-2xs active:scale-95"
-                title="Muat data sampel untuk demonstrasi"
-              >
-                <Sparkles className="w-4 h-4 text-amber-600" />
-                <span>Muat Sampel Demo</span>
-              </button>
-            )}
-
             <button
               type="button"
               onClick={handleRefresh}

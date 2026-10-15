@@ -2165,7 +2165,9 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-cyan-200/60 text-xs">
                     <div>
                       <span className="text-slate-500 font-semibold text-[11px]">NPSN: </span>
-                      <span className="font-mono font-bold text-slate-800">{teacher?.npsn || '20500000'}</span>
+                      <span className="font-mono font-bold text-slate-800">
+                        {teacher?.npsn || (registeredSchools || []).find(s => s.name.toLowerCase().trim() === (activeSchoolName || teacher?.schoolName || '').toLowerCase().trim())?.npsn || '20521404'}
+                      </span>
                     </div>
                     <div>
                       <span className="text-slate-500 font-semibold text-[11px]">Path Database: </span>
@@ -2219,7 +2221,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                             )}
                           </div>
                           <p className="text-[11px] text-slate-500 mt-0.5">
-                            NPSN: <span className="font-semibold text-slate-700">{s.npsn || '20500000'}</span> • Path: <span className="font-mono text-cyan-800">/schools/{s.id}</span>
+                            NPSN: <span className="font-semibold text-slate-700">{s.npsn || '20521404'}</span> • Path: <span className="font-mono text-cyan-800">/schools/{s.id}</span>
                           </p>
                         </div>
 

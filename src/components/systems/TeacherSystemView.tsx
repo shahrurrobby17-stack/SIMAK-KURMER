@@ -41,6 +41,8 @@ interface TeacherSystemViewProps {
   registeredSchools?: RegisteredSchool[];
   activeSchoolName?: string;
   onUpdateRegisteredUsers?: (users: UserAccount[]) => void;
+  onUpdateTeacherProfiles?: (profiles: TeacherProfile[]) => void;
+  onDeleteGtkUser?: (target: { uid?: string; email?: string; nip?: string; name?: string }) => boolean | void;
   onNavigateTab?: (tab: string) => void;
   onOpenAddUserModal?: (defaultRole: string) => void;
   onOpenEditUserModal?: (user: UserAccount) => void;
@@ -70,6 +72,8 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
   registeredSchools = [],
   activeSchoolName,
   onUpdateRegisteredUsers,
+  onUpdateTeacherProfiles,
+  onDeleteGtkUser,
   onNavigateTab,
   onOpenAddUserModal,
   onOpenEditUserModal,
@@ -82,6 +86,28 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
   const [statusKepegawaianFilter, setStatusKepegawaianFilter] = useState<string>('Semua');
   const [schoolFilter, setSchoolFilter] = useState<string>('Semua');
   const [roleFilter, setRoleFilter] = useState<string>('Semua');
+
+  // Persistent exclusion set for deleted GTK items
+  const [deletedGtkKeys, setDeletedGtkKeys] = useState<Set<string>>(() => {
+    try {
+      const saved = localStorage.getItem('simak_deleted_gtk_keys');
+      return saved ? new Set(JSON.parse(saved)) : new Set();
+    } catch {
+      return new Set();
+    }
+  });
+
+  // Toast feedback state
+  const [toastNotification, setToastNotification] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  useEffect(() => {
+    if (toastNotification) {
+      const timer = setTimeout(() => {
+        setToastNotification(null);
+      }, 3500);
+      return () => clearTimeout(timer);
+    }
+  }, [toastNotification]);
 
   // Modal States for Inline GTK Add/Edit
   const [showInlineAddModal, setShowInlineAddModal] = useState<boolean>(false);
@@ -171,8 +197,24 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
   const allGtkList = useMemo(() => {
     const map = new Map<string, any>();
 
+    const isGtkDeleted = (item: { uid?: string; id?: string; email?: string; nip?: string; name?: string }) => {
+      if (!deletedGtkKeys || deletedGtkKeys.size === 0) return false;
+      const uidNorm = item.uid || item.id;
+      const emailNorm = (item.email || '').trim().toLowerCase();
+      const nipNorm = (item.nip || '').replace(/\s+/g, '').trim();
+      const nameNorm = (item.name || '').trim().toLowerCase();
+
+      if (uidNorm && deletedGtkKeys.has(uidNorm)) return true;
+      if (emailNorm && deletedGtkKeys.has(emailNorm)) return true;
+      if (nipNorm && nipNorm !== '-' && deletedGtkKeys.has(nipNorm)) return true;
+      if (nameNorm && deletedGtkKeys.has(nameNorm)) return true;
+      return false;
+    };
+
     // 1. Process registeredUsers
     registeredUsers.forEach((u) => {
+      if (isGtkDeleted(u)) return;
+
       const rLower = (u.role || '').toLowerCase();
       // Exclude students
       if (rLower.includes('siswa') || rLower.includes('murid')) return;
@@ -203,6 +245,8 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
 
     // 2. Combine with teacherProfiles
     teacherProfiles.forEach((p) => {
+      if (isGtkDeleted(p)) return;
+
       const key = p.email ? p.email.toLowerCase() : (p.id || p.nip);
       if (!key) return;
 
@@ -230,8 +274,8 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
       }
     });
 
-    return Array.from(map.values());
-  }, [registeredUsers, teacherProfiles, isKepalaSekolah, activeSchoolName]);
+    return Array.from(map.values()).filter(item => !isGtkDeleted(item));
+  }, [registeredUsers, teacherProfiles, isKepalaSekolah, activeSchoolName, deletedGtkKeys]);
 
   // List of distinct schools for school filter
   const schoolOptions = useMemo(() => {
@@ -352,10 +396,26 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
     e.preventDefault();
     if (!formName.trim() || !formEmail.trim()) return;
 
+    const emailNorm = formEmail.trim().toLowerCase();
+    const nameNorm = formName.trim().toLowerCase();
+    const nipNorm = formNip.trim().replace(/\s+/g, '');
+
+    // Un-delete if previously marked deleted
+    setDeletedGtkKeys(prev => {
+      const next = new Set(prev);
+      next.delete(emailNorm);
+      next.delete(nameNorm);
+      if (nipNorm) next.delete(nipNorm);
+      try {
+        localStorage.setItem('simak_deleted_gtk_keys', JSON.stringify(Array.from(next)));
+      } catch (e) {}
+      return next;
+    });
+
     const newGtkUser: UserAccount = {
       uid: `USER-GTK-${Date.now()}`,
       name: formName.trim(),
-      email: formEmail.trim().toLowerCase(),
+      email: emailNorm,
       nip: formNip.trim() || undefined,
       schoolName: formSchool,
       role: formRole,
@@ -365,9 +425,17 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
     (newGtkUser as any).employmentStatus = formEmploymentStatus;
 
     if (onUpdateRegisteredUsers) {
-      onUpdateRegisteredUsers([newGtkUser, ...registeredUsers]);
+      const updated = [newGtkUser, ...registeredUsers];
+      onUpdateRegisteredUsers(updated);
+      try {
+        localStorage.setItem('simak_registered_users', JSON.stringify(updated));
+      } catch (e) {}
     }
     setShowInlineAddModal(false);
+    setToastNotification({
+      type: 'success',
+      message: `Akun GTK "${formName.trim()}" berhasil ditambahkan ke database.`
+    });
   };
 
   // Save Inline Edit GTK
@@ -375,46 +443,200 @@ export const TeacherSystemView: React.FC<TeacherSystemViewProps> = ({
     e.preventDefault();
     if (!selectedUserForEdit || !formName.trim()) return;
 
-    const updated = registeredUsers.map((u) => {
-      if (u.uid === selectedUserForEdit.uid || u.email === selectedUserForEdit.email) {
-        const item = {
-          ...u,
+    const targetUid = selectedUserForEdit.uid;
+    const targetEmail = (selectedUserForEdit.email || '').trim().toLowerCase();
+
+    // 1. Update in registeredUsers
+    if (onUpdateRegisteredUsers) {
+      let foundInRegistered = false;
+      const updatedUsers = registeredUsers.map((u) => {
+        if (u.uid === targetUid || (u.email && u.email.trim().toLowerCase() === targetEmail)) {
+          foundInRegistered = true;
+          const item = {
+            ...u,
+            name: formName.trim(),
+            email: formEmail.trim().toLowerCase(),
+            nip: formNip.trim() || undefined,
+            schoolName: formSchool,
+            role: formRole,
+            status: formStatus
+          };
+          (item as any).employmentStatus = formEmploymentStatus;
+          return item;
+        }
+        return u;
+      });
+
+      if (!foundInRegistered) {
+        const newU: UserAccount = {
+          uid: targetUid || `USER-GTK-${Date.now()}`,
           name: formName.trim(),
           email: formEmail.trim().toLowerCase(),
           nip: formNip.trim() || undefined,
           schoolName: formSchool,
           role: formRole,
-          status: formStatus
+          status: formStatus,
+          password: 'password123'
         };
-        (item as any).employmentStatus = formEmploymentStatus;
-        return item;
+        (newU as any).employmentStatus = formEmploymentStatus;
+        updatedUsers.unshift(newU);
       }
-      return u;
-    });
 
-    if (onUpdateRegisteredUsers) {
-      onUpdateRegisteredUsers(updated);
+      onUpdateRegisteredUsers(updatedUsers);
+      try {
+        localStorage.setItem('simak_registered_users', JSON.stringify(updatedUsers));
+      } catch (e) {}
     }
+
+    // 2. Update in teacherProfiles if present
+    if (onUpdateTeacherProfiles && teacherProfiles) {
+      const updatedProfiles = teacherProfiles.map((p) => {
+        if (p.id === targetUid || (p.email && p.email.trim().toLowerCase() === targetEmail)) {
+          return {
+            ...p,
+            name: formName.trim(),
+            email: formEmail.trim().toLowerCase(),
+            nip: formNip.trim() || p.nip,
+            schoolName: formSchool,
+            title: formRole,
+            status: formStatus
+          };
+        }
+        return p;
+      });
+      onUpdateTeacherProfiles(updatedProfiles);
+      try {
+        localStorage.setItem('simak_teacher_profiles', JSON.stringify(updatedProfiles));
+      } catch (e) {}
+    }
+
     setShowInlineEditModal(false);
     setSelectedUserForEdit(null);
+    setToastNotification({
+      type: 'success',
+      message: `Data GTK "${formName.trim()}" berhasil diperbarui.`
+    });
   };
 
   // Confirm Delete GTK
   const handleConfirmInlineDelete = () => {
-    if (selectedUserForDelete) {
-      if (onOpenDeleteUserModal) {
-        onOpenDeleteUserModal(selectedUserForDelete);
-      } else if (onUpdateRegisteredUsers) {
-        const updated = registeredUsers.filter(u => u.uid !== selectedUserForDelete.uid && u.email !== selectedUserForDelete.email);
-        onUpdateRegisteredUsers(updated);
-      }
+    if (!selectedUserForDelete) return;
+
+    const targetUid = selectedUserForDelete.uid;
+    const targetEmail = (selectedUserForDelete.email || '').trim().toLowerCase();
+    const targetNip = (selectedUserForDelete.nip || '').replace(/\s+/g, '').trim();
+    const targetName = (selectedUserForDelete.name || '').trim().toLowerCase();
+
+    // Prevent deleting Master Admin
+    const isMaster = 
+      targetEmail === 'shahrurrobby17@gmail.com' ||
+      targetUid === 'USER-ADMIN' ||
+      targetUid === 'PROF-ADMIN' ||
+      (selectedUserForDelete.role && (
+        selectedUserForDelete.role.toLowerCase().includes('admin utama') ||
+        selectedUserForDelete.role.toLowerCase().includes('master data')
+      ));
+
+    if (isMaster) {
+      setToastNotification({
+        type: 'error',
+        message: `Akun "${selectedUserForDelete.name}" adalah Akun Administrator Utama dan tidak dapat dihapus!`
+      });
       setShowInlineDeleteModal(false);
       setSelectedUserForDelete(null);
+      return;
     }
+
+    // 1. Add to persistent deleted keys in state and localStorage
+    const newKeys = [targetUid, targetEmail, targetNip !== '-' ? targetNip : '', targetName].filter(Boolean) as string[];
+    setDeletedGtkKeys(prev => {
+      const next = new Set(prev);
+      newKeys.forEach(k => next.add(k));
+      try {
+        localStorage.setItem('simak_deleted_gtk_keys', JSON.stringify(Array.from(next)));
+      } catch (e) {}
+      return next;
+    });
+
+    // 2. Call onDeleteGtkUser callback from App.tsx
+    if (onDeleteGtkUser) {
+      onDeleteGtkUser({ uid: targetUid, email: targetEmail, nip: targetNip, name: targetName });
+    }
+
+    // 3. Filter registeredUsers and update state + localStorage
+    if (onUpdateRegisteredUsers) {
+      const updatedUsers = registeredUsers.filter(u => {
+        const uUid = u.uid;
+        const uEmail = (u.email || '').trim().toLowerCase();
+        const uNip = (u.nip || '').replace(/\s+/g, '').trim();
+        const uName = (u.name || '').trim().toLowerCase();
+
+        if (targetUid && uUid && uUid === targetUid) return false;
+        if (targetEmail && uEmail && uEmail === targetEmail) return false;
+        if (targetNip && targetNip !== '-' && uNip && uNip === targetNip) return false;
+        if (targetName && uName && uName === targetName) return false;
+        return true;
+      });
+      onUpdateRegisteredUsers(updatedUsers);
+      try {
+        localStorage.setItem('simak_registered_users', JSON.stringify(updatedUsers));
+      } catch (e) {}
+    }
+
+    // 4. Filter teacherProfiles and update state + localStorage
+    if (onUpdateTeacherProfiles && teacherProfiles) {
+      const updatedProfiles = teacherProfiles.filter(p => {
+        const pId = p.id;
+        const pEmail = (p.email || '').trim().toLowerCase();
+        const pNip = (p.nip || '').replace(/\s+/g, '').trim();
+        const pName = (p.name || '').trim().toLowerCase();
+
+        if (targetUid && pId && pId === targetUid) return false;
+        if (targetEmail && pEmail && pEmail === targetEmail) return false;
+        if (targetNip && targetNip !== '-' && pNip && pNip === targetNip) return false;
+        if (targetName && pName && pName === targetName) return false;
+        return true;
+      });
+      onUpdateTeacherProfiles(updatedProfiles);
+      try {
+        localStorage.setItem('simak_teacher_profiles', JSON.stringify(updatedProfiles));
+      } catch (e) {}
+    }
+
+    setShowInlineDeleteModal(false);
+    setToastNotification({
+      type: 'success',
+      message: `Akun GTK "${selectedUserForDelete.name}" telah berhasil dihapus dari database.`
+    });
+    setSelectedUserForDelete(null);
   };
 
   return (
     <div className="space-y-6">
+      {/* Toast Notification Banner */}
+      {toastNotification && (
+        <div className={`p-4 rounded-none border flex items-center justify-between gap-3 animate-fadeIn shadow-sm ${
+          toastNotification.type === 'error'
+            ? 'bg-rose-50 border-rose-200 text-rose-800'
+            : 'bg-emerald-50 border-emerald-200 text-emerald-800'
+        }`}>
+          <div className="flex items-center gap-2.5">
+            {toastNotification.type === 'error' ? (
+              <X className="w-5 h-5 text-rose-600 shrink-0" />
+            ) : (
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+            )}
+            <span className="text-xs sm:text-sm font-bold">{toastNotification.message}</span>
+          </div>
+          <button
+            type="button"
+            onClick={() => setToastNotification(null)}
+            className="text-slate-400 hover:text-slate-600 p-1 cursor-pointer"
+          >
+            ✕
+          </button>
+        </div>
+      )}
       {/* KPI Cards for GTK */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div className="bg-white p-4 rounded-none border border-slate-200/80 shadow-xs flex items-center gap-3.5">

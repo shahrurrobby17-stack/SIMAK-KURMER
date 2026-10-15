@@ -8,6 +8,9 @@ import {
   setActiveSchoolContext,
   subscribeToRegisteredSchools,
   registerSchoolToFirebase,
+  deleteSchoolFromFirebase,
+  filterDeletedSchools,
+  addDeletedSchoolKey,
   initialRegisteredSchools,
   saveTeacherProfileToFirebase, 
   saveTeacherProfilesToFirebase,
@@ -35,7 +38,10 @@ import {
   subscribeToDataLockConfig,
   saveLoginBackgroundConfigToFirebase,
   subscribeToLoginBackgroundConfig,
-  deleteSchoolFromFirebase
+  savePpdbRegistrationsBatchToFirebase,
+  subscribeToPpdbRegistrations,
+  savePpdbAccessConfigToFirebase,
+  subscribeToPpdbAccessConfig
 } from './lib/firebaseService';
 import { 
   Student, 
@@ -52,8 +58,10 @@ import {
   DataLockConfig,
   LoginBackgroundConfig,
   RegisteredSchool,
-  defaultLoginBackgroundConfig
+  defaultLoginBackgroundConfig,
+  PpdbRegistration
 } from './types';
+import { initialPpdbRegistrations } from './data/initialPpdbData';
 import { 
   initialTeacherProfile, 
   initialTeacherProfiles,
@@ -80,6 +88,7 @@ import { TeacherModuleUploadView } from './components/TeacherModuleUploadView';
 import { AIAssistantModal } from './components/AIAssistantModal';
 import { StudentSyncView } from './components/StudentSyncView';
 import { MasterDataView } from './components/MasterDataView';
+import { PpdbRegistrationView } from './components/PpdbRegistrationView';
 import { CurriculumSystemView } from './components/systems/CurriculumSystemView';
 import { TeacherSystemView } from './components/systems/TeacherSystemView';
 import { AdministrationSystemView } from './components/systems/AdministrationSystemView';
@@ -172,7 +181,21 @@ export default function App() {
     return initialTeacherProfile;
   });
 
-  const [registeredSchools, setRegisteredSchools] = useState<RegisteredSchool[]>(initialRegisteredSchools);
+  const [registeredSchools, setRegisteredSchools] = useState<RegisteredSchool[]>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('simak_registered_schools');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            return filterDeletedSchools(parsed);
+          }
+        }
+      }
+    } catch (e) {}
+    return filterDeletedSchools(initialRegisteredSchools);
+  });
+
   const [showSchoolStorageModal, setShowSchoolStorageModal] = useState<boolean>(false);
   const [selectedSchoolName, setSelectedSchoolName] = useState<string>(() => {
     try {
@@ -195,11 +218,100 @@ export default function App() {
   useEffect(() => {
     const unsub = subscribeToRegisteredSchools((schools) => {
       if (schools && schools.length > 0) {
-        setRegisteredSchools(schools);
+        const filtered = filterDeletedSchools(schools);
+        setRegisteredSchools(filtered);
+        try {
+          localStorage.setItem('simak_registered_schools', JSON.stringify(filtered));
+        } catch (e) {}
       }
     });
     return () => unsub();
   }, []);
+
+  // Data Pendaftaran Siswa Baru (PPDB / SPMB)
+  const [ppdbRegistrations, setPpdbRegistrations] = useState<PpdbRegistration[]>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('simak_ppdb_registrations');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          if (Array.isArray(parsed)) {
+            const sampleIds = ['SPMB-1718290001', 'SPMB-1718290002', 'SPMB-1718290003'];
+            const cleaned = parsed.filter(item => item && !sampleIds.includes(item.id));
+            if (cleaned.length !== parsed.length) {
+              localStorage.setItem('simak_ppdb_registrations', JSON.stringify(cleaned));
+            }
+            return cleaned;
+          }
+        }
+      }
+    } catch (e) {}
+    return initialPpdbRegistrations;
+  });
+
+  useEffect(() => {
+    const unsubPpdb = subscribeToPpdbRegistrations((data) => {
+      if (data && Array.isArray(data)) {
+        const sampleIds = ['SPMB-1718290001', 'SPMB-1718290002', 'SPMB-1718290003'];
+        const cleaned = data.filter(item => item && !sampleIds.includes(item.id));
+        setPpdbRegistrations(cleaned);
+        try {
+          localStorage.setItem('simak_ppdb_registrations', JSON.stringify(cleaned));
+        } catch (e) {}
+      }
+    });
+    return () => unsubPpdb();
+  }, []);
+
+  const handleUpdatePpdbRegistrations = (newList: PpdbRegistration[]) => {
+    setPpdbRegistrations(newList);
+    try {
+      localStorage.setItem('simak_ppdb_registrations', JSON.stringify(newList));
+    } catch (e) {}
+    savePpdbRegistrationsBatchToFirebase(newList);
+  };
+
+  const handleRegisterPpdb = (newRecord: PpdbRegistration) => {
+    setPpdbRegistrations(prev => {
+      const exists = prev.some(r => r.id === newRecord.id);
+      const updated = exists ? prev.map(r => r.id === newRecord.id ? newRecord : r) : [newRecord, ...prev];
+      try {
+        localStorage.setItem('simak_ppdb_registrations', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  // Status Akses Pendaftaran PPDB/SPMB (Dibuka / Ditutup)
+  const [isPpdbAccessOpen, setIsPpdbAccessOpen] = useState<boolean>(() => {
+    try {
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('simak_ppdb_access_open');
+        if (saved !== null) {
+          return JSON.parse(saved);
+        }
+      }
+    } catch (e) {}
+    return true;
+  });
+
+  useEffect(() => {
+    const unsubPpdbAccess = subscribeToPpdbAccessConfig((isOpen) => {
+      setIsPpdbAccessOpen(isOpen);
+      try {
+        localStorage.setItem('simak_ppdb_access_open', JSON.stringify(isOpen));
+      } catch (e) {}
+    });
+    return () => unsubPpdbAccess();
+  }, []);
+
+  const handleTogglePpdbAccess = (isOpen: boolean) => {
+    setIsPpdbAccessOpen(isOpen);
+    try {
+      localStorage.setItem('simak_ppdb_access_open', JSON.stringify(isOpen));
+    } catch (e) {}
+    savePpdbAccessConfigToFirebase(isOpen);
+  };
 
   const handleSelectSchoolStorage = (school: RegisteredSchool) => {
     setSelectedSchoolName(school.name);
@@ -217,19 +329,27 @@ export default function App() {
 
   const handleRegisterNewSchool = async (newSchoolData: Partial<RegisteredSchool> & { name: string }) => {
     const created = await registerSchoolToFirebase(newSchoolData);
+    setRegisteredSchools(prev => {
+      const next = filterDeletedSchools([created, ...prev.filter(s => s.id !== created.id)]);
+      try {
+        localStorage.setItem('simak_registered_schools', JSON.stringify(next));
+      } catch (e) {}
+      return next;
+    });
     await seedSchoolDataIfEmpty(created.id, created.name);
     handleSelectSchoolStorage(created);
   };
 
   const handleDeleteSchoolStorage = async (schoolId: string, schoolName?: string): Promise<boolean> => {
+    // 1. Record in deleted school keys and delete from Firebase
+    addDeletedSchoolKey(schoolId, schoolName);
     try {
-      // 1. Hapus dokumen sekolah dari Firebase Firestore
-      await deleteSchoolFromFirebase(schoolId);
+      await deleteSchoolFromFirebase(schoolId, schoolName);
     } catch (err) {
       console.warn('Firebase school delete note:', err);
     }
 
-    // 2. Bersihkan seluruh penyimpanan cache lokal browser untuk sekolah ini
+    // 2. Clear local storage cache for this school
     try {
       if (typeof window !== 'undefined') {
         const keysToRemove: string[] = [];
@@ -253,17 +373,35 @@ export default function App() {
       console.warn('Error clearing school localStorage:', e);
     }
 
-    // 3. Perbarui daftar sekolah terdaftar di state aplikasi
+    // 3. Update registeredSchools in state and localStorage
+    let updatedList: RegisteredSchool[] = [];
     setRegisteredSchools(prev => {
       const updated = prev.filter(s => s.id !== schoolId && s.name.toLowerCase().trim() !== (schoolName || '').toLowerCase().trim());
-      return updated.length > 0 ? updated : initialRegisteredSchools;
+      updatedList = filterDeletedSchools(updated);
+      try {
+        localStorage.setItem('simak_registered_schools', JSON.stringify(updatedList));
+      } catch (e) {}
+      return updatedList;
     });
 
-    // 4. Jika sekolah yang dihapus sedang aktif digunakan, alihkan ke sekolah tersisa atau default
+    // 4. If deleted school was active, switch to fallback
     const currentName = (schoolName || '').toLowerCase().trim();
     if (activeSchoolId === schoolId || activeSchoolName.toLowerCase().trim() === currentName) {
-      const remaining = registeredSchools.filter(s => s.id !== schoolId && s.name.toLowerCase().trim() !== currentName);
-      const fallback = remaining[0] || initialRegisteredSchools[0];
+      const remaining = filterDeletedSchools(registeredSchools.filter(s => s.id !== schoolId && s.name.toLowerCase().trim() !== currentName));
+      const fallback = remaining[0] || {
+        id: 'sma_diponegoro_wagir',
+        name: 'SMA Diponegoro Wagir',
+        npsn: '20521404',
+        principalName: 'H. Moh. Ridwan, S.Pd., M.Si.',
+        address: 'Jl. Raya Parangargo No. 1, Wagir',
+        city: 'Kab. Malang',
+        province: 'Jawa Timur',
+        jenjang: 'SMA',
+        statusSekolah: 'Swasta',
+        akreditasi: 'A',
+        academicYear: '2026/2027',
+        semester: 'Ganjil'
+      };
       handleSelectSchoolStorage(fallback);
     }
 
@@ -703,6 +841,15 @@ export default function App() {
     } catch (e) {}
   }, [registeredUsers]);
 
+  // Keep localStorage synchronized with teacherProfiles
+  useEffect(() => {
+    try {
+      if (teacherProfiles && teacherProfiles.length > 0) {
+        localStorage.setItem('simak_teacher_profiles', JSON.stringify(teacherProfiles));
+      }
+    } catch (e) {}
+  }, [teacherProfiles]);
+
   const [showLoginScreen, setShowLoginScreen] = useState<boolean>(true);
 
   // Info Terkini Announcement state (running text below header)
@@ -1079,6 +1226,65 @@ export default function App() {
   const handleUpdateTeacherProfiles = (updatedProfiles: TeacherProfile[]) => {
     setTeacherProfiles(updatedProfiles);
     saveTeacherProfilesToFirebase(updatedProfiles);
+    try {
+      localStorage.setItem('simak_teacher_profiles', JSON.stringify(updatedProfiles));
+    } catch (e) {}
+  };
+
+  const handleDeleteGtkUser = (target: { uid?: string; email?: string; nip?: string; name?: string }) => {
+    const targetUid = target.uid;
+    const targetEmail = (target.email || '').trim().toLowerCase();
+    const targetNip = (target.nip || '').replace(/\s+/g, '').trim();
+    const targetName = (target.name || '').trim().toLowerCase();
+
+    // Prevent deleting Master Admin
+    if (
+      targetEmail === 'shahrurrobby17@gmail.com' ||
+      targetUid === 'USER-ADMIN' ||
+      targetUid === 'PROF-ADMIN'
+    ) {
+      return false;
+    }
+
+    // 1. Remove from registeredUsers
+    const updatedUsers = registeredUsers.filter(u => {
+      const uUid = u.uid;
+      const uEmail = (u.email || '').trim().toLowerCase();
+      const uNip = (u.nip || '').replace(/\s+/g, '').trim();
+      const uName = (u.name || '').trim().toLowerCase();
+
+      if (targetUid && uUid && uUid === targetUid) return false;
+      if (targetEmail && uEmail && uEmail === targetEmail) return false;
+      if (targetNip && targetNip !== '-' && uNip && uNip === targetNip) return false;
+      if (targetName && uName && uName === targetName) return false;
+      return true;
+    });
+    setRegisteredUsers(updatedUsers);
+    saveRegisteredUsersToFirebase(updatedUsers);
+    try {
+      localStorage.setItem('simak_registered_users', JSON.stringify(updatedUsers));
+    } catch (e) {}
+
+    // 2. Remove from teacherProfiles
+    const updatedProfiles = teacherProfiles.filter(p => {
+      const pId = p.id;
+      const pEmail = (p.email || '').trim().toLowerCase();
+      const pNip = (p.nip || '').replace(/\s+/g, '').trim();
+      const pName = (p.name || '').trim().toLowerCase();
+
+      if (targetUid && pId && pId === targetUid) return false;
+      if (targetEmail && pEmail && pEmail === targetEmail) return false;
+      if (targetNip && targetNip !== '-' && pNip && pNip === targetNip) return false;
+      if (targetName && pName && pName === targetName) return false;
+      return true;
+    });
+    setTeacherProfiles(updatedProfiles);
+    saveTeacherProfilesToFirebase(updatedProfiles);
+    try {
+      localStorage.setItem('simak_teacher_profiles', JSON.stringify(updatedProfiles));
+    } catch (e) {}
+
+    return true;
   };
 
   // Start real-time presence heartbeat when currentUser is active
@@ -2170,8 +2376,9 @@ export default function App() {
     } catch (e) {}
   };
 
-  // Block access completely on mobile phone (HP/Smartphone)
-  if (isMobileDevice) {
+  // Device restriction check for mobile phone (HP/Smartphone):
+  // Allow public login portal, PPDB/SPMB registration form, and PPDB management view on HP
+  if (isMobileDevice && !showLoginScreen && currentUser && activeTab !== 'ppdb-spmb') {
     return (
       <MobileDeviceRestricted
         currentWidth={viewportSize.width}
@@ -2191,6 +2398,7 @@ export default function App() {
         registeredUsers={registeredUsers}
         registeredSchools={registeredSchools}
         onRegisterNewAccount={handleRegisterNewAccount}
+        onRegisterPpdb={handleRegisterPpdb}
         onResetPassword={handleResetPassword}
         students={allStudents.length > 0 ? allStudents : students}
         grades={allGrades.length > 0 ? allGrades : grades}
@@ -2204,6 +2412,7 @@ export default function App() {
         loginBackgroundConfig={loginBackgroundConfig}
                   
         isMasterUser={isMasterUser}
+        isPpdbAccessOpen={isPpdbAccessOpen}
         onLoginSuccess={(user, profileId, targetTab) => {
           setCurrentUser(user);
           setShowLoginScreen(false);
@@ -2392,6 +2601,7 @@ export default function App() {
           attendanceRecords={allAttendanceRecords && allAttendanceRecords.length > 0 ? allAttendanceRecords : attendanceRecords}
           registeredUsers={registeredUsers}
           studentTasks={allStudentTasks && allStudentTasks.length > 0 ? allStudentTasks : studentTasks}
+          ppdbPendingCount={ppdbRegistrations.filter(r => r.status === 'Menunggu Verifikasi').length}
         />
 
         {/* Content Pane */}
@@ -2564,6 +2774,8 @@ export default function App() {
                       registeredSchools={registeredSchools}
                       activeSchoolName={activeSchoolName}
                       onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
+                      onUpdateTeacherProfiles={handleUpdateTeacherProfiles}
+                      onDeleteGtkUser={handleDeleteGtkUser}
                       onNavigateTab={(tab) => handleTabChange(tab as NavTab)}
                     />
                   )}
@@ -2627,6 +2839,8 @@ export default function App() {
                       registeredUsers={registeredUsers}
                       onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
                       teacherProfiles={teacherProfiles}
+                      onUpdateTeacherProfiles={handleUpdateTeacherProfiles}
+                      onDeleteGtkUser={handleDeleteGtkUser}
                       currentUser={currentUser}
                       teacher={teacher}
                       onUpdateTeacherProfile={handleUpdateTeacherProfile}
@@ -2648,6 +2862,8 @@ export default function App() {
                       registeredUsers={registeredUsers}
                       onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
                       teacherProfiles={teacherProfiles}
+                      onUpdateTeacherProfiles={handleUpdateTeacherProfiles}
+                      onDeleteGtkUser={handleDeleteGtkUser}
                       currentUser={currentUser}
                       teacher={teacher}
                       onUpdateTeacherProfile={handleUpdateTeacherProfile}
@@ -2664,11 +2880,44 @@ export default function App() {
                     />
                   )}
 
+                  {activeTab === 'ppdb-spmb' && (isMasterUser || isAdminSystem || isAdministrator || isKepalaSekolah) && (
+                    <PpdbRegistrationView 
+                      registrations={ppdbRegistrations}
+                      onUpdateRegistrations={handleUpdatePpdbRegistrations}
+                      onPromoteToStudent={(newStudent) => {
+                        if (newStudent.name) {
+                          const fullStudent: Student = {
+                            id: newStudent.id || `STD-${Date.now()}`,
+                            nis: newStudent.nis || '10001',
+                            nisn: newStudent.nisn || '0123456789',
+                            name: newStudent.name,
+                            gender: newStudent.gender || 'L',
+                            className: newStudent.className || (classList[0] || 'VII-A'),
+                            parentName: newStudent.parentName || '-',
+                            parentPhone: newStudent.parentPhone || '-',
+                            status: 'Aktif',
+                            schoolName: activeSchoolName
+                          };
+                          handleAddStudent(fullStudent);
+                        }
+                      }}
+                      registeredSchools={registeredSchools}
+                      activeSchoolName={activeSchoolName}
+                      classList={classList}
+                      currentUserRole={currentUser?.role || (isAdministrator ? 'Administrator' : 'Kepala Sekolah')}
+                      currentUserName={currentUser?.name || 'Administrator'}
+                      isPpdbAccessOpen={isPpdbAccessOpen}
+                      onTogglePpdbAccess={handleTogglePpdbAccess}
+                    />
+                  )}
+
                   {activeTab === 'master-data' && (isMasterUser || isAdminSystem || isAdministrator || isKepalaSekolah) && (
                     <MasterDataView 
                       registeredUsers={registeredUsers}
                       onUpdateRegisteredUsers={handleUpdateRegisteredUsers}
                       teacherProfiles={teacherProfiles}
+                      onUpdateTeacherProfiles={handleUpdateTeacherProfiles}
+                      onDeleteGtkUser={handleDeleteGtkUser}
                       currentUser={currentUser}
                       teacher={teacher}
                       onUpdateTeacherProfile={handleUpdateTeacherProfile}

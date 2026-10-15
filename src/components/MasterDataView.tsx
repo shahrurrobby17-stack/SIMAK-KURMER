@@ -71,6 +71,8 @@ interface MasterDataViewProps {
   registeredUsers: UserAccount[];
   onUpdateRegisteredUsers: (updatedUsers: UserAccount[]) => void;
   teacherProfiles?: TeacherProfile[];
+  onUpdateTeacherProfiles?: (updatedProfiles: TeacherProfile[]) => void;
+  onDeleteGtkUser?: (target: { uid?: string; email?: string; nip?: string; name?: string }) => boolean | void;
   currentUser?: UserAccount | null;
   teacher?: TeacherProfile;
   onUpdateTeacherProfile?: (newProfile: TeacherProfile) => boolean;
@@ -91,6 +93,8 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
   registeredUsers = [],
   onUpdateRegisteredUsers,
   teacherProfiles = [],
+  onUpdateTeacherProfiles,
+  onDeleteGtkUser,
   currentUser,
   teacher,
   onUpdateTeacherProfile,
@@ -205,6 +209,15 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
   const [showModuleModal, setShowModuleModal] = useState<boolean>(false);
   const [selectedUserForModule, setSelectedUserForModule] = useState<UserAccount | null>(null);
   const [activeModuleTab, setActiveModuleTab] = useState<'jadwal' | 'sinkronisasi' | 'siswa' | 'presensi' | 'presensiEkstra' | 'kelolaNilai' | 'jurnal' | 'upload-modul' | 'modul' | 'uploadModul'>('jadwal');
+
+  // Active school lookup for Penyimpanan card
+  const activeSchoolObj = registeredSchools.find(s => 
+    s.name.toLowerCase().trim() === (activeSchoolName || teacher?.schoolName || '').toLowerCase().trim()
+  ) || registeredSchools.find(s => s.npsn === teacher?.npsn) || registeredSchools[0];
+
+  const matchedSchoolName = activeSchoolObj?.name || activeSchoolName || teacher?.schoolName || 'SMA Diponegoro Wagir';
+  const matchedNpsn = activeSchoolObj?.npsn || teacher?.npsn || '20521404';
+  const matchedPrincipal = activeSchoolObj?.principalName || teacher?.principalName || 'H. Moh. Ridwan, S.Pd., M.Si.';
 
   // Form states for Add/Edit
   const [formName, setFormName] = useState<string>('');
@@ -629,6 +642,46 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
     });
 
     onUpdateRegisteredUsers(updatedUsers);
+
+    if (onDeleteGtkUser) {
+      onDeleteGtkUser({ uid: targetUid, email: targetEmail, nip: userToDelete.nip, name: targetName });
+    }
+
+    if (onUpdateTeacherProfiles && teacherProfiles) {
+      const filteredProfs = teacherProfiles.filter(p => {
+        if (targetUid && p.id === targetUid) return false;
+        if (targetEmail && p.email && p.email.trim().toLowerCase() === targetEmail) return false;
+        if (targetName && p.name && p.name.trim().toLowerCase() === targetName) return false;
+        return true;
+      });
+      onUpdateTeacherProfiles(filteredProfs);
+    }
+
+    // Also record into simak_deleted_gtk_keys and filter simak_teacher_profiles
+    try {
+      const savedGtkKeys = localStorage.getItem('simak_deleted_gtk_keys');
+      const keysSet = savedGtkKeys ? new Set(JSON.parse(savedGtkKeys)) : new Set();
+      if (targetUid) keysSet.add(targetUid);
+      if (targetEmail) keysSet.add(targetEmail);
+      if (userToDelete.nip && userToDelete.nip !== '-') keysSet.add(userToDelete.nip.replace(/\s+/g, ''));
+      if (targetName) keysSet.add(targetName);
+      localStorage.setItem('simak_deleted_gtk_keys', JSON.stringify(Array.from(keysSet)));
+    } catch (e) {}
+
+    try {
+      const savedProfs = localStorage.getItem('simak_teacher_profiles');
+      if (savedProfs) {
+        const parsedProfs: TeacherProfile[] = JSON.parse(savedProfs);
+        const filteredProfs = parsedProfs.filter(p => {
+          if (targetUid && p.id === targetUid) return false;
+          if (targetEmail && p.email && p.email.trim().toLowerCase() === targetEmail) return false;
+          if (targetName && p.name && p.name.trim().toLowerCase() === targetName) return false;
+          return true;
+        });
+        localStorage.setItem('simak_teacher_profiles', JSON.stringify(filteredProfs));
+      }
+    } catch (e) {}
+
     setShowDeleteModal(false);
     setUserToDelete(null);
     setSaveSuccessMsg(`Akun "${userToDelete.name}" telah berhasil dihapus dari Master Data.`);
@@ -981,14 +1034,14 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
             <div className="p-4 bg-slate-50 border border-slate-200 space-y-2">
               <div className="flex items-center justify-between flex-wrap gap-2">
                 <h4 className="text-sm font-black text-slate-800">
-                  {activeSchoolName || teacher?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak'}
+                  {matchedSchoolName}
                 </h4>
                 <span className="font-mono text-xs text-cyan-800 bg-cyan-50 px-2 py-0.5 border border-cyan-200">
-                  Path: /schools/{normalizeSchoolId(activeSchoolName || teacher?.schoolName || '')}
+                  Path: /schools/{normalizeSchoolId(matchedSchoolName)}
                 </span>
               </div>
               <p className="text-xs text-slate-500">
-                NPSN: <span className="font-bold text-slate-700">{teacher?.npsn || '20500000'}</span> • Kepala Sekolah: <span className="font-bold text-slate-700">{teacher?.principalName || 'Kepala Sekolah'}</span>
+                NPSN: <span className="font-bold text-slate-700">{matchedNpsn}</span> • Kepala Sekolah: <span className="font-bold text-slate-700">{matchedPrincipal}</span>
               </p>
             </div>
 
@@ -1066,6 +1119,13 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
         <TeacherSystemView
           registeredUsers={registeredUsers}
           teacher={teacher}
+          currentUser={currentUser}
+          teacherProfiles={teacherProfiles}
+          registeredSchools={registeredSchools}
+          activeSchoolName={activeSchoolName}
+          onUpdateRegisteredUsers={onUpdateRegisteredUsers}
+          onUpdateTeacherProfiles={onUpdateTeacherProfiles}
+          onDeleteGtkUser={onDeleteGtkUser}
           onNavigateTab={onNavigateTab}
           onOpenAddUserModal={(role) => handleOpenAddModal(role)}
           onOpenEditUserModal={handleOpenEditModal}

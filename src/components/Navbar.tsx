@@ -206,6 +206,15 @@ const MENU_CATALOG: SearchMenuItem[] = [
     studentAccessible: false
   },
   {
+    id: 'ppdb-spmb',
+    title: 'Data PPDB / SPMB',
+    subtitle: 'Pendaftaran Siswa Baru & Verifikasi Calon Murid',
+    category: 'Administrasi',
+    keywords: ['ppdb', 'spmb', 'pendaftaran', 'siswa baru', 'calon siswa', 'murid baru', 'zonasi', 'prestasi', 'afirmasi', 'registrasi'],
+    icon: UserCheck,
+    studentAccessible: false
+  },
+  {
     id: 'master-data',
     title: 'Monitoring Akun (Master Data)',
     subtitle: 'Master data akun SIMAK & hak akses pengguna',
@@ -611,19 +620,23 @@ export const Navbar: React.FC<NavbarProps> = ({
               ) : (
                 <button
                   type="button"
-                  onClick={onOpenSchoolSelector}
-                  className="flex items-center gap-1.5 text-left hover:bg-white/10 px-1.5 py-0.5 rounded-none transition-colors cursor-pointer group max-w-[280px] sm:max-w-xs md:max-w-md"
-                  title="Klik untuk melihat atau beralih partisi penyimpanan sekolah"
+                  onClick={(!isAdministrator && activeTab !== 'system-schools') ? onOpenSchoolSelector : undefined}
+                  className={`flex items-center gap-1.5 text-left px-1.5 py-0.5 rounded-none transition-colors group max-w-[280px] sm:max-w-xs md:max-w-md ${(!isAdministrator && activeTab !== 'system-schools') ? 'hover:bg-white/10 cursor-pointer' : 'cursor-default'}`}
+                  title={(!isAdministrator && activeTab !== 'system-schools') ? "Klik untuk melihat atau beralih partisi penyimpanan sekolah" : "Identitas Satuan Pendidikan SIMAK"}
                 >
                   <div className="min-w-0">
                     <div className="flex items-center gap-1 min-w-0">
-                      <span className="text-[8px] uppercase tracking-wider bg-cyan-900/80 text-cyan-200 border border-cyan-400/40 px-1 py-0.1 font-bold shrink-0">
-                        Penyimpanan
-                      </span>
+                      {!isAdministrator && activeTab !== 'system-schools' && (
+                        <span className="text-[8px] uppercase tracking-wider bg-cyan-900/80 text-cyan-200 border border-cyan-400/40 px-1 py-0.1 font-bold shrink-0">
+                          Penyimpanan
+                        </span>
+                      )}
                       <p className="text-[11px] sm:text-xs md:text-sm text-white font-bold tracking-tight truncate leading-tight group-hover:text-cyan-200 transition-colors">
                         {teacher?.schoolName || currentUser?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak'}
                       </p>
-                      <Database className="w-3 h-3 text-cyan-300 opacity-75 group-hover:opacity-100 shrink-0" />
+                      {!isAdministrator && activeTab !== 'system-schools' && (
+                        <Database className="w-3 h-3 text-cyan-300 opacity-75 group-hover:opacity-100 shrink-0" />
+                      )}
                     </div>
                     {!isStudentPage && (
                       <span className="block text-[10px] sm:text-[11px] text-slate-200 font-medium truncate">
@@ -639,7 +652,7 @@ export const Navbar: React.FC<NavbarProps> = ({
 
         {/* Mobile Action Buttons (Logout on HP) */}
         <div className="md:hidden flex items-center gap-1.5 shrink-0">
-          {onOpenSchoolSelector && !isKepalaSekolah && !isGuruRole && !isKurikulumPage && !isSarprasPage && !isKesiswaanPage && !isKeuanganPage && (
+          {onOpenSchoolSelector && !isAdministrator && activeTab !== 'system-schools' && !isKepalaSekolah && !isGuruRole && !isKurikulumPage && !isSarprasPage && !isKesiswaanPage && !isKeuanganPage && (
             <button
               type="button"
               onClick={onOpenSchoolSelector}
@@ -665,7 +678,7 @@ export const Navbar: React.FC<NavbarProps> = ({
         {/* Right Side: Filter Kelas & Kolom Cari Menu */}
         <div className="flex items-center justify-end gap-2 md:gap-2.5 shrink-0 ml-auto">
           {/* Quick Switch School Storage button on Desktop */}
-          {onOpenSchoolSelector && !isKepalaSekolah && !isGuruRole && !isKurikulumPage && !isSarprasPage && !isKesiswaanPage && !isKeuanganPage && (
+          {onOpenSchoolSelector && !isAdministrator && activeTab !== 'system-schools' && !isKepalaSekolah && !isGuruRole && !isKurikulumPage && !isSarprasPage && !isKesiswaanPage && !isKeuanganPage && (
             <button
               type="button"
               onClick={onOpenSchoolSelector}

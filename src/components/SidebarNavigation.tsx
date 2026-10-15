@@ -35,12 +35,14 @@ import {
   FileCheck,
   AlertOctagon,
   School,
-  X
+  X,
+  UserPlus
 } from 'lucide-react';
 
 export type NavTab = 
   | 'dashboard' 
   | 'login-logs'
+  | 'ppdb-spmb'
   | 'attendance' 
   | 'grades' 
   | 'extra-tasks' 
@@ -94,6 +96,7 @@ interface SidebarNavigationProps {
   attendanceRecords?: AttendanceRecord[];
   registeredUsers?: UserAccount[];
   studentTasks?: StudentTask[];
+  ppdbPendingCount?: number;
   isOpen?: boolean;
   onClose?: () => void;
 }
@@ -117,6 +120,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
   attendanceRecords,
   registeredUsers,
   studentTasks,
+  ppdbPendingCount = 0,
   isOpen = true,
   onClose
 }) => {
@@ -433,6 +437,14 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     subtitle: 'Log Pengguna Login',
     icon: Clock,
     badge: null
+  };
+
+  const ppdbItem = {
+    id: 'ppdb-spmb' as NavTab,
+    label: 'Data PPDB/SPMB',
+    subtitle: 'Pendaftaran Siswa Baru',
+    icon: UserPlus,
+    badge: ppdbPendingCount > 0 ? `${ppdbPendingCount} Baru` : null
   };
 
   const gtkItem = {
@@ -977,6 +989,9 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
 
               {/* Menu Log / Riwayat Pengguna Login - Tepat di atas Menu Master Data (Khusus Administrator Saja) */}
               {isAdministrator && renderDesktopItem(loginLogsItem, isMobileDrawer)}
+
+              {/* Menu Data PPDB/SPMB - Tepat di atas Menu Master Data (Khusus Administrator & Kepala Sekolah) */}
+              {(isAdministrator || isKepalaSekolah) && renderDesktopItem(ppdbItem, isMobileDrawer)}
 
               {/* Master Data Section */}
               {!isStudentRole && (

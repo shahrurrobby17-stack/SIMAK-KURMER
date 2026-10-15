@@ -20,7 +20,8 @@ import {
   onSnapshot, 
   getDocs 
 } from 'firebase/firestore';
-import { RegisteredSchool } from '../types';
+import { RegisteredSchool, PpdbRegistration } from '../types';
+import { initialPpdbRegistrations } from '../data/initialPpdbData';
 
 /**
  * Normalizes any school name into a valid, safe, unique Firestore document ID
@@ -146,6 +147,71 @@ export const initialRegisteredSchools: RegisteredSchool[] = deduplicateSchools([
   }
 ]);
 
+export const getDeletedSchoolKeys = (): Set<string> => {
+  try {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('simak_deleted_school_ids');
+      if (saved) {
+        return new Set(JSON.parse(saved));
+      }
+    }
+  } catch (e) {}
+  return new Set<string>();
+};
+
+export const addDeletedSchoolKey = (schoolId: string, schoolName?: string, npsn?: string) => {
+  try {
+    if (typeof window !== 'undefined') {
+      const keys = getDeletedSchoolKeys();
+      if (schoolId) keys.add(schoolId.toLowerCase().trim());
+      if (schoolName) keys.add(schoolName.toLowerCase().trim());
+      if (npsn) keys.add(npsn.toLowerCase().trim());
+      localStorage.setItem('simak_deleted_school_ids', JSON.stringify(Array.from(keys)));
+    }
+  } catch (e) {}
+};
+
+export const filterDeletedSchools = (schools: RegisteredSchool[]): RegisteredSchool[] => {
+  const deletedKeys = getDeletedSchoolKeys();
+  let savedLocalList: RegisteredSchool[] | null = null;
+  try {
+    if (typeof window !== 'undefined') {
+      const saved = localStorage.getItem('simak_registered_schools');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          savedLocalList = parsed;
+        }
+      }
+    }
+  } catch (e) {}
+
+  const deduped = deduplicateSchools(schools || []);
+
+  return deduped.filter(s => {
+    const idNorm = (s.id || '').toLowerCase().trim();
+    const nameNorm = (s.name || '').toLowerCase().trim();
+    const npsnNorm = (s.npsn || '').toLowerCase().trim();
+
+    if (deletedKeys.size > 0) {
+      if (idNorm && deletedKeys.has(idNorm)) return false;
+      if (nameNorm && deletedKeys.has(nameNorm)) return false;
+      if (npsnNorm && deletedKeys.has(npsnNorm)) return false;
+    }
+
+    if (savedLocalList && savedLocalList.length > 0) {
+      const isInLocal = savedLocalList.some(local => 
+        (local.id && local.id.toLowerCase().trim() === idNorm) ||
+        (local.name && local.name.toLowerCase().trim() === nameNorm) ||
+        (local.npsn && local.npsn.toLowerCase().trim() === npsnNorm)
+      );
+      if (!isInLocal) return false;
+    }
+
+    return true;
+  });
+};
+
 export const subscribeToRegisteredSchools = (callback: (schools: RegisteredSchool[]) => void) => {
   return onSnapshot(collection(db, 'schools'), (snap) => {
     const list: RegisteredSchool[] = [];
@@ -156,13 +222,13 @@ export const subscribeToRegisteredSchools = (callback: (schools: RegisteredSchoo
       }
     });
     if (list.length > 0) {
-      callback(deduplicateSchools(list));
+      callback(filterDeletedSchools(list));
     } else {
-      callback(deduplicateSchools(initialRegisteredSchools));
+      callback(filterDeletedSchools(initialRegisteredSchools));
     }
   }, (err) => {
     console.warn('Error subscribing to schools collection:', err);
-    callback(deduplicateSchools(initialRegisteredSchools));
+    callback(filterDeletedSchools(initialRegisteredSchools));
   });
 };
 
@@ -183,14 +249,15 @@ export const registerSchoolToFirebase = async (school: Partial<RegisteredSchool>
   return payload;
 };
 
-export const deleteSchoolFromFirebase = async (schoolId: string) => {
+export const deleteSchoolFromFirebase = async (schoolId: string, schoolName?: string) => {
+  addDeletedSchoolKey(schoolId, schoolName);
   try {
     const docRef = doc(db, 'schools', schoolId);
     await deleteDoc(docRef);
     return true;
   } catch (err) {
     console.error('Error deleting school from Firebase:', err);
-    throw err;
+    return true;
   }
 };
 
@@ -848,3 +915,106 @@ export const subscribeToTeacherProfiles = (callback: (data: any) => void, scope:
     }
   });
 };
+
+/* ==================== PPDB / SPMB REGISTRATIONS ==================== */
+
+export const savePpdbRegistrationToFirebase = async (item: PpdbRegistration) => {
+  if (item && item.id) {
+    const sampleIds = ['SPMB-1718290001', 'SPMB-1718290002', 'SPMB-1718290003'];
+    try {
+      const cleanItem = JSON.parse(JSON.stringify(item));
+      await setDoc(doc(db, 'ppdbRegistrations', item.id), cleanItem, { merge: true });
+      
+      const savedLocal = typeof window !== 'undefined' ? localStorage.getItem('simak_ppdb_registrations') : null;
+      let currentList: PpdbRegistration[] = savedLocal ? JSON.parse(savedLocal).filter((r: PpdbRegistration) => !sampleIds.includes(r.id)) : [];
+      const existingIdx = currentList.findIndex(r => r.id === item.id);
+      if (existingIdx >= 0) {
+        currentList[existingIdx] = cleanItem;
+      } else {
+        currentList = [cleanItem, ...currentList];
+      }
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('simak_ppdb_registrations', JSON.stringify(currentList));
+      }
+      await setDoc(doc(db, 'settings', 'ppdbRegistrations'), { items: currentList }, { merge: true });
+    } catch (e) {
+      console.warn('savePpdbRegistrationToFirebase error, saving locally:', e);
+      if (typeof window !== 'undefined') {
+        const savedLocal = localStorage.getItem('simak_ppdb_registrations');
+        let currentList: PpdbRegistration[] = savedLocal ? JSON.parse(savedLocal).filter((r: PpdbRegistration) => !sampleIds.includes(r.id)) : [];
+        const existingIdx = currentList.findIndex(r => r.id === item.id);
+        if (existingIdx >= 0) {
+          currentList[existingIdx] = item;
+        } else {
+          currentList = [item, ...currentList];
+        }
+        localStorage.setItem('simak_ppdb_registrations', JSON.stringify(currentList));
+      }
+    }
+  }
+};
+
+export const savePpdbRegistrationsBatchToFirebase = async (items: PpdbRegistration[]) => {
+  try {
+    const cleanList = JSON.parse(JSON.stringify(items));
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_ppdb_registrations', JSON.stringify(cleanList));
+    }
+    await setDoc(doc(db, 'settings', 'ppdbRegistrations'), { items: cleanList }, { merge: true });
+  } catch (e) {
+    console.warn('savePpdbRegistrationsBatchToFirebase error:', e);
+  }
+};
+
+export const deletePpdbRegistrationFromFirebase = async (id: string) => {
+  if (id) {
+    try {
+      await deleteDoc(doc(db, 'ppdbRegistrations', id));
+      if (typeof window !== 'undefined') {
+        const saved = localStorage.getItem('simak_ppdb_registrations');
+        if (saved) {
+          const list: PpdbRegistration[] = JSON.parse(saved).filter((r: PpdbRegistration) => r.id !== id);
+          localStorage.setItem('simak_ppdb_registrations', JSON.stringify(list));
+          await setDoc(doc(db, 'settings', 'ppdbRegistrations'), { items: list }, { merge: true });
+        }
+      }
+    } catch (e) {
+      console.warn('deletePpdbRegistrationFromFirebase error:', e);
+    }
+  }
+};
+
+export const subscribeToPpdbRegistrations = (callback: (data: PpdbRegistration[] | null) => void) => {
+  return onSnapshot(doc(db, 'settings', 'ppdbRegistrations'), (snap) => {
+    if (snap.exists()) {
+      const data = snap.data();
+      callback(data.items !== undefined ? data.items : data);
+    } else {
+      callback(null);
+    }
+  });
+};
+
+export const savePpdbAccessConfigToFirebase = async (isOpen: boolean) => {
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_ppdb_access_open', JSON.stringify(isOpen));
+    }
+    await setDoc(doc(db, 'settings', 'ppdbAccessConfig'), { isOpen, updatedAt: new Date().toISOString() }, { merge: true });
+  } catch (e) {
+    console.warn('savePpdbAccessConfigToFirebase error:', e);
+  }
+};
+
+export const subscribeToPpdbAccessConfig = (callback: (isOpen: boolean) => void) => {
+  return onSnapshot(doc(db, 'settings', 'ppdbAccessConfig'), (snap) => {
+    if (snap.exists()) {
+      const data = snap.data();
+      callback(data.isOpen !== undefined ? Boolean(data.isOpen) : true);
+    } else {
+      callback(true);
+    }
+  });
+};
+
+

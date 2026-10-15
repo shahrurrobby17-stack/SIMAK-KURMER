@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { subscribeToUserPresence, UserPresence, getLocalPresenceMap } from '../lib/userPresenceService';
 import {
   RefreshCw,
   BookOpen,
@@ -76,10 +77,51 @@ export const AdminExecutiveAnalytics: React.FC<AdminExecutiveAnalyticsProps> = (
   const [selectedCategory, setSelectedCategory] = useState<AnalyticCategory>('Semua');
   const [searchQuery, setSearchQuery] = useState<string>('');
 
+  // Real-time presence state for administrator executive overview
+  const [presenceMap, setPresenceMap] = useState<Record<string, UserPresence>>(() => {
+    try {
+      return getLocalPresenceMap();
+    } catch {
+      return {};
+    }
+  });
+  const [liveTicker, setLiveTicker] = useState<number>(Date.now());
+
+  useEffect(() => {
+    const unsub = subscribeToUserPresence((map) => {
+      setPresenceMap(map);
+    });
+    const interval = setInterval(() => {
+      setLiveTicker(Date.now());
+    }, 2500);
+    return () => {
+      unsub();
+      clearInterval(interval);
+    };
+  }, []);
+
   // Dynamically compute real metrics where applicable
   const totalStudents = students.length > 0 ? students.length : 482;
   const activeTeachersCount = teacherProfiles.length > 0 ? teacherProfiles.length : 42;
   const registeredUsersCount = registeredUsers.length > 0 ? registeredUsers.length : 42;
+
+  // Real-time online users evaluation
+  const realtimeOnlineUsers = useMemo(() => {
+    const now = Date.now();
+    const onlineList: Array<{ name: string; role: string; email: string }> = [];
+    
+    // Check registered users
+    for (const u of registeredUsers) {
+      const emailLower = (u.email || '').toLowerCase().trim();
+      const p = presenceMap[emailLower];
+      const isCurrent = currentUser?.email && currentUser.email.toLowerCase().trim() === emailLower;
+      const isOnline = isCurrent || (p && p.isOnline && (now - (p.lastSeenMillis || 0) < 60000));
+      if (isOnline) {
+        onlineList.push({ name: u.name || 'Pengguna', role: u.role || 'GTK', email: emailLower });
+      }
+    }
+    return onlineList;
+  }, [registeredUsers, presenceMap, currentUser, liveTicker]);
 
   // Grades calculation
   const totalGrades = grades.length;
@@ -430,6 +472,54 @@ export const AdminExecutiveAnalytics: React.FC<AdminExecutiveAnalyticsProps> = (
 
   return (
     <div className="space-y-6">
+      {/* Realtime User Session Status Banner for Administrator */}
+      <div className="bg-gradient-to-r from-slate-900 via-[#164e63] to-slate-900 text-white p-3.5 sm:p-4 rounded-none border border-cyan-800/60 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="relative flex items-center justify-center">
+            <span className="w-3 h-3 rounded-full bg-emerald-400 animate-ping absolute" />
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 relative z-10" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-[10px] font-black tracking-widest uppercase bg-emerald-500/20 text-emerald-300 px-2 py-0.5 border border-emerald-400/30">
+                Live Session Realtime
+              </span>
+              <span className="text-xs sm:text-sm font-bold text-white">
+                Status Sesi Pengguna: <strong className="text-emerald-300 font-extrabold">{realtimeOnlineUsers.length} Akun Sedang Online</strong>
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300 mt-0.5">
+              Sinkronisasi presensi real-time antar tab dan perangkat aktif • {registeredUsers.length - realtimeOnlineUsers.length} akun sedang offline
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap self-start md:self-auto">
+          {realtimeOnlineUsers.slice(0, 3).map((u, i) => (
+            <span key={i} className="text-[10px] font-semibold bg-white/10 text-cyan-100 px-2 py-1 border border-white/10 flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              <span className="truncate max-w-[120px]">{u.name}</span>
+            </span>
+          ))}
+          {realtimeOnlineUsers.length > 3 && (
+            <span className="text-[10px] text-cyan-200 font-bold bg-white/10 px-1.5 py-1">
+              +{realtimeOnlineUsers.length - 3} lainnya
+            </span>
+          )}
+          {onNavigateTab && (
+            <button
+              type="button"
+              onClick={() => onNavigateTab('master-data')}
+              className="text-[11px] font-bold bg-amber-400 hover:bg-amber-300 text-slate-950 px-3 py-1 transition-colors cursor-pointer flex items-center gap-1 shrink-0 ml-1"
+              title="Buka Monitoring Akun & Hak Akses Pengguna"
+            >
+              <span>Audit Akun</span>
+              <ArrowUpRight className="w-3 h-3 stroke-[2.5]" />
+            </button>
+          )}
+        </div>
+      </div>
+
       {/* KPI Overview Summary Bar (4 High-level Strategic Pillars) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Pillar 1: Validasi & Sinkron */}
