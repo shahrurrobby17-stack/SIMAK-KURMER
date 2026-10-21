@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { Database, Loader2 } from 'lucide-react';
 
 interface SaveSuccessModalProps {
   isOpen: boolean;
@@ -45,12 +46,12 @@ export const SaveSuccessModal: React.FC<SaveSuccessModalProps> = ({
         setPhase('success');
       }, 700);
 
-      // No auto close, wait for user click
-
       return () => {
         clearTimeout(timer1);
         if (timer2Ref.current) clearTimeout(timer2Ref.current);
       };
+    } else {
+      setPhase('saving');
     }
   }, [isOpen, autoCloseDelay, onClose, hasDataLockAlert]);
 
@@ -89,16 +90,18 @@ export const SaveSuccessModal: React.FC<SaveSuccessModalProps> = ({
                   >
                     {/* Spinning Outer Ring */}
                     <motion.div
-                      animate={{ rotate: 360 }}
+                      animate={{ rotate: [0, 360] }}
                       transition={{ repeat: Infinity, duration: 0.85, ease: "linear" }}
                       className="w-16 h-16 border-4 border-slate-200 border-t-[#164e63] border-r-[#164e63] rounded-full"
                     />
-                    {/* Inner Pulse Circle */}
+                    {/* Inner Pulse Circle with Icon */}
                     <motion.div
                       animate={{ scale: [0.85, 1.05, 0.85] }}
                       transition={{ repeat: Infinity, duration: 1.2, ease: "easeInOut" }}
-                      className="absolute w-8 h-8 bg-cyan-100 rounded-full"
-                    />
+                      className="absolute w-9 h-9 bg-cyan-100 rounded-full flex items-center justify-center text-[#164e63]"
+                    >
+                      <Database className="w-4 h-4 text-[#164e63]" />
+                    </motion.div>
                   </motion.div>
                 ) : (
                   <motion.div
@@ -134,6 +137,16 @@ export const SaveSuccessModal: React.FC<SaveSuccessModalProps> = ({
               <h3 className="text-base font-bold text-slate-800">
                 {phase === 'saving' ? 'Memproses Penyimpanan...' : title}
               </h3>
+
+              {phase === 'saving' ? (
+                <p className="text-xs text-slate-500 mt-1 animate-pulse">
+                  Memproses dan menyinkronkan data ke database...
+                </p>
+              ) : (
+                <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                  {message}
+                </p>
+              )}
               
               {/* OKE Button when success */}
               {phase === 'success' && (

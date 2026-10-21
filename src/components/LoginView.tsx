@@ -752,12 +752,40 @@ export const LoginView: React.FC<LoginViewProps> = ({
       } as UserAccount;
     }
 
-    // 2b. Check built-in system accounts for roles (Kepala Sekolah, Kurikulum, TU, Keuangan, Kesiswaan, Sarpras)
+    // 2b. Check built-in system accounts for roles (TU, Kurikulum, Kepala Sekolah, Keuangan, Kesiswaan, Sarpras)
+    const isTuMatch = 
+      cleanInputLower === 'tu@simakmerdeka.ai.studio' || 
+      cleanInputLower.includes('tatausaha') || 
+      cleanInputLower.includes('tata_usaha') ||
+      cleanInputLower.includes('tata-usaha') ||
+      cleanInputLower.startsWith('tu@') || 
+      cleanInputLower.includes('.tu@') ||
+      cleanInputLower.includes('tu_') ||
+      cleanInputLower.includes('tu-') ||
+      cleanInputNip === '198204152008011009';
+
+    if (isTuMatch) {
+      return {
+        uid: 'USER-TU-01',
+        email: cleanInputLower.includes('@') ? cleanInputLower : 'tu@simakmerdeka.ai.studio',
+        name: 'Rahmat Hidayat, S.Sos.',
+        role: 'Kepala Tata Usaha / Staf TU',
+        schoolName: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
+        nip: '19820415 200801 1 009',
+        profileId: 'PROF-TU',
+        status: 'Aktif',
+        isMaintenance: false
+      } as UserAccount;
+    }
+
     const isKepalaSekolahMatch = 
       cleanInputLower === 'kepalasekolah@simakmerdeka.ai.studio' ||
-      cleanInputLower.includes('kepala') || 
-      cleanInputLower.includes('kepsek') || 
-      cleanInputLower.includes('principal') || 
+      (
+        ((cleanInputLower.includes('kepala') && !cleanInputLower.includes('tu') && !cleanInputLower.includes('tata')) || 
+         cleanInputLower.includes('kepsek') || 
+         cleanInputLower.includes('principal')) &&
+        !cleanInputLower.includes('tu') && !cleanInputLower.includes('tata')
+      ) || 
       cleanInputLower.startsWith('ks@') ||
       cleanInputLower.includes('ks.') ||
       cleanInputLower.includes('.ks@') ||
@@ -797,20 +825,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
         schoolName: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
         nip: '19750821 200003 1 002',
         profileId: 'PROF-KURIKULUM',
-        status: 'Aktif',
-        isMaintenance: false
-      } as UserAccount;
-    }
-
-    if (cleanInputLower === 'tu@simakmerdeka.ai.studio' || cleanInputLower.includes('tatausaha') || cleanInputLower.startsWith('tu@') || cleanInputNip === '198204152008011009') {
-      return {
-        uid: 'USER-TU-01',
-        email: cleanInputLower.includes('@') ? cleanInputLower : 'tu@simakmerdeka.ai.studio',
-        name: 'Rahmat Hidayat, S.Sos.',
-        role: 'Kepala Tata Usaha / Staf TU',
-        schoolName: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
-        nip: '19820415 200801 1 009',
-        profileId: 'PROF-TU',
         status: 'Aktif',
         isMaintenance: false
       } as UserAccount;
@@ -970,11 +984,46 @@ export const LoginView: React.FC<LoginViewProps> = ({
       return;
     }
 
-    // Detect Kepala Sekolah SSO role immediately
+    // 1. Detect TU (Tata Usaha) SSO role immediately
+    const isTuInput = 
+      cleanLower.includes('tatausaha') || 
+      cleanLower.includes('tata_usaha') ||
+      cleanLower.includes('tata-usaha') ||
+      cleanLower.startsWith('tu@') || 
+      cleanLower.includes('.tu@') ||
+      cleanLower.includes('tu_') ||
+      cleanLower.includes('tu-') ||
+      cleanLower === 'tu@simakmerdeka.ai.studio' || 
+      cleanLower.replace(/\s+/g, '') === '198204152008011009' ||
+      Boolean(matchedLoginAccount?.role && (
+        matchedLoginAccount.role.toLowerCase().includes('tu') ||
+        matchedLoginAccount.role.toLowerCase().includes('tata usaha') ||
+        matchedLoginAccount.role.toLowerCase().includes('administrasi')
+      ));
+
+    if (isTuInput) {
+      setIsTeacherLogin(false);
+      setIsMasterDataLogin(true);
+      setSsoSystem('TU');
+      return;
+    }
+
+    // 2. Detect Kurikulum SSO role
+    if (cleanLower.includes('kurikulum') || cleanLower.replace(/\s+/g, '') === '197508212000031002') {
+      setIsTeacherLogin(false);
+      setIsMasterDataLogin(true);
+      setSsoSystem('Kurikulum');
+      return;
+    }
+
+    // 3. Detect Kepala Sekolah SSO role
     const isKepalaSekolahInput = 
-      cleanLower.includes('kepala') || 
-      cleanLower.includes('kepsek') || 
-      cleanLower.includes('principal') || 
+      (
+        ((cleanLower.includes('kepala') && !cleanLower.includes('tu') && !cleanLower.includes('tata')) || 
+         cleanLower.includes('kepsek') || 
+         cleanLower.includes('principal')) &&
+        !cleanLower.includes('tu') && !cleanLower.includes('tata')
+      ) || 
       cleanLower.startsWith('ks@') ||
       cleanLower.includes('ks.') ||
       cleanLower.includes('.ks@') ||
@@ -991,7 +1040,9 @@ export const LoginView: React.FC<LoginViewProps> = ({
       cleanLower.replace(/\s+/g, '') === '196911201994031003' ||
       cleanLower.replace(/\s+/g, '') === '196911201994032003' ||
       Boolean(matchedLoginAccount?.role && (
-        matchedLoginAccount.role.toLowerCase().includes('kepala') ||
+        (matchedLoginAccount.role.toLowerCase().includes('kepala') && 
+         !matchedLoginAccount.role.toLowerCase().includes('tu') && 
+         !matchedLoginAccount.role.toLowerCase().includes('tata')) ||
         matchedLoginAccount.role.toLowerCase().includes('principal') ||
         matchedLoginAccount.role.toLowerCase().includes('kepsek')
       ));
@@ -1002,18 +1053,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
       setSsoSystem('Kepala Sekolah');
       return;
     }
-    if (cleanLower.includes('kurikulum') || cleanLower.replace(/\s+/g, '') === '197508212000031002') {
-      setIsTeacherLogin(false);
-      setIsMasterDataLogin(true);
-      setSsoSystem('Kurikulum');
-      return;
-    }
-    if (cleanLower.includes('tatausaha') || cleanLower.startsWith('tu@') || cleanLower === 'tu@simakmerdeka.ai.studio' || cleanLower.replace(/\s+/g, '') === '198204152008011009') {
-      setIsTeacherLogin(false);
-      setIsMasterDataLogin(true);
-      setSsoSystem('TU');
-      return;
-    }
+
     if (cleanLower.includes('keuangan') || cleanLower.includes('bendahara') || cleanLower.replace(/\s+/g, '') === '198511252010012005') {
       setIsTeacherLogin(false);
       setIsMasterDataLogin(true);
@@ -1050,9 +1090,9 @@ export const LoginView: React.FC<LoginViewProps> = ({
       } else {
         setIsTeacherLogin(false);
         setIsMasterDataLogin(true);
-        if (roleLower.includes('kepala')) setSsoSystem('Kepala Sekolah');
+        if (roleLower.includes('tu') || roleLower.includes('tata usaha') || roleLower.includes('administrasi')) setSsoSystem('TU');
         else if (roleLower.includes('kurikulum')) setSsoSystem('Kurikulum');
-        else if (roleLower.includes('tu') || roleLower.includes('tata usaha')) setSsoSystem('TU');
+        else if (roleLower.includes('kepala')) setSsoSystem('Kepala Sekolah');
         else if (roleLower.includes('sarpras')) setSsoSystem('Sarpras');
         else if (roleLower.includes('keuangan') || roleLower.includes('bendahara')) setSsoSystem('Keuangan');
         else if (roleLower.includes('kesiswaan')) setSsoSystem('Kesiswaan');
@@ -1484,11 +1524,11 @@ export const LoginView: React.FC<LoginViewProps> = ({
     if (norm.includes('kurikulum')) {
       return { targetTab: 'system-kurikulum', userRole: 'Tim Kurikulum / Pengelola KSP', systemName: 'Sistem Kurikulum Merdeka' };
     }
-    if (norm.includes('kepala') || norm.includes('principal') || norm.includes('kepsek') || norm === 'ks') {
-      return { targetTab: 'validasi', userRole: 'Kepala Sekolah', systemName: 'Sistem Manajemen Kepala Sekolah' };
-    }
-    if (norm.includes('tu') || norm.includes('tata usaha')) {
+    if (norm.includes('tu') || norm.includes('tata usaha') || norm.includes('administrasi')) {
       return { targetTab: 'system-tu', userRole: 'Kepala Tata Usaha / Staf TU', systemName: 'Sistem Tata Usaha (TU)' };
+    }
+    if ((norm.includes('kepala') && !norm.includes('tu') && !norm.includes('tata')) || norm.includes('principal') || norm.includes('kepsek') || norm === 'ks') {
+      return { targetTab: 'validasi', userRole: 'Kepala Sekolah', systemName: 'Sistem Manajemen Kepala Sekolah' };
     }
     if (norm.includes('sarpras') || norm.includes('sarana')) {
       return { targetTab: 'system-sarpras', userRole: 'Pengelola Sarpras', systemName: 'Sistem Sarana & Prasarana' };
@@ -1522,14 +1562,14 @@ export const LoginView: React.FC<LoginViewProps> = ({
     if (choiceNorm.includes('administrator') || choiceNorm.includes('admin') || choiceNorm.includes('master')) {
       return roleNorm.includes('admin') || roleNorm.includes('master') || roleNorm.includes('super');
     }
+    if (choiceNorm.includes('tu') || choiceNorm.includes('tata usaha')) {
+      return roleNorm.includes('tu') || roleNorm.includes('tata usaha') || roleNorm.includes('administrasi');
+    }
     if (choiceNorm.includes('kepala') || choiceNorm.includes('principal')) {
-      return roleNorm.includes('kepala') || roleNorm.includes('principal');
+      return (roleNorm.includes('kepala') && !roleNorm.includes('tu') && !roleNorm.includes('tata')) || roleNorm.includes('principal');
     }
     if (choiceNorm.includes('kurikulum')) {
       return roleNorm.includes('kurikulum') || roleNorm.includes('ksp');
-    }
-    if (choiceNorm.includes('tu') || choiceNorm.includes('tata usaha')) {
-      return roleNorm.includes('tu') || roleNorm.includes('tata usaha') || roleNorm.includes('administrasi');
     }
     if (choiceNorm.includes('sarpras') || choiceNorm.includes('sarana')) {
       return roleNorm.includes('sarpras') || roleNorm.includes('sarana');
@@ -4647,6 +4687,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
                         </>
                       )}
                     </button>
+
+
 
 
 

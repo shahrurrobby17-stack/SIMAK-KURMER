@@ -169,6 +169,9 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       currentUser.role.toLowerCase().includes('kepala') ||
       currentUser.role.toLowerCase().includes('principal')
     ) && (
+      !currentUser.role.toLowerCase().includes('tu') &&
+      !currentUser.role.toLowerCase().includes('tata') &&
+      !currentUser.role.toLowerCase().includes('administrasi') &&
       !currentUser.role.toLowerCase().includes('wakil') &&
       !currentUser.role.toLowerCase().includes('wakasek') &&
       !currentUser.role.toLowerCase().includes('waka') &&
