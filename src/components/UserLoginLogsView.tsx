@@ -57,6 +57,7 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
   const [selectedRoleFilter, setSelectedRoleFilter] = useState<string>('Semua');
   const [selectedStatusFilter, setSelectedStatusFilter] = useState<'Semua' | 'Berhasil' | 'Gagal'>('Semua');
   const [selectedDeviceFilter, setSelectedDeviceFilter] = useState<'Semua' | 'Desktop' | 'Mobile' | 'Tablet'>('Semua');
+  const [hideDuplicates, setHideDuplicates] = useState<boolean>(true);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [showClearConfirmModal, setShowClearConfirmModal] = useState<boolean>(false);
   const [selectedDetailLog, setSelectedDetailLog] = useState<UserLoginLog | null>(null);
@@ -116,9 +117,9 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
     setTimeout(() => setNotificationMsg(null), 3000);
   };
 
-  // Filtered logs
+  // Filtered logs (with user deduplication)
   const filteredLogs = useMemo(() => {
-    return logs.filter(log => {
+    const matched = logs.filter(log => {
       // Query filter
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -159,7 +160,25 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
 
       return true;
     });
-  }, [logs, searchQuery, selectedSchoolFilter, selectedRoleFilter, selectedStatusFilter, selectedDeviceFilter]);
+
+    if (!hideDuplicates) {
+      return matched;
+    }
+
+    // Deduplicate by user key (email or lowercased name) keeping the latest login entry per user
+    const seenUsers = new Set<string>();
+    const deduplicated: UserLoginLog[] = [];
+
+    for (const log of matched) {
+      const userKey = (log.email || log.name || log.userId || '').toLowerCase().trim();
+      if (!userKey || !seenUsers.has(userKey)) {
+        if (userKey) seenUsers.add(userKey);
+        deduplicated.push(log);
+      }
+    }
+
+    return deduplicated;
+  }, [logs, searchQuery, selectedSchoolFilter, selectedRoleFilter, selectedStatusFilter, selectedDeviceFilter, hideDuplicates]);
 
   // Statistics calculation
   const stats = useMemo(() => {
@@ -432,12 +451,30 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
               <option value="Mobile">Mobile (Smartphone)</option>
               <option value="Tablet">Tablet</option>
             </select>
+
+            {/* Deduplication Toggle Button */}
+            <button
+              type="button"
+              onClick={() => setHideDuplicates(!hideDuplicates)}
+              className={`flex items-center gap-1.5 px-3 py-2.5 rounded-xl border text-xs sm:text-sm font-semibold transition-all cursor-pointer ${
+                hideDuplicates
+                  ? 'bg-cyan-50 text-[#164e63] border-cyan-300 font-bold shadow-2xs'
+                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-slate-100'
+              }`}
+              title={hideDuplicates ? 'Klik untuk menampilkan seluruh histori termasuk login berulang' : 'Klik untuk menyembunyikan duplikasi nama pengguna'}
+            >
+              <Layers className="w-4 h-4 text-[#164e63]" />
+              <span>{hideDuplicates ? 'Tanpa Nama Ganda' : 'Tampilkan Semua Sesi'}</span>
+            </button>
           </div>
         </div>
 
-        <div className="flex items-center justify-between text-xs text-slate-500 font-medium pt-1 border-t border-slate-100">
-          <span>Menampilkan <strong>{filteredLogs.length}</strong> dari total <strong>{logs.length}</strong> riwayat login tercatat lintas seluruh sekolah</span>
-          {(searchQuery || selectedSchoolFilter !== 'Semua' || selectedRoleFilter !== 'Semua' || selectedStatusFilter !== 'Semua' || selectedDeviceFilter !== 'Semua') && (
+        <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 font-medium pt-1 border-t border-slate-100">
+          <span>
+            Menampilkan <strong>{filteredLogs.length}</strong> {hideDuplicates ? 'pengguna unik (login terbaru)' : 'catatan riwayat login'} dari total <strong>{logs.length}</strong> entri tercatat
+            {hideDuplicates && <span className="ml-1 text-[#164e63] font-semibold">(tanpa duplikasi nama)</span>}
+          </span>
+          {(searchQuery || selectedSchoolFilter !== 'Semua' || selectedRoleFilter !== 'Semua' || selectedStatusFilter !== 'Semua' || selectedDeviceFilter !== 'Semua' || !hideDuplicates) && (
             <button
               type="button"
               onClick={() => {
@@ -446,6 +483,7 @@ export const UserLoginLogsView: React.FC<UserLoginLogsViewProps> = ({
                 setSelectedRoleFilter('Semua');
                 setSelectedStatusFilter('Semua');
                 setSelectedDeviceFilter('Semua');
+                setHideDuplicates(true);
               }}
               className="text-[#164e63] hover:underline font-bold"
             >

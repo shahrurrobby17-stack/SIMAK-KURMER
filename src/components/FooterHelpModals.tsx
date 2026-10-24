@@ -210,7 +210,7 @@ export const FooterHelpModals: React.FC<FooterHelpModalsProps> = ({ activeModal,
                 <Info className="w-5 h-5 text-[#164e63] shrink-0" />
                 <div>
                   <h3 className="font-bold text-slate-800 text-xs">Ketentuan Penggunaan Aplikasi SIMAK Merdeka Versi 3.7.0</h3>
-                  <p className="text-[11px] text-slate-600">Terakhir Diperbarui: Juli 2026 • Kurikulum Merdeka KSP</p>
+                  <p className="text-[11px] text-slate-600">Pembaruan Terakhir : Rabu, 21 Oktober 2026 • Kurikulum Merdeka KSP</p>
                 </div>
               </div>
 

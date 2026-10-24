@@ -76,7 +76,6 @@ export type NavTab =
   | 'settings';
 
 import { UserAccount, TeacherProfile, Student, StudentGrade, AttendanceRecord, StudentTask } from '../types';
-import { useTeachingSchedules } from '../lib/teachingScheduleService';
 import { computeMenuHealthMap } from '../lib/menuHealthService';
 
 interface SidebarNavigationProps {
@@ -153,16 +152,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
     return { totalInvalidCount: inv, totalWarningCount: warn, totalValidCount: val };
   }, [menuHealthMap]);
 
-  
-  // Live active teaching schedule data from Teaching Schedule menu
-  const {
-    activeClasses,
-    activeClassText
-  } = useTeachingSchedules({
-    teacher,
-    currentUser,
-    isMasterUser
-  });
+
 
   const isKepalaSekolah = Boolean(
     currentUser?.role && (
@@ -920,14 +910,6 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               <p className="text-[10px] font-semibold text-slate-400 truncate leading-tight mt-0.5">
                 {currentUser?.role || teacher?.subjectRole || 'Guru Pengampu'}
               </p>
-              {!isKurikulumOnlyMode && !isTuOnlyMode && !isKesiswaanOnlyMode && !isKeuanganOnlyMode && !isStudentRole && (
-                <div className="flex items-center gap-1.5 mt-2">
-                  <div className={`w-1.5 h-1.5 rounded-full ${activeClasses.length > 0 ? 'bg-emerald-400' : 'bg-sky-400'}`}></div>
-                  <p className="text-[9px] font-bold truncate text-slate-300">
-                    Status: Kelas Aktif ({activeClassText})
-                  </p>
-                </div>
-              )}
             </div>
           </div>
         </div>

@@ -225,62 +225,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   const [showResetSarprasModal, setShowResetSarprasModal] = useState<boolean>(false);
   const [sarprasResetSuccess, setSarprasResetSuccess] = useState<boolean>(false);
 
-  // Reset All Data State
-  const [showResetAllDataModal, setShowResetAllDataModal] = useState<boolean>(false);
-  const [allDataResetSuccess, setAllDataResetSuccess] = useState<boolean>(false);
-
-  const handleResetAllData = () => {
-    try {
-      localStorage.setItem('simak_weekly_class_schedules_cleared', 'true');
-      localStorage.setItem('simak_weekly_class_schedules', JSON.stringify([]));
-      localStorage.setItem('simak_teacher_modules', JSON.stringify([]));
-      localStorage.setItem('simak_curriculum_jjm', JSON.stringify([]));
-      localStorage.setItem('simak_curriculum_p5', JSON.stringify([]));
-      localStorage.setItem('simak_curriculum_events', JSON.stringify([]));
-      localStorage.setItem('simak_curriculum_reset_cleared', 'true');
-      localStorage.removeItem('simak_berita_acara_custom');
-      localStorage.removeItem('simak_active_classes');
-      localStorage.removeItem('simak_all_registered_classes');
-      localStorage.setItem('simak_sarpras_items', JSON.stringify([]));
-      localStorage.setItem('simak_sarpras_rooms', JSON.stringify([]));
-      localStorage.setItem('simak_sarpras_loans', JSON.stringify([]));
-      localStorage.setItem('simak_sarpras_tickets', JSON.stringify([]));
-      
-      // Kesiswaan reset keys
-      localStorage.setItem('simak_kesiswaan_reset_cleared', 'true');
-      localStorage.setItem('simak_kesiswaan_violations', JSON.stringify([]));
-      localStorage.setItem('simak_kesiswaan_ekskul', JSON.stringify([]));
-      localStorage.setItem('simak_kesiswaan_achievements', JSON.stringify([]));
-      localStorage.setItem('simak_kesiswaan_scholarships', JSON.stringify([]));
-      localStorage.setItem('simak_kesiswaan_osis', JSON.stringify([]));
-      localStorage.setItem('simak_extra_records', JSON.stringify({}));
-      localStorage.setItem('simak_extra_members', JSON.stringify({}));
-      localStorage.setItem('simak_extra_list', JSON.stringify([]));
-      localStorage.setItem('simak_extra_instructors', JSON.stringify({}));
-
-      // Attendance (Presensi Siswa) reset keys
-      localStorage.setItem('simak_attendance_reset_cleared', 'true');
-      localStorage.setItem('simak_attendance_records', JSON.stringify([]));
-
-      // Keuangan (Finance) reset keys
-      localStorage.setItem('simak_keuangan_reset_cleared', 'true');
-      localStorage.setItem('simak_keuangan_spp', JSON.stringify([]));
-      localStorage.setItem('simak_keuangan_expenses', JSON.stringify([]));
-
-      setShowResetAllDataModal(false);
-      setAllDataResetSuccess(true);
-      window.dispatchEvent(new Event('simak_sarpras_reset'));
-      window.dispatchEvent(new Event('simak_kurikulum_reset'));
-      window.dispatchEvent(new Event('simak_kesiswaan_reset'));
-      window.dispatchEvent(new Event('simak_attendance_reset'));
-      window.dispatchEvent(new Event('simak_keuangan_reset'));
-      window.dispatchEvent(new CustomEvent('simak_schedules_updated', { detail: [] }));
-      window.dispatchEvent(new Event('storage'));
-    } catch (e) {
-      console.error('Failed to reset all data:', e);
-    }
-  };
-
   const handleResetSarprasData = () => {
     try {
       localStorage.setItem('simak_sarpras_items', JSON.stringify([]));
@@ -1089,18 +1033,6 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
             <span className="block font-bold">Tahun Ajaran & Kelas</span>
           </button>
 
-          {/* Tombol Reset Semua Data (Dibawah Menu Tahun Ajaran dan Kelas) */}
-          <button
-            type="button"
-            onClick={() => setShowResetAllDataModal(true)}
-            className="w-full text-left px-4 py-3 rounded-none text-xs font-bold flex items-center gap-3 transition-all duration-200 ease-in-out active:scale-[0.98] cursor-pointer bg-rose-50 hover:bg-rose-100 text-rose-800 border border-rose-200 mt-2"
-          >
-            <div className="p-1.5 rounded-none bg-rose-100 text-rose-700">
-              <Trash2 className="w-4 h-4" />
-            </div>
-            <span className="block font-bold">Reset Semua Data</span>
-          </button>
-
           {/* Tombol Kunci Data */}
           {isAdministratorUser && !isKepalaSekolah && !isGuruRole && !isSarprasRole && !isKurikulumRole && (
             <button
@@ -1802,28 +1734,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                 </div>
               </div>
 
-              {/* Section Reset Semua Data (Dibawah Tahun Ajaran dan Kelas) */}
-              <div className="p-4 bg-rose-50 border border-rose-200 rounded-none shadow-xs space-y-3 mt-4">
-                <div className="flex items-center gap-2 pb-2 border-b border-rose-200 text-rose-800">
-                  <Trash2 className="w-4 h-4 text-rose-600" />
-                  <h3 className="text-xs font-bold text-rose-900">Reset Semua Data</h3>
-                </div>
 
-                <p className="text-[11px] text-rose-800 leading-relaxed">
-                  Tindakan ini akan menghapus dan mengembalikan seluruh data akademik, rombel/kelas, serta jadwal mengajar dan data terkait ke kondisi awal (default).
-                </p>
-
-                <div className="pt-1 flex items-center justify-end">
-                  <button
-                    type="button"
-                    onClick={() => setShowResetAllDataModal(true)}
-                    className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-none flex items-center gap-2 cursor-pointer shadow-xs transition-all text-xs"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Reset Semua Data</span>
-                  </button>
-                </div>
-              </div>
 
               {/* Modal Confirmation Deletion */}
               {classToDeleteConfirm && (
@@ -2166,7 +2077,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                     <div>
                       <span className="text-slate-500 font-semibold text-[11px]">NPSN: </span>
                       <span className="font-mono font-bold text-slate-800">
-                        {teacher?.npsn || (registeredSchools || []).find(s => s.name.toLowerCase().trim() === (activeSchoolName || teacher?.schoolName || '').toLowerCase().trim())?.npsn || '20521404'}
+                        {teacher?.npsn || (registeredSchools || []).find(s => s.name.toLowerCase().trim() === (activeSchoolName || teacher?.schoolName || '').toLowerCase().trim())?.npsn || '20517834'}
                       </span>
                     </div>
                     <div>
@@ -2221,7 +2132,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
                             )}
                           </div>
                           <p className="text-[11px] text-slate-500 mt-0.5">
-                            NPSN: <span className="font-semibold text-slate-700">{s.npsn || '20521404'}</span> • Path: <span className="font-mono text-cyan-800">/schools/{s.id}</span>
+                            NPSN: <span className="font-semibold text-slate-700">{s.npsn || '20517834'}</span> • Path: <span className="font-mono text-cyan-800">/schools/{s.id}</span>
                           </p>
                         </div>
 
@@ -3127,52 +3038,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
         </div>
       )}
 
-      {/* Animated Save Success Modal for Reset Semua Data */}
-      <SaveSuccessModal 
-        isOpen={allDataResetSuccess} 
-        onClose={() => setAllDataResetSuccess(false)} 
-        title="Semua Data Berhasil Direset"
-        message="Seluruh data akademik, rombel/kelas, serta jadwal mengajar dan sistem telah dikembalikan ke kondisi awal (default)!"
-      />
 
-      {/* Modal Konfirmasi Reset Semua Data */}
-      {showResetAllDataModal && (
-        <div className="fixed inset-0 bg-slate-900/60 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-none border border-slate-300 shadow-2xl max-w-md w-full p-6 space-y-4 animate-scaleUp">
-            <div className="flex items-center gap-3 text-rose-600 border-b border-slate-100 pb-3">
-              <div className="p-2 bg-rose-100 rounded-none">
-                <AlertCircle className="w-6 h-6 text-rose-600" />
-              </div>
-              <div>
-                <h3 className="font-bold text-slate-900 text-sm">Konfirmasi Reset Semua Data</h3>
-                <p className="text-[11px] text-slate-500">Tindakan menghapus seluruh data sistem</p>
-              </div>
-            </div>
-
-            <p className="text-xs text-slate-600 leading-relaxed bg-rose-50/50 p-3 rounded-none border border-rose-100">
-              Apakah Anda yakin ingin mereset <strong>semua data</strong>? Seluruh data jadwal, kelas, rombel, dan konfigurasi terkait akan dikembalikan ke data default awal.
-            </p>
-
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setShowResetAllDataModal(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-none text-xs cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={handleResetAllData}
-                className="px-4 py-2 bg-rose-700 hover:bg-rose-800 text-white font-bold rounded-none text-xs flex items-center gap-2 cursor-pointer shadow-xs"
-              >
-                <Trash2 className="w-3.5 h-3.5" />
-                <span>Ya, Reset Semua Data</span>
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

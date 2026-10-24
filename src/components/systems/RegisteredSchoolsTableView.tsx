@@ -342,7 +342,13 @@ export const RegisteredSchoolsTableView: React.FC<RegisteredSchoolsTableViewProp
 
                       {/* NPSN */}
                       <td className="py-3 px-3.5 text-center border-r border-slate-200 font-mono font-bold text-[#164e63] text-xs">
-                        {sch.npsn || '20521404'}
+                        {sch.npsn === '20500000' ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-300">
+                            Belum Terverifikasi
+                          </span>
+                        ) : (
+                          sch.npsn || '20517834'
+                        )}
                       </td>
 
                       {/* Kepala Sekolah */}
@@ -503,7 +509,7 @@ export const RegisteredSchoolsTableView: React.FC<RegisteredSchoolsTableViewProp
                     required
                     value={formData.npsn}
                     onChange={(e) => setFormData(prev => ({ ...prev, npsn: e.target.value }))}
-                    placeholder="Contoh: 20521404"
+                    placeholder="Contoh: 20517834"
                     className="w-full px-3 py-2 border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-50 font-mono"
                   />
                 </div>

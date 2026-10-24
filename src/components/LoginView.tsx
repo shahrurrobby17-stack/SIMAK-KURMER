@@ -1223,6 +1223,57 @@ export const LoginView: React.FC<LoginViewProps> = ({
     }
   }, [propsRegisteredSchools]);
 
+  // Table search state for Ringkasan Data Sekolah Terdaftar
+  const [schoolTableSearch, setSchoolTableSearch] = useState<string>('');
+
+  // Effective data for registered schools table
+  const effectiveSchools = useMemo(() => {
+    const base = (liveSchools && liveSchools.length > 0) 
+      ? liveSchools 
+      : ((propsRegisteredSchools && propsRegisteredSchools.length > 0) ? propsRegisteredSchools : initialRegisteredSchools);
+    const cleaned = filterDeletedSchools(deduplicateSchools(base));
+    const excludedPatterns = [
+      'sd negeri 1 wagir',
+      'sdn 1 wagir',
+      'mi diponegoro wagir',
+      'sma negeri 2 surabaya',
+      'sman 2 surabaya',
+      'sma muhammadiyah 1 jakarta'
+    ];
+    const nonExcluded = cleaned.filter(s => {
+      const name = (s.name || '').toLowerCase().trim();
+      const id = (s.id || '').toLowerCase().trim();
+      const npsn = (s.npsn || '').trim();
+      if (npsn === '20518001' || npsn === '20518002' || npsn === '20512345' || npsn === '20198765') return false;
+      return !excludedPatterns.some(p => name.includes(p) || id.includes(p.replace(/\s+/g, '_')));
+    });
+
+    const existingNames = new Set(nonExcluded.map(s => s.name.trim().toLowerCase()));
+    const missingFeatured = initialRegisteredSchools.filter(s => 
+      !existingNames.has(s.name.trim().toLowerCase()) &&
+      !excludedPatterns.some(p => s.name.toLowerCase().includes(p))
+    );
+    const merged = [...nonExcluded, ...missingFeatured].map(s => {
+      if (s.name.includes('Bedalisodo')) {
+        return { ...s, npsn: '20500000' };
+      }
+      return s;
+    });
+    return merged;
+  }, [liveSchools, propsRegisteredSchools]);
+
+  const filteredDisplaySchools = useMemo(() => {
+    return effectiveSchools.filter(school => {
+      const q = schoolTableSearch.trim().toLowerCase();
+      const matchSearch = !q || 
+        (school.name && school.name.toLowerCase().includes(q)) ||
+        (school.npsn && school.npsn.toLowerCase().includes(q)) ||
+        (school.npsn === '20500000' && 'belum terverifikasi'.includes(q));
+
+      return matchSearch;
+    });
+  }, [effectiveSchools, schoolTableSearch]);
+
   // Register Form States
   const [regName, setRegName] = useState<string>('');
   const [regJenjang, setRegJenjang] = useState<string>('');
@@ -2933,7 +2984,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   {/* Last Update Date */}
                   <div className="flex items-center space-x-2 text-xs lg:text-sm text-white/95 font-semibold whitespace-nowrap pt-1">
                     <Calendar className="w-4 h-4 text-white shrink-0" />
-                    <span className="whitespace-nowrap">Pembaruan Terakhir : Kamis, 15 Oktober 2026</span>
+                    <span className="whitespace-nowrap">Pembaruan Terakhir : Sabtu, 24 Oktober 2026</span>
                   </div>
                 </div>
 
@@ -3804,20 +3855,23 @@ export const LoginView: React.FC<LoginViewProps> = ({
                 <span>Live Real-Time Sinkronisasi Cloud Firestore</span>
               </div>
               <h2 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
-                Ringkasan Indikator Utama SIMAK
+                Ringkasan Data Sekolah Terdaftar
               </h2>
-              <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-2xl mx-auto font-medium leading-relaxed">
-                Pantau status sinkronisasi cloud real-time serta rincian verifikasi perangkat database Firestore secara langsung.
+              <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-3xl mx-auto font-medium leading-relaxed">
+                Daftar profil satuan pendidikan resmi yang terdaftar dan terintegrasi di SIMAK Merdeka.
               </p>
 
               {/* Status bar with Last Sync timestamp and manual refresh */}
               <div className="flex flex-wrap items-center justify-center gap-2 mt-3 text-xs text-slate-600 font-medium">
                 <span className="flex items-center gap-1.5 text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
                   <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  Status: <strong className="text-emerald-700">Firestore Real-Time</strong>
+                  Status: <strong className="text-emerald-700">Terdaftar & Aktif</strong>
                 </span>
                 <span className="flex items-center gap-1.5 text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
-                  Pembaruan: <strong className="text-sky-700">{lastSyncTime}</strong>
+                  Total: <strong className="text-sky-700">{effectiveSchools.length} Satuan Pendidikan</strong>
+                </span>
+                <span className="flex items-center gap-1.5 text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
+                  Pembaruan: <strong className="text-slate-700">{lastSyncTime}</strong>
                 </span>
                 <button
                   type="button"
@@ -3829,6 +3883,122 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   <RefreshCw className={`w-3 h-3 text-sky-600 ${isRefreshing ? 'animate-spin' : ''}`} />
                   <span>Segarkan Data</span>
                 </button>
+              </div>
+            </div>
+
+            {/* Search Bar */}
+            <div className="mb-4 flex flex-col sm:flex-row items-center justify-between gap-3 bg-white p-3 sm:p-4 rounded-2xl border border-slate-200/90 shadow-2xs">
+              <div className="relative w-full max-w-md">
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  value={schoolTableSearch}
+                  onChange={(e) => setSchoolTableSearch(e.target.value)}
+                  placeholder="Cari nama sekolah atau NPSN..."
+                  className="w-full pl-9 pr-8 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent transition-all placeholder:text-slate-400 font-medium"
+                />
+                {schoolTableSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setSchoolTableSearch('')}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 text-xs p-1"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center gap-1.5 text-xs text-slate-500 font-medium">
+                <span>Total Data:</span>
+                <strong className="text-slate-800 font-bold">{filteredDisplaySchools.length} Sekolah</strong>
+              </div>
+            </div>
+
+            {/* RESPONSIVE TABLE CARD */}
+            <div className="bg-white rounded-2xl border border-slate-200/90 shadow-sm overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs border-collapse">
+                  <thead>
+                    <tr className="bg-slate-50 border-b border-slate-200 text-slate-600 font-bold uppercase tracking-wider text-[11px]">
+                      <th className="py-3 px-3.5 text-center w-12">No</th>
+                      <th className="py-3 px-4 min-w-[240px]">Nama Satuan Pendidikan</th>
+                      <th className="py-3 px-3.5 text-center min-w-[120px]">NPSN</th>
+                      <th className="py-3 px-3.5 text-center min-w-[100px]">Jenjang</th>
+                      <th className="py-3 px-3.5 text-center min-w-[110px]">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+                    {filteredDisplaySchools.length > 0 ? (
+                      filteredDisplaySchools.map((school, index) => {
+                        const rowNumber = index + 1;
+                        const isEven = rowNumber % 2 === 0;
+                        return (
+                          <tr 
+                            key={school.id || `school-${index}`} 
+                            className={`transition-colors ${isEven ? 'bg-slate-50' : 'bg-white'} hover:bg-sky-50/50`}
+                          >
+                            <td className="py-3 px-3.5 text-center font-bold text-slate-500">
+                              {index + 1}
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="flex items-center gap-2.5">
+                                <div className="w-8 h-8 rounded-xl flex items-center justify-center shrink-0 shadow-2xs bg-[#0066b2] text-white">
+                                  <School className="w-4 h-4 text-white" />
+                                </div>
+                                <div className="font-bold text-slate-900">
+                                  {school.name}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-3.5 text-center">
+                              {school.npsn === '20500000' ? (
+                                <span className="inline-flex items-center px-2.5 py-0.5 rounded text-[11px] font-semibold bg-slate-100 text-slate-600 border border-slate-300">
+                                  Belum Terverifikasi
+                                </span>
+                              ) : (
+                                <span className="font-mono bg-slate-100 text-slate-800 px-2.5 py-0.5 rounded text-[11px] font-bold border border-slate-200">
+                                  {school.npsn || '-'}
+                                </span>
+                              )}
+                            </td>
+                            <td className="py-3 px-3.5 text-center">
+                              <span className="inline-flex px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#0066b2]/10 text-[#0066b2] border border-[#0066b2]/25">
+                                {school.jenjang || 'SMA'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-3.5 text-center">
+                              <span className="inline-flex px-2.5 py-0.5 rounded-md text-[11px] font-bold bg-[#0066b2]/10 text-[#0066b2] border border-[#0066b2]/25">
+                                {school.statusSekolah || 'Negeri'}
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={5} className="py-10 text-center text-slate-500">
+                          <School className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                          <p className="font-semibold">Tidak ada sekolah yang cocok dengan pencarian.</p>
+                          <button
+                            type="button"
+                            onClick={() => setSchoolTableSearch('')}
+                            className="mt-2 text-xs font-bold text-sky-600 hover:text-sky-700 underline cursor-pointer"
+                          >
+                            Reset filter pencarian
+                          </button>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+              <div className="px-4 py-3 bg-slate-50/80 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-2 text-xs text-slate-600">
+                <div className="font-medium">
+                  Menampilkan <strong className="text-slate-800">{filteredDisplaySchools.length}</strong> dari <strong className="text-slate-800">{effectiveSchools.length}</strong> sekolah terdaftar
+                </div>
+                <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  <span>Data terverifikasi & tersinkronisasi otomatis dengan Cloud Database</span>
+                </div>
               </div>
             </div>
           </div>
@@ -4690,8 +4860,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
 
 
-
-
                     {!isStudentLogin && (
                       <div className="text-center mt-3 pt-3 border-t border-slate-100">
                         <p className="text-xs text-slate-500 font-medium">
@@ -5276,6 +5444,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
             </div>
             <div className="flex items-center gap-4 text-[11px] text-slate-500">
               <span>Tahun Ajaran 2026/2027</span>
+              <span>•</span>
+              <span className="font-semibold text-slate-600">Pembaruan Terakhir : Sabtu, 24 Oktober 2026</span>
               <span>•</span>
               <span>© 2026 SIMAK Guru Merdeka. Hak Cipta Dilindungi.</span>
             </div>

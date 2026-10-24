@@ -48,7 +48,10 @@ import {
   Package,
   Library,
   School,
-  Settings
+  Settings,
+  Laptop,
+  Globe,
+  Wifi
 } from 'lucide-react';
 import { UserAccount, TeacherProfile, RegisteredSchool, InfoAnnouncement, InfoAnnouncementItem, getAnnouncementItems } from '../types';
 import { normalizeSchoolId, deleteSchoolFromFirebase } from '../lib/firebaseService';
@@ -145,10 +148,10 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
       setLoginLogs(logs);
     });
 
-    // 3. Live timer ticker every 2.5 seconds to refresh relative times and expired statuses in real-time
+    // 3. Live timer ticker every 1 second (1000ms) for real-time live clock ticking
     const tickerInterval = setInterval(() => {
       setLiveTicker(Date.now());
-    }, 2500);
+    }, 1000);
 
     return () => {
       unsubPresence();
@@ -210,14 +213,14 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
   const [selectedUserForModule, setSelectedUserForModule] = useState<UserAccount | null>(null);
   const [activeModuleTab, setActiveModuleTab] = useState<'jadwal' | 'sinkronisasi' | 'siswa' | 'presensi' | 'presensiEkstra' | 'kelolaNilai' | 'jurnal' | 'upload-modul' | 'modul' | 'uploadModul'>('jadwal');
 
-  // Active school lookup for Penyimpanan card
+  // Active school lookup for Penyimpanan card (synchronized with Detail Sekolah)
   const activeSchoolObj = registeredSchools.find(s => 
-    s.name.toLowerCase().trim() === (activeSchoolName || teacher?.schoolName || '').toLowerCase().trim()
-  ) || registeredSchools.find(s => s.npsn === teacher?.npsn) || registeredSchools[0];
+    s.name && s.name.toLowerCase().trim() === (teacher?.schoolName || activeSchoolName || '').toLowerCase().trim()
+  ) || registeredSchools.find(s => s.npsn && teacher?.npsn && s.npsn.trim() === teacher.npsn.trim()) || registeredSchools[0];
 
-  const matchedSchoolName = activeSchoolObj?.name || activeSchoolName || teacher?.schoolName || 'SMA Diponegoro Wagir';
-  const matchedNpsn = activeSchoolObj?.npsn || teacher?.npsn || '20521404';
-  const matchedPrincipal = activeSchoolObj?.principalName || teacher?.principalName || 'H. Moh. Ridwan, S.Pd., M.Si.';
+  const matchedSchoolName = teacher?.schoolName || activeSchoolObj?.name || activeSchoolName || 'SMA Islam Diponegoro Wagir';
+  const matchedNpsn = teacher?.npsn || activeSchoolObj?.npsn || '20517834';
+  const matchedPrincipal = teacher?.principalName || activeSchoolObj?.principalName || 'H. Moh. Ridwan, S.Pd., M.Si.';
 
   // Form states for Add/Edit
   const [formName, setFormName] = useState<string>('');
@@ -745,212 +748,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
         </div>
       )}
 
-      {/* Header Navigation Bar Akses Sistem Administrator - Disembunyikan pada halaman Data Sekolah & Daftar Sekolah */}
-      {selectedCategory !== 'DetailSekolah' && selectedCategory !== 'DaftarSekolahTabel' && (
-        <div className="bg-white border border-slate-200 px-3.5 pt-3 pb-2.5 shadow-xs">
-        <div className="flex items-center justify-between gap-3 mb-2.5 pb-2 border-b border-slate-100 flex-wrap">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 bg-[#164e63] text-white">
-              <Database className="w-4 h-4" />
-            </div>
-            <div>
-              <h2 className="text-xs sm:text-sm font-bold uppercase tracking-wider text-slate-800">
-                Pusat Kendali Administrasi & Sistem Sekolah
-              </h2>
-              <p className="text-[11px] text-slate-500">
-                Pilih menu sistem di bawah ini untuk mengakses atau memonitor modul terkait
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 flex-wrap">
-            {selectedCategory === 'Semua' && (
-              <button
-                type="button"
-                onClick={() => handleOpenAddModal()}
-                className="px-3.5 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
-              >
-                <UserPlus className="w-3.5 h-3.5" />
-                <span>Tambah Akun</span>
-              </button>
-            )}
 
-            {(selectedCategory as string) === 'DetailSekolah' && (
-              <button
-                type="button"
-                onClick={() => {
-                  const modalBtn = document.getElementById('btn-open-add-school-modal');
-                  if (modalBtn) modalBtn.click();
-                }}
-                className="px-3.5 py-1.5 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
-              >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Tambah Sekolah</span>
-              </button>
-            )}
-          </div>
-        </div>
-
-        <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pt-0.5">
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('Semua')}
-            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              (selectedCategory as string) === 'Semua'
-                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <Database className="w-3.5 h-3.5 text-[#164e63]" />
-            <span>Monitoring Akun ({totalCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('DetailSekolah')}
-            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              (selectedCategory as string) === 'DetailSekolah'
-                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <School className="w-3.5 h-3.5 text-sky-600" />
-            <span>Data Sekolah</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('DaftarSekolahTabel')}
-            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              (selectedCategory as string) === 'DaftarSekolahTabel'
-                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <Building2 className="w-3.5 h-3.5 text-cyan-800" />
-            <span>Daftar Sekolah ({registeredSchools.length})</span>
-          </button>
-
-          {/* Menu Penyimpanan - Di Atas Menu Pengumuman Sistem */}
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('Penyimpanan')}
-            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              selectedCategory === 'Penyimpanan'
-                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <Database className="w-3.5 h-3.5 text-cyan-700" />
-            <span>Penyimpanan</span>
-          </button>
-
-          {/* Menu Pengumuman Sistem - Di Bawah Menu Penyimpanan */}
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('Pengumuman')}
-            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              selectedCategory === 'Pengumuman'
-                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <Megaphone className="w-3.5 h-3.5 text-amber-600" />
-            <span>Pengumuman Sistem</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('Kurikulum')}
-            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              selectedCategory === 'Kurikulum'
-                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <BookOpen className="w-3.5 h-3.5 text-blue-600" />
-            <span>Kurikulum ({kurikulumCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('Guru')}
-            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              selectedCategory === 'Guru'
-                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <Users className="w-3.5 h-3.5 text-indigo-600" />
-            <span>Guru & PTK ({guruCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('TU')}
-            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              selectedCategory === 'TU'
-                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <Building2 className="w-3.5 h-3.5 text-amber-600" />
-            <span>Tata Usaha ({tuCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('Sarpras')}
-            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              selectedCategory === 'Sarpras'
-                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <Package className="w-3.5 h-3.5 text-purple-600" />
-            <span>Sarpras ({sarprasCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('Keuangan')}
-            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              selectedCategory === 'Keuangan'
-                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <Wallet className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Keuangan</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('Siswa')}
-            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              selectedCategory === 'Siswa'
-                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <GraduationCap className="w-3.5 h-3.5 text-cyan-700" />
-            <span>Kesiswaan ({siswaCount})</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setSelectedCategory('Perpustakaan')}
-            className={`px-3 py-2 text-xs font-bold border-b-2 flex items-center gap-2 whitespace-nowrap cursor-pointer transition-all ${
-              selectedCategory === 'Perpustakaan'
-                ? 'border-[#164e63] text-[#164e63] bg-cyan-50/70'
-                : 'border-transparent text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-            }`}
-          >
-            <Library className="w-3.5 h-3.5 text-teal-600" />
-            <span>Perpustakaan ({perpustakaanCount})</span>
-          </button>
-        </div>
-      </div>
-      )}
 
       {/* CONDITIONAL RENDERING OF DEDICATED SYSTEMS */}
       {selectedCategory === 'DaftarSekolahTabel' ? (
@@ -1202,11 +1000,17 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0">
-              <div className="text-right hidden sm:block">
-                <div className="text-[10px] text-slate-400 font-semibold uppercase">Waktu Server</div>
-                <div className="text-[11px] font-mono font-bold text-slate-700">
-                  {new Date(liveTicker).toLocaleTimeString('id-ID')} WIB
+            <div className="flex items-center gap-2.5 self-start sm:self-auto shrink-0 flex-wrap">
+              <div className="flex items-center gap-2.5 bg-slate-50 border border-slate-200 px-3 py-1.5 rounded-none shadow-2xs">
+                <Clock className="w-4 h-4 text-[#164e63] shrink-0" />
+                <div className="text-left sm:text-right">
+                  <div className="text-[9px] text-slate-400 font-bold uppercase tracking-wider flex items-center gap-1">
+                    <span>Waktu Server</span>
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block" />
+                  </div>
+                  <div className="text-xs font-mono font-black text-slate-800 tracking-tight">
+                    {new Date(liveTicker).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })} WIB
+                  </div>
                 </div>
               </div>
               <button
@@ -1215,11 +1019,19 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                   setLiveTicker(Date.now());
                   showToast('Sinkronisasi sesi realtime berhasil diperbarui.', 'success');
                 }}
-                className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer active:scale-95"
+                className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer active:scale-95"
                 title="Segarkan data sesi realtime sekarang"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Segarkan Sesi</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => handleOpenAddModal()}
+                className="px-3 py-2 bg-[#164e63] hover:bg-cyan-800 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-all cursor-pointer active:scale-95"
+              >
+                <UserPlus className="w-3.5 h-3.5" />
+                <span>Tambah Akun</span>
               </button>
             </div>
           </div>
@@ -1357,7 +1169,7 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
           </div>
 
           {/* Controls: Filter Selects + View Mode */}
-          <div className="flex items-center gap-2 overflow-x-auto pb-1 md:pb-0">
+          <div className="flex flex-wrap items-center gap-2 pb-1 md:pb-0">
             {/* Online / Offline Filter */}
             <select
               value={onlineFilter}
@@ -1532,29 +1344,31 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                       <td className="py-3.5 px-4 text-center whitespace-nowrap">
                         {userOnline.isOnline ? (
                           <div className="inline-flex flex-col items-center">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-700 border border-emerald-300 shadow-2xs">
-                              <span className="relative flex h-2 w-2">
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-black tracking-wider bg-emerald-500/10 text-emerald-800 border border-emerald-300/90 shadow-xs">
+                              <span className="relative flex h-2.5 w-2.5">
                                 <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                                <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                                <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.8)]"></span>
                               </span>
-                              <span>SEDANG ONLINE</span>
+                              <span>ONLINE</span>
                             </span>
-                            <span className="text-[10px] text-emerald-700 font-bold mt-0.5">
-                              {userOnline.lastSeenText}
+                            <span className="text-[10px] text-emerald-700 font-bold mt-1 flex items-center gap-1">
+                              <span className="w-1 h-1 rounded-full bg-emerald-500 shrink-0" />
+                              <span>{userOnline.lastSeenText}</span>
                             </span>
                             {userOnline.deviceInfo && (
-                              <span className="text-[9px] text-slate-400 font-mono mt-0.5">
-                                {userOnline.deviceInfo}
+                              <span className="text-[9px] text-slate-500 font-medium bg-slate-100/90 border border-slate-200/80 px-2 py-0.5 rounded-md mt-1 inline-flex items-center gap-1 font-mono">
+                                <Laptop className="w-2.5 h-2.5 text-slate-400 shrink-0" />
+                                <span>{userOnline.deviceInfo}</span>
                               </span>
                             )}
                           </div>
                         ) : (
                           <div className="inline-flex flex-col items-center">
-                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600 border border-slate-200">
-                              <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-extrabold tracking-wider bg-slate-100 text-slate-600 border border-slate-200 shadow-2xs">
+                              <span className="w-2 h-2 rounded-full bg-slate-400 shrink-0"></span>
                               <span>OFFLINE</span>
                             </span>
-                            <span className="text-[10px] text-slate-400 font-medium mt-0.5 max-w-[140px] truncate" title={userOnline.lastSeenText}>
+                            <span className="text-[10px] text-slate-400 font-medium mt-1 max-w-[150px] truncate" title={userOnline.lastSeenText}>
                               {userOnline.lastSeenText}
                             </span>
                           </div>
@@ -1712,16 +1526,16 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                   <div className="flex flex-col items-end gap-1 shrink-0">
                     {/* Session Online/Offline Badge */}
                     {userOnline.isOnline ? (
-                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-50 text-emerald-800 border border-emerald-300 shadow-2xs">
-                        <span className="relative flex h-1.5 w-1.5">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-black tracking-wider bg-emerald-500/10 text-emerald-800 border border-emerald-300/80 shadow-2xs">
+                        <span className="relative flex h-2 w-2">
                           <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                          <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-emerald-500"></span>
+                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)]"></span>
                         </span>
-                        <span>SEDANG ONLINE</span>
+                        <span>ONLINE</span>
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-600 border border-slate-200">
-                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400"></span>
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold tracking-wider bg-slate-100 text-slate-600 border border-slate-200">
+                        <span className="w-1.5 h-1.5 rounded-full bg-slate-400 shrink-0"></span>
                         <span>OFFLINE</span>
                       </span>
                     )}
@@ -1745,10 +1559,10 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
                 <div className="space-y-1.5 text-xs text-slate-600 pt-2 border-t border-slate-100">
                   <div className="flex items-center justify-between">
                     <span className="text-slate-400 font-medium">Status Sesi:</span>
-                    <span className={`font-semibold flex items-center gap-1.5 ${userOnline.isOnline ? 'text-emerald-700 font-bold' : 'text-slate-500'}`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${userOnline.isOnline ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
-                      {userOnline.isOnline ? 'Sedang Online' : 'Offline'} 
-                      <span className="text-[10px] text-slate-400 font-normal">({userOnline.lastSeenText})</span>
+                    <span className={`font-semibold flex items-center gap-1.5 text-xs ${userOnline.isOnline ? 'text-emerald-700 font-bold' : 'text-slate-500'}`}>
+                      <span className={`w-2 h-2 rounded-full ${userOnline.isOnline ? 'bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.8)] animate-pulse' : 'bg-slate-400'}`} />
+                      <span>{userOnline.isOnline ? 'Sedang Online' : 'Offline'}</span>
+                      <span className="text-[10px] text-slate-400 font-medium">({userOnline.lastSeenText})</span>
                     </span>
                   </div>
                   <div className="flex items-center justify-between">

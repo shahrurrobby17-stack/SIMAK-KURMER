@@ -164,7 +164,7 @@ export const NewFeaturesModal: React.FC<NewFeaturesModalProps> = ({
                 <span className="bg-amber-400 text-slate-950 text-[10px] font-black px-2 py-0.5 rounded-none uppercase tracking-wider">
                   Update Terbaru Versi 3.7.0
                 </span>
-                <span className="text-xs text-cyan-200 font-medium hidden sm:inline">SIMAK Guru System</span>
+                <span className="text-xs text-cyan-200 font-medium hidden sm:inline">Pembaruan Terakhir : Rabu, 21 Oktober 2026</span>
               </div>
               <h2 className="text-lg sm:text-xl font-extrabold text-white mt-1">
                 Informasi Fitur & Pembaruan Sistem

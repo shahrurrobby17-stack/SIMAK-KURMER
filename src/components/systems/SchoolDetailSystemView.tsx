@@ -89,8 +89,8 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
   ) || registeredSchools[0];
 
   // Form states
-  const [schoolName, setSchoolName] = useState<string>(() => teacher?.schoolName || currentSchoolData?.name || 'SMA Diponegoro Wagir');
-  const [npsn, setNpsn] = useState<string>(() => teacher?.npsn || currentSchoolData?.npsn || '20521404');
+  const [schoolName, setSchoolName] = useState<string>(() => teacher?.schoolName || currentSchoolData?.name || 'SMA Islam Diponegoro Wagir');
+  const [npsn, setNpsn] = useState<string>(() => teacher?.npsn || currentSchoolData?.npsn || '20517834');
   const [jenjang, setJenjang] = useState<string>(() => currentSchoolData?.jenjang || 'SMA');
   const [statusSekolah, setStatusSekolah] = useState<string>(() => currentSchoolData?.statusSekolah || 'Swasta');
   const [akreditasi, setAkreditasi] = useState<string>(() => currentSchoolData?.akreditasi || 'A (Unggul)');
@@ -1115,7 +1115,7 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
                     required
                     value={newSchoolData.npsn}
                     onChange={(e) => setNewSchoolData(prev => ({ ...prev, npsn: e.target.value }))}
-                    placeholder="Contoh: 20521404"
+                    placeholder="Contoh: 20517834"
                     className="w-full px-3 py-2 border border-slate-300 text-xs font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-cyan-500 bg-slate-50"
                   />
                 </div>

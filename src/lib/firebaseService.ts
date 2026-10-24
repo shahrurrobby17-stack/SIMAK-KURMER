@@ -78,70 +78,43 @@ export const deduplicateSchools = (schools: RegisteredSchool[]): RegisteredSchoo
 export const initialRegisteredSchools: RegisteredSchool[] = deduplicateSchools([
   {
     id: 'sma_diponegoro_wagir',
-    name: 'SMA Diponegoro Wagir',
-    npsn: '20521404',
+    name: 'SMA Islam Diponegoro Wagir',
+    npsn: '20517834',
     principalName: 'H. Moh. Ridwan, S.Pd., M.Si.',
     address: 'Jl. Raya Parangargo No. 1, Wagir',
     city: 'Kab. Malang',
     province: 'Jawa Timur',
     jenjang: 'SMA',
     statusSekolah: 'Swasta',
-    akreditasi: 'A',
+    akreditasi: 'A (Unggul)',
     academicYear: '2026/2027',
     semester: 'Ganjil'
   },
   {
-    id: 'sd_negeri_1_wagir',
-    name: 'SD Negeri 1 Wagir',
-    npsn: '20518001',
-    principalName: 'Siti Aminah, S.Pd.SD',
-    address: 'Jl. Raya Parangargo, Wagir',
+    id: 'sd_negeri_3_bedalisodo',
+    name: 'SD Negeri 3 Bedalisodo',
+    npsn: '20500000',
+    principalName: 'Drs. Supriyanto, M.Pd.',
+    address: 'Jl. Raya Bedalisodo, Kec. Wagir',
     city: 'Kab. Malang',
     province: 'Jawa Timur',
     jenjang: 'SD',
     statusSekolah: 'Negeri',
-    akreditasi: 'A',
+    akreditasi: 'B (Baik)',
     academicYear: '2026/2027',
     semester: 'Ganjil'
   },
   {
-    id: 'mi_diponegoro_wagir',
-    name: 'MI Diponegoro Wagir',
-    npsn: '20518002',
-    principalName: 'M. Ali Fikri, S.Pd.I',
-    address: 'Jl. Raya Parangargo No. 3, Wagir',
+    id: 'sd_negeri_4_bedalisodo',
+    name: 'SD Negeri 4 Bedalisodo',
+    npsn: '20500000',
+    principalName: 'Endang Widyastuti, S.Pd.SD',
+    address: 'Dusun Bedali Kidul, Desa Bedalisodo, Kec. Wagir',
     city: 'Kab. Malang',
     province: 'Jawa Timur',
     jenjang: 'SD',
-    statusSekolah: 'Swasta',
-    akreditasi: 'A',
-    academicYear: '2026/2027',
-    semester: 'Ganjil'
-  },
-  {
-    id: 'sman_1_indonesia',
-    name: 'SMA Negeri 1 Indonesia - Sekolah Penggerak',
-    npsn: '20500000',
-    principalName: 'Dr. Hj. Sri Wahyuni, M.Si.',
-    jenjang: 'SMA',
-    academicYear: '2026/2027',
-    semester: 'Ganjil'
-  },
-  {
-    id: 'sma_negeri_2_surabaya',
-    name: 'SMA Negeri 2 Surabaya',
-    npsn: '20512345',
-    principalName: 'Dra. Endang Sulistyowati',
-    jenjang: 'SMA',
-    academicYear: '2026/2027',
-    semester: 'Ganjil'
-  },
-  {
-    id: 'sma_muhammadiyah_1_jakarta',
-    name: 'SMA Muhammadiyah 1 Jakarta',
-    npsn: '20198765',
-    principalName: 'H. Suryadi, M.Pd.',
-    jenjang: 'SMA',
+    statusSekolah: 'Negeri',
+    akreditasi: 'B (Baik)',
     academicYear: '2026/2027',
     semester: 'Ganjil'
   }
@@ -192,6 +165,26 @@ export const filterDeletedSchools = (schools: RegisteredSchool[]): RegisteredSch
     const idNorm = (s.id || '').toLowerCase().trim();
     const nameNorm = (s.name || '').toLowerCase().trim();
     const npsnNorm = (s.npsn || '').toLowerCase().trim();
+
+    // Explicitly exclude unwanted schools requested by user
+    if (
+      nameNorm.includes('sd negeri 1 wagir') ||
+      nameNorm.includes('sdn 1 wagir') ||
+      nameNorm.includes('mi diponegoro wagir') ||
+      nameNorm.includes('sma negeri 2 surabaya') ||
+      nameNorm.includes('sman 2 surabaya') ||
+      nameNorm.includes('sma muhammadiyah 1 jakarta') ||
+      idNorm.includes('sd_negeri_1_wagir') ||
+      idNorm.includes('mi_diponegoro_wagir') ||
+      idNorm.includes('sma_negeri_2_surabaya') ||
+      idNorm.includes('sma_muhammadiyah_1_jakarta') ||
+      npsnNorm === '20518001' ||
+      npsnNorm === '20518002' ||
+      npsnNorm === '20512345' ||
+      npsnNorm === '20198765'
+    ) {
+      return false;
+    }
 
     if (deletedKeys.size > 0) {
       if (idNorm && deletedKeys.has(idNorm)) return false;

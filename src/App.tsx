@@ -390,8 +390,8 @@ export default function App() {
       const remaining = filterDeletedSchools(registeredSchools.filter(s => s.id !== schoolId && s.name.toLowerCase().trim() !== currentName));
       const fallback = remaining[0] || {
         id: 'sma_diponegoro_wagir',
-        name: 'SMA Diponegoro Wagir',
-        npsn: '20521404',
+        name: 'SMA Islam Diponegoro Wagir',
+        npsn: '20517834',
         principalName: 'H. Moh. Ridwan, S.Pd., M.Si.',
         address: 'Jl. Raya Parangargo No. 1, Wagir',
         city: 'Kab. Malang',
