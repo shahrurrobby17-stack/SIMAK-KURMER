@@ -62,14 +62,66 @@ export const getActiveSchoolContext = () => ({
 });
 
 export const deduplicateSchools = (schools: RegisteredSchool[]): RegisteredSchool[] => {
-  const seen = new Set<string>();
+  const seenCanonicalKeys = new Set<string>();
+  const seenNames = new Set<string>();
+  const seenNpsn = new Set<string>();
+  const seenIds = new Set<string>();
   const result: RegisteredSchool[] = [];
+
+  const getCanonicalKey = (s: RegisteredSchool): string => {
+    const rawName = (s.name || '').trim().toLowerCase().replace(/\s+/g, ' ');
+    const rawNpsn = (s.npsn || '').trim();
+    const rawId = (s.id || '').trim().toLowerCase();
+
+    if (
+      (rawName.includes('diponegoro') && rawName.includes('wagir')) ||
+      rawNpsn === '20517834' ||
+      rawId.includes('diponegoro')
+    ) {
+      return 'sma_islam_diponegoro_wagir';
+    }
+    if ((rawName.includes('bedalisodo') && rawName.includes('3')) || rawId.includes('bedalisodo_3') || rawId === 'sd_negeri_3_bedalisodo') {
+      return 'sd_negeri_3_bedalisodo';
+    }
+    if ((rawName.includes('bedalisodo') && rawName.includes('4')) || rawId.includes('bedalisodo_4') || rawId === 'sd_negeri_4_bedalisodo') {
+      return 'sd_negeri_4_bedalisodo';
+    }
+    return rawId || rawName;
+  };
+
   for (const s of schools) {
     if (!s || !s.name) continue;
-    const norm = s.name.trim().toLowerCase().replace(/\s+/g, ' ');
-    if (!seen.has(norm)) {
-      seen.add(norm);
-      result.push(s);
+    const normName = s.name.trim().toLowerCase().replace(/\s+/g, ' ');
+    const rawNpsn = (s.npsn || '').trim();
+    const rawId = (s.id || '').trim().toLowerCase();
+    const canonicalKey = getCanonicalKey(s);
+
+    const hasValidNpsn = Boolean(rawNpsn && rawNpsn !== '20500000' && rawNpsn !== '-' && rawNpsn !== '');
+
+    const isDuplicate = 
+      seenCanonicalKeys.has(canonicalKey) ||
+      (rawId && seenIds.has(rawId)) ||
+      seenNames.has(normName) ||
+      (hasValidNpsn && seenNpsn.has(rawNpsn));
+
+    if (!isDuplicate) {
+      seenCanonicalKeys.add(canonicalKey);
+      if (rawId) seenIds.add(rawId);
+      seenNames.add(normName);
+      if (hasValidNpsn) seenNpsn.add(rawNpsn);
+
+      let canonicalItem = s;
+      if (canonicalKey === 'sma_islam_diponegoro_wagir') {
+        canonicalItem = {
+          ...s,
+          id: 'sma_diponegoro_wagir',
+          name: 'SMA Islam Diponegoro Wagir',
+          npsn: hasValidNpsn ? rawNpsn : '20517834',
+          jenjang: s.jenjang || 'SMA',
+          statusSekolah: s.statusSekolah || 'Swasta'
+        };
+      }
+      result.push(canonicalItem);
     }
   }
   return result;
@@ -214,14 +266,70 @@ export const subscribeToRegisteredSchools = (callback: (schools: RegisteredSchoo
         list.push({ ...data, id: d.id || data.id });
       }
     });
-    if (list.length > 0) {
-      callback(filterDeletedSchools(list));
+
+    // Merge with defaults and local storage cache so edits are never lost
+    let cachedLocal: RegisteredSchool[] = [];
+    try {
+      if (typeof window !== 'undefined') {
+        const raw = localStorage.getItem('simak_registered_schools');
+        if (raw) cachedLocal = JSON.parse(raw);
+      }
+    } catch (e) {}
+
+    const getCanonicalSchoolKey = (s: RegisteredSchool) => {
+      const name = (s.name || '').toLowerCase().trim();
+      const npsn = (s.npsn || '').trim();
+      const id = (s.id || '').toLowerCase().trim();
+      if ((name.includes('diponegoro') && name.includes('wagir')) || npsn === '20517834' || id.includes('diponegoro')) {
+        return 'sma_diponegoro_wagir';
+      }
+      if ((name.includes('bedalisodo') && name.includes('3')) || id.includes('bedalisodo_3') || id === 'sd_negeri_3_bedalisodo') {
+        return 'sd_negeri_3_bedalisodo';
+      }
+      if ((name.includes('bedalisodo') && name.includes('4')) || id.includes('bedalisodo_4') || id === 'sd_negeri_4_bedalisodo') {
+        return 'sd_negeri_4_bedalisodo';
+      }
+      return id || name;
+    };
+
+    const schoolMap = new Map<string, RegisteredSchool>();
+    // 1. Initial base
+    initialRegisteredSchools.forEach(s => schoolMap.set(getCanonicalSchoolKey(s), s));
+    // 2. Cached local
+    if (Array.isArray(cachedLocal)) {
+      cachedLocal.forEach(s => {
+        const key = getCanonicalSchoolKey(s);
+        const exist = schoolMap.get(key);
+        schoolMap.set(key, { ...(exist || {}), ...s, id: exist?.id || s.id });
+      });
+    }
+    // 3. Remote firestore data
+    list.forEach(s => {
+      const key = getCanonicalSchoolKey(s);
+      const exist = schoolMap.get(key);
+      schoolMap.set(key, { ...(exist || {}), ...s, id: exist?.id || s.id });
+    });
+
+    const finalSchools = Array.from(schoolMap.values());
+    if (finalSchools.length > 0) {
+      callback(deduplicateSchools(filterDeletedSchools(finalSchools)));
     } else {
       callback(filterDeletedSchools(initialRegisteredSchools));
     }
   }, (err) => {
     console.warn('Error subscribing to schools collection:', err);
-    callback(filterDeletedSchools(initialRegisteredSchools));
+    let cachedLocal: RegisteredSchool[] = [];
+    try {
+      if (typeof window !== 'undefined') {
+        const raw = localStorage.getItem('simak_registered_schools');
+        if (raw) cachedLocal = JSON.parse(raw);
+      }
+    } catch (e) {}
+    if (cachedLocal.length > 0) {
+      callback(deduplicateSchools(filterDeletedSchools(cachedLocal)));
+    } else {
+      callback(filterDeletedSchools(initialRegisteredSchools));
+    }
   });
 };
 
@@ -231,14 +339,30 @@ export const registerSchoolToFirebase = async (school: Partial<RegisteredSchool>
   const payload: RegisteredSchool = {
     id: schoolId,
     name: school.name.trim(),
-    npsn: school.npsn || '20500000',
-    principalName: school.principalName || 'Kepala Sekolah',
+    npsn: school.npsn !== undefined ? String(school.npsn).trim() : '20500000',
+    jenjang: school.jenjang || 'SMA',
+    statusSekolah: school.statusSekolah || 'Swasta',
+    akreditasi: school.akreditasi || 'A (Unggul)',
+    kurikulum: school.kurikulum || 'Kurikulum Merdeka',
+    principalName: school.principalName !== undefined ? school.principalName.trim() : 'Kepala Sekolah',
+    principalNip: school.principalNip !== undefined ? school.principalNip.trim() : '-',
     academicYear: school.academicYear || '2026/2027',
     semester: school.semester || 'Ganjil',
+    city: school.city !== undefined ? school.city.trim() : 'Kab. Malang',
+    address: school.address !== undefined ? school.address.trim() : '',
+    province: school.province !== undefined ? school.province.trim() : 'Jawa Timur',
+    postalCode: school.postalCode !== undefined ? school.postalCode.trim() : '',
+    phone: school.phone !== undefined ? school.phone.trim() : '',
+    email: school.email !== undefined ? school.email.trim() : '',
+    website: school.website !== undefined ? school.website.trim() : '',
     createdAt: school.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
   };
-  await setDoc(docRef, payload, { merge: true });
+  try {
+    await setDoc(docRef, payload, { merge: true });
+  } catch (err) {
+    console.warn('Firebase setDoc failed, continuing with local persistence:', err);
+  }
   return payload;
 };
 

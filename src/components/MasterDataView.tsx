@@ -762,7 +762,29 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
           onRegisterSchool={onRegisterSchool}
           onDeleteSchoolStorage={onDeleteSchoolStorage}
           onNavigateToDetail={(schName) => {
-            if (onUpdateTeacherProfile && teacher) {
+            const targetSchool = registeredSchools.find(s => s.name === schName || s.id === schName);
+            if (targetSchool && onUpdateTeacherProfile && teacher) {
+              onUpdateTeacherProfile({
+                ...teacher,
+                schoolName: targetSchool.name,
+                npsn: targetSchool.npsn || '20500000',
+                principalName: targetSchool.principalName || teacher.principalName,
+                principalNip: targetSchool.principalNip || teacher.principalNip,
+                city: targetSchool.city || teacher.city,
+                address: targetSchool.address || teacher.address,
+                province: targetSchool.province || teacher.province,
+                postalCode: targetSchool.postalCode || teacher.postalCode,
+                phone: targetSchool.phone || teacher.phone,
+                email: targetSchool.email || teacher.email,
+                website: targetSchool.website || teacher.website,
+                jenjang: targetSchool.jenjang || teacher.jenjang,
+                statusSekolah: targetSchool.statusSekolah || teacher.statusSekolah,
+                akreditasi: targetSchool.akreditasi || teacher.akreditasi,
+                kurikulum: targetSchool.kurikulum || teacher.kurikulum,
+                academicYear: targetSchool.academicYear || teacher.academicYear,
+                semester: targetSchool.semester || teacher.semester
+              });
+            } else if (onUpdateTeacherProfile && teacher) {
               onUpdateTeacherProfile({ ...teacher, schoolName: schName });
             }
             setSelectedCategory('DetailSekolah');

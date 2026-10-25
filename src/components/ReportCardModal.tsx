@@ -144,8 +144,8 @@ export const ReportCardModal: React.FC<ReportCardModalProps> = ({
           {/* Header Kop Surat Sekolah */}
           <div className="border-b-4 border-slate-900 pb-4 text-center space-y-1 relative">
             <div className="flex justify-between items-center mb-2">
-              <div className="w-14 h-14 bg-white flex items-center justify-center p-1">
-                <img src="/kemdikbud_logo.svg" alt="Kemdikbud" className="w-full h-full object-contain" />
+              <div className="w-14 h-14 flex items-center justify-center p-1">
+                <img src="/kemdikbud_logo.png" alt="Kemdikbud" className="w-full h-full object-contain" />
               </div>
               <div className="text-center flex-1 px-4">
                 <h2 className="text-xs font-bold uppercase tracking-widest text-slate-700">

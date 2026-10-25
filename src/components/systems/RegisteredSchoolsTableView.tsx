@@ -17,7 +17,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { RegisteredSchool, UserAccount, TeacherProfile } from '../../types';
-import { normalizeSchoolId } from '../../lib/firebaseService';
+import { normalizeSchoolId, deduplicateSchools } from '../../lib/firebaseService';
 
 interface RegisteredSchoolsTableViewProps {
   registeredSchools: RegisteredSchool[];
@@ -73,7 +73,8 @@ export const RegisteredSchoolsTableView: React.FC<RegisteredSchoolsTableViewProp
 
   // Filtered schools
   const filteredSchools = useMemo(() => {
-    return registeredSchools.filter((s) => {
+    const list = deduplicateSchools(registeredSchools || []);
+    return list.filter((s) => {
       const nameMatch = 
         (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (s.npsn || '').includes(searchTerm) ||

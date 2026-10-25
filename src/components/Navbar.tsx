@@ -567,7 +567,7 @@ export const Navbar: React.FC<NavbarProps> = ({
             className={`flex items-center space-x-2 md:space-x-2.5 shrink-0 ${isAdministrator ? 'cursor-pointer hover:opacity-95' : ''}`}
             title={isAdministrator ? "Kembali ke Dashboard Utama" : undefined}
           >
-            <div className="w-8 h-8 sm:w-9 sm:h-9 bg-white rounded-none shadow-xs shrink-0 flex items-center justify-center p-0.5 sm:p-1 border border-white/25">
+            <div className="w-8 h-8 sm:w-9 sm:h-9 shrink-0 flex items-center justify-center">
               <TutWuriHandayaniLogo className="w-full h-full" />
             </div>
             <div className="flex flex-col justify-center min-w-0">

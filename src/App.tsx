@@ -10,6 +10,7 @@ import {
   registerSchoolToFirebase,
   deleteSchoolFromFirebase,
   filterDeletedSchools,
+  deduplicateSchools,
   addDeletedSchoolKey,
   initialRegisteredSchools,
   saveTeacherProfileToFirebase, 
@@ -188,12 +189,12 @@ export default function App() {
         if (saved) {
           const parsed = JSON.parse(saved);
           if (Array.isArray(parsed) && parsed.length > 0) {
-            return filterDeletedSchools(parsed);
+            return deduplicateSchools(filterDeletedSchools(parsed));
           }
         }
       }
     } catch (e) {}
-    return filterDeletedSchools(initialRegisteredSchools);
+    return deduplicateSchools(filterDeletedSchools(initialRegisteredSchools));
   });
 
   const [showSchoolStorageModal, setShowSchoolStorageModal] = useState<boolean>(false);
@@ -218,7 +219,7 @@ export default function App() {
   useEffect(() => {
     const unsub = subscribeToRegisteredSchools((schools) => {
       if (schools && schools.length > 0) {
-        const filtered = filterDeletedSchools(schools);
+        const filtered = deduplicateSchools(filterDeletedSchools(schools));
         setRegisteredSchools(filtered);
         try {
           localStorage.setItem('simak_registered_schools', JSON.stringify(filtered));
@@ -321,21 +322,56 @@ export default function App() {
     setTeacher(prev => ({
       ...prev,
       schoolName: school.name,
-      npsn: school.npsn || prev.npsn || '20500000',
-      principalName: school.principalName || prev.principalName
+      npsn: school.npsn !== undefined ? school.npsn : (prev.npsn || '20500000'),
+      principalName: school.principalName !== undefined ? school.principalName : prev.principalName,
+      principalNip: school.principalNip !== undefined ? school.principalNip : prev.principalNip,
+      city: school.city !== undefined ? school.city : prev.city,
+      address: school.address !== undefined ? school.address : prev.address,
+      province: school.province !== undefined ? school.province : prev.province,
+      postalCode: school.postalCode !== undefined ? school.postalCode : prev.postalCode,
+      phone: school.phone !== undefined ? school.phone : prev.phone,
+      email: school.email !== undefined ? school.email : prev.email,
+      website: school.website !== undefined ? school.website : prev.website,
+      jenjang: school.jenjang || prev.jenjang || 'SMA',
+      statusSekolah: school.statusSekolah || prev.statusSekolah || 'Negeri',
+      akreditasi: school.akreditasi || prev.akreditasi || 'A (Unggul)',
+      kurikulum: school.kurikulum || prev.kurikulum || 'Kurikulum Merdeka',
+      academicYear: school.academicYear || prev.academicYear || '2026/2027',
+      semester: school.semester || prev.semester || 'Ganjil'
     }));
     setActiveSchoolContext(school.name);
   };
 
-  const handleRegisterNewSchool = async (newSchoolData: Partial<RegisteredSchool> & { name: string }) => {
+  const handleRegisterNewSchool = async (newSchoolData: Partial<RegisteredSchool> & { name: string; oldId?: string; oldName?: string }) => {
     const created = await registerSchoolToFirebase(newSchoolData);
-    setRegisteredSchools(prev => {
-      const next = filterDeletedSchools([created, ...prev.filter(s => s.id !== created.id)]);
+
+    // If the school was renamed, clean up old school key
+    if (newSchoolData.oldId && newSchoolData.oldId !== created.id) {
       try {
-        localStorage.setItem('simak_registered_schools', JSON.stringify(next));
+        await deleteSchoolFromFirebase(newSchoolData.oldId, newSchoolData.oldName);
       } catch (e) {}
-      return next;
+    }
+
+    setRegisteredSchools(prev => {
+      const targetId = newSchoolData.oldId || created.id;
+      const targetName = (newSchoolData.oldName || created.name).toLowerCase().trim();
+      let matched = false;
+      const updatedList = prev.map(s => {
+        if (s.id === targetId || s.id === created.id || s.name.toLowerCase().trim() === targetName) {
+          matched = true;
+          return { ...s, ...created };
+        }
+        return s;
+      });
+
+      const nextList = matched ? updatedList : [created, ...prev.filter(s => s.id !== created.id)];
+      const filtered = filterDeletedSchools(nextList);
+      try {
+        localStorage.setItem('simak_registered_schools', JSON.stringify(filtered));
+      } catch (e) {}
+      return filtered;
     });
+
     await seedSchoolDataIfEmpty(created.id, created.name);
     handleSelectSchoolStorage(created);
   };
@@ -1628,7 +1664,7 @@ export default function App() {
       // Administrator atau Kepala Sekolah memperbarui detail sekolah: sinkronkan ke Firebase & context
       const targetName = (newProfile.schoolName || teacher.schoolName).trim();
       const sId = normalizeSchoolId(targetName);
-      registerSchoolToFirebase({
+      const schoolPayload: RegisteredSchool = {
         id: sId,
         name: targetName,
         npsn: newProfile.npsn || '20500000',
@@ -1636,9 +1672,9 @@ export default function App() {
         principalNip: newProfile.principalNip || '',
         academicYear: newProfile.academicYear || '2026/2027',
         semester: newProfile.semester || 'Ganjil',
-        city: newProfile.city || 'Indonesia',
+        city: newProfile.city || 'Kab. Malang',
         address: newProfile.address || '',
-        province: newProfile.province || '',
+        province: newProfile.province || 'Jawa Timur',
         postalCode: newProfile.postalCode || '',
         phone: newProfile.phone || '',
         email: newProfile.email || '',
@@ -1647,7 +1683,26 @@ export default function App() {
         statusSekolah: newProfile.statusSekolah || 'Negeri',
         akreditasi: newProfile.akreditasi || 'A (Unggul)',
         kurikulum: newProfile.kurikulum || 'Kurikulum Merdeka'
+      };
+      registerSchoolToFirebase(schoolPayload);
+
+      setRegisteredSchools(prev => {
+        let matched = false;
+        const updated = prev.map(s => {
+          if (s.id === sId || s.name.toLowerCase().trim() === targetName.toLowerCase()) {
+            matched = true;
+            return { ...s, ...schoolPayload };
+          }
+          return s;
+        });
+        const result = matched ? updated : [schoolPayload, ...prev];
+        const filtered = filterDeletedSchools(result);
+        try {
+          localStorage.setItem('simak_registered_schools', JSON.stringify(filtered));
+        } catch (e) {}
+        return filtered;
       });
+
       if (newProfile.schoolName && newProfile.schoolName !== activeSchoolName) {
         setSelectedSchoolName(newProfile.schoolName);
         setActiveSchoolContext(newProfile.schoolName);
@@ -2321,6 +2376,12 @@ export default function App() {
   }, [isKepalaSekolah, activeTab]);
 
   useEffect(() => {
+    if (isAdministrator && activeTab === 'ai-assistant') {
+      setActiveTab('master-data');
+    }
+  }, [isAdministrator, activeTab]);
+
+  useEffect(() => {
     const RESTRICTED_TABS: NavTab[] = ['sync', 'schedule', 'journal', 'upload-modul', 'students', 'attendance', 'extracurricular', 'grades'];
     if (isCurrentAccountDisabled && RESTRICTED_TABS.includes(activeTab)) {
       setActiveTab(isAdministrator ? 'dashboard' : 'settings');
@@ -2328,6 +2389,11 @@ export default function App() {
   }, [isCurrentAccountDisabled, activeTab, isAdministrator]);
 
   const handleTabChange = (tab: NavTab) => {
+    if (isAdministrator && tab === 'ai-assistant') {
+      setActiveTab('master-data');
+      return;
+    }
+
     if (!isAdministrator && tab === 'dashboard') {
       if (isKepalaSekolah) setActiveTab('validasi');
       else if (isGuruRole) setActiveTab('students');
@@ -3020,7 +3086,7 @@ export default function App() {
                 />
               )}
 
-              {activeTab === 'ai-assistant' && !isKepalaSekolah && (
+              {activeTab === 'ai-assistant' && !isKepalaSekolah && !isAdministrator && !isMasterUser && !isAdminSystem && (
                 <GeminiAssistantView
                   teacher={teacher}
                   selectedClass={selectedClass}

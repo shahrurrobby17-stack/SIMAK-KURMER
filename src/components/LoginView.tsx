@@ -1200,23 +1200,23 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
   useEffect(() => {
     if (propsRegisteredSchools && propsRegisteredSchools.length > 0) {
-      setLiveSchools(filterDeletedSchools(propsRegisteredSchools));
+      setLiveSchools(deduplicateSchools(filterDeletedSchools(propsRegisteredSchools)));
     } else {
       const unsub = subscribeToRegisteredSchools((list) => {
         if (list && list.length > 0) {
-          setLiveSchools(filterDeletedSchools(list));
+          setLiveSchools(deduplicateSchools(filterDeletedSchools(list)));
         } else {
           const saved = typeof window !== 'undefined' ? localStorage.getItem('simak_registered_schools') : null;
           if (saved) {
             try {
               const parsed = JSON.parse(saved);
               if (Array.isArray(parsed) && parsed.length > 0) {
-                setLiveSchools(filterDeletedSchools(parsed));
+                setLiveSchools(deduplicateSchools(filterDeletedSchools(parsed)));
                 return;
               }
             } catch (e) {}
           }
-          setLiveSchools(filterDeletedSchools(initialRegisteredSchools));
+          setLiveSchools(deduplicateSchools(filterDeletedSchools(initialRegisteredSchools)));
         }
       });
       return () => unsub();
@@ -1248,18 +1248,41 @@ export const LoginView: React.FC<LoginViewProps> = ({
       return !excludedPatterns.some(p => name.includes(p) || id.includes(p.replace(/\s+/g, '_')));
     });
 
-    const existingNames = new Set(nonExcluded.map(s => s.name.trim().toLowerCase()));
-    const missingFeatured = initialRegisteredSchools.filter(s => 
-      !existingNames.has(s.name.trim().toLowerCase()) &&
-      !excludedPatterns.some(p => s.name.toLowerCase().includes(p))
-    );
-    const merged = [...nonExcluded, ...missingFeatured].map(s => {
-      if (s.name.includes('Bedalisodo')) {
+    const isDiponegoroWagir = (name: string, id: string, npsn: string) => {
+      const lower = (name || '').toLowerCase().trim();
+      const rawNpsn = (npsn || '').trim();
+      const rawId = (id || '').toLowerCase().trim();
+      return (lower.includes('diponegoro') && lower.includes('wagir')) || rawNpsn === '20517834' || rawId.includes('diponegoro');
+    };
+
+    const hasDiponegoro = nonExcluded.some(s => isDiponegoroWagir(s.name, s.id, s.npsn || ''));
+    const hasBedali3 = nonExcluded.some(s => (s.name || '').toLowerCase().includes('bedalisodo') && (s.name || '').includes('3'));
+    const hasBedali4 = nonExcluded.some(s => (s.name || '').toLowerCase().includes('bedalisodo') && (s.name || '').includes('4'));
+
+    const missingFeatured = initialRegisteredSchools.filter(s => {
+      if (isDiponegoroWagir(s.name, s.id, s.npsn || '') && hasDiponegoro) return false;
+      if ((s.name || '').includes('3') && hasBedali3) return false;
+      if ((s.name || '').includes('4') && hasBedali4) return false;
+      return !excludedPatterns.some(p => (s.name || '').toLowerCase().includes(p));
+    });
+
+    const merged = deduplicateSchools([...nonExcluded, ...missingFeatured]).map(s => {
+      if ((s.name || '').includes('Bedalisodo')) {
         return { ...s, npsn: '20500000' };
+      }
+      if (isDiponegoroWagir(s.name, s.id, s.npsn || '')) {
+        return {
+          ...s,
+          id: 'sma_diponegoro_wagir',
+          name: 'SMA Islam Diponegoro Wagir',
+          npsn: s.npsn && s.npsn !== '20500000' ? s.npsn : '20517834',
+          jenjang: s.jenjang || 'SMA',
+          statusSekolah: s.statusSekolah || 'Swasta'
+        };
       }
       return s;
     });
-    return merged;
+    return deduplicateSchools(merged);
   }, [liveSchools, propsRegisteredSchools]);
 
   const filteredDisplaySchools = useMemo(() => {
@@ -1643,64 +1666,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
     return true;
   };
 
-  const handleQuickAdminLogin = () => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    
-    let localRegUsers: UserAccount[] = [];
-    try {
-      if (typeof window !== 'undefined') {
-        const stored = localStorage.getItem('simak_registered_users');
-        if (stored) localRegUsers = JSON.parse(stored);
-      }
-    } catch (e) {}
 
-    const allRegistered = [...registeredUsers, ...localRegUsers];
-    const matchedRegistered = allRegistered.find(u => 
-      u.email?.toLowerCase() === 'shahrurrobby17@gmail.com' ||
-      u.nip?.replace(/\s+/g, '') === '199001012015011001' ||
-      u.uid === 'USER-ADMIN' ||
-      (u.role && (u.role.toLowerCase().includes('admin') || u.role.toLowerCase().includes('master')))
-    );
-
-    const activeName = matchedRegistered?.name || 'Shahrur Robby, S.Pd.';
-    const activeNip = matchedRegistered?.nip || '19900101 201501 1 001';
-    const activeSchool = matchedRegistered?.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak';
-    const activeEmail = matchedRegistered?.email || 'shahrurrobby17@gmail.com';
-
-    const adminUser: UserAccount = {
-      uid: matchedRegistered?.uid || 'USER-ADMIN',
-      email: activeEmail,
-      password: matchedRegistered?.password || '12345678',
-      name: activeName,
-      schoolName: activeSchool,
-      role: 'Administrator',
-      nip: activeNip,
-      profileId: matchedRegistered?.profileId || 'PROF-ADMIN',
-      status: 'Aktif',
-      isMaintenance: false
-    };
-
-    recordUserLoginLog({
-      userId: adminUser.uid,
-      name: adminUser.name,
-      email: adminUser.email,
-      nip: adminUser.nip,
-      role: adminUser.role,
-      schoolName: adminUser.schoolName,
-      status: 'Berhasil',
-      authMethod: 'Masuk Cepat (Khusus Administrator)'
-    });
-
-    setUserOnlinePresence(adminUser, true).catch(() => {});
-
-    setSuccessNotification(`Masuk Cepat Berhasil: Selamat datang, ${activeName}! Mengarahkan ke Dashboard Administrator...`);
-
-    setTimeout(() => {
-      setIsLoading(false);
-      onLoginSuccess(adminUser, 'PROF-ADMIN', 'master-data');
-    }, 450);
-  };
 
   const handleDirectStudentLogin = (studentToLogin?: Student) => {
     setIsLoading(true);
@@ -2728,20 +2694,20 @@ export const LoginView: React.FC<LoginViewProps> = ({
           </nav>
 
           {/* Right Header Action Button with Dropdown */}
-          <div className="hidden sm:block relative">
+          <div className="hidden sm:flex items-center gap-2.5 relative">
             {/* Main Login Dropdown Trigger */}
             <button
               type="button"
               onClick={() => setShowLoginDropdown(prev => !prev)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
                 isHeaderLight 
-                  ? 'bg-sky-500 hover:bg-sky-600 text-white border border-sky-400/50' 
-                  : 'bg-white hover:bg-slate-100 text-sky-700 border border-white/80'
+                  ? 'bg-[#0066b2] hover:bg-[#005291] text-white border border-[#0066b2]' 
+                  : 'bg-white/20 hover:bg-white/30 text-white border border-white/40 backdrop-blur-xs'
               }`}
             >
-              <LogIn className={`w-4 h-4 stroke-[2.5] ${isHeaderLight ? 'text-white' : 'text-sky-600'}`} />
+              <LogIn className="w-4 h-4 stroke-[2.5] text-white" />
               <span>Masuk ke Sistem</span>
-              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showLoginDropdown ? 'rotate-180' : ''} ${isHeaderLight ? 'text-sky-100' : 'text-slate-500'}`} />
+              <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showLoginDropdown ? 'rotate-180' : ''} text-white/80`} />
             </button>
 
             {showLoginDropdown && (
@@ -2752,7 +2718,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   onClick={() => setShowLoginDropdown(false)} 
                 />
 
-                <div className="absolute right-0 mt-2 top-full w-64 bg-white rounded-xl shadow-xl border border-slate-200/90 py-1.5 z-50 animate-fadeIn text-slate-800">
+                <div className="absolute right-0 mt-2 top-full w-56 bg-white rounded-xl shadow-xl border border-slate-200/90 py-1.5 z-50 animate-fadeIn text-slate-800">
                   <button
                     type="button"
                     onClick={() => {
@@ -2879,13 +2845,12 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
             {/* Tombol Masuk ke Sistem Mobile */}
             <div className="mt-7 w-full max-w-xs relative space-y-2.5">
-
               <button
                 type="button"
                 onClick={() => setShowLoginDropdown(prev => !prev)}
-                className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-slate-100 text-sky-700 px-6 py-3.5 rounded-xl font-bold text-sm shadow-xl active:scale-95 transition-all cursor-pointer border border-white/80"
+                className="w-full flex items-center justify-center gap-2.5 bg-white hover:bg-sky-50 text-[#004b87] px-5 py-3.5 rounded-xl font-black text-xs sm:text-sm shadow-xl active:scale-95 transition-all cursor-pointer border border-white/95"
               >
-                <LogIn className="w-4 h-4 text-sky-600 stroke-[2.5]" />
+                <LogIn className="w-4 h-4 text-[#0066b2] stroke-[2.5]" />
                 <span>Masuk ke Sistem</span>
                 <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${showLoginDropdown ? 'rotate-180' : ''}`} />
               </button>
@@ -2986,6 +2951,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     <Calendar className="w-4 h-4 text-white shrink-0" />
                     <span className="whitespace-nowrap">Pembaruan Terakhir : Sabtu, 24 Oktober 2026</span>
                   </div>
+
                 </div>
 
               </div>
@@ -3860,30 +3826,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
               <p className="text-xs sm:text-sm text-slate-600 mt-1.5 max-w-3xl mx-auto font-medium leading-relaxed">
                 Daftar profil satuan pendidikan resmi yang terdaftar dan terintegrasi di SIMAK Merdeka.
               </p>
-
-              {/* Status bar with Last Sync timestamp and manual refresh */}
-              <div className="flex flex-wrap items-center justify-center gap-2 mt-3 text-xs text-slate-600 font-medium">
-                <span className="flex items-center gap-1.5 text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500" />
-                  Status: <strong className="text-emerald-700">Terdaftar & Aktif</strong>
-                </span>
-                <span className="flex items-center gap-1.5 text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
-                  Total: <strong className="text-sky-700">{effectiveSchools.length} Satuan Pendidikan</strong>
-                </span>
-                <span className="flex items-center gap-1.5 text-slate-700 bg-white px-3 py-1 rounded-full border border-slate-200 shadow-2xs">
-                  Pembaruan: <strong className="text-slate-700">{lastSyncTime}</strong>
-                </span>
-                <button
-                  type="button"
-                  onClick={handleManualRefresh}
-                  disabled={isRefreshing}
-                  className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-white hover:bg-slate-50 text-slate-700 font-semibold border border-slate-200 shadow-2xs transition-colors cursor-pointer disabled:opacity-50"
-                  title="Segarkan data secara real-time dari cloud"
-                >
-                  <RefreshCw className={`w-3 h-3 text-sky-600 ${isRefreshing ? 'animate-spin' : ''}`} />
-                  <span>Segarkan Data</span>
-                </button>
-              </div>
             </div>
 
             {/* Search Bar */}
@@ -4857,6 +4799,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
                         </>
                       )}
                     </button>
+
+
 
 
 

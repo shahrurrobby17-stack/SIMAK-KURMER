@@ -74,36 +74,36 @@ export const SscasnRegisterForm: React.FC<SscasnRegisterFormProps> = ({
 
   // Registered Schools List State
   const [schoolsList, setSchoolsList] = useState<RegisteredSchool[]>(() => {
-    if (propsRegisteredSchools && propsRegisteredSchools.length > 0) return filterDeletedSchools(propsRegisteredSchools);
+    if (propsRegisteredSchools && propsRegisteredSchools.length > 0) return deduplicateSchools(filterDeletedSchools(propsRegisteredSchools));
     const saved = typeof window !== 'undefined' ? localStorage.getItem('simak_registered_schools') : null;
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return filterDeletedSchools(parsed);
+        if (Array.isArray(parsed) && parsed.length > 0) return deduplicateSchools(filterDeletedSchools(parsed));
       } catch (e) {}
     }
-    return filterDeletedSchools(initialRegisteredSchools);
+    return deduplicateSchools(filterDeletedSchools(initialRegisteredSchools));
   });
 
   useEffect(() => {
     if (propsRegisteredSchools && propsRegisteredSchools.length > 0) {
-      setSchoolsList(filterDeletedSchools(propsRegisteredSchools));
+      setSchoolsList(deduplicateSchools(filterDeletedSchools(propsRegisteredSchools)));
     } else {
       const unsub = subscribeToRegisteredSchools((list) => {
         if (list && list.length > 0) {
-          setSchoolsList(filterDeletedSchools(list));
+          setSchoolsList(deduplicateSchools(filterDeletedSchools(list)));
         } else {
           const saved = typeof window !== 'undefined' ? localStorage.getItem('simak_registered_schools') : null;
           if (saved) {
             try {
               const parsed = JSON.parse(saved);
               if (Array.isArray(parsed) && parsed.length > 0) {
-                setSchoolsList(filterDeletedSchools(parsed));
+                setSchoolsList(deduplicateSchools(filterDeletedSchools(parsed)));
                 return;
               }
             } catch (e) {}
           }
-          setSchoolsList(filterDeletedSchools(initialRegisteredSchools));
+          setSchoolsList(deduplicateSchools(filterDeletedSchools(initialRegisteredSchools)));
         }
       });
       return () => unsub();

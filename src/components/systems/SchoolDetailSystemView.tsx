@@ -84,28 +84,32 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
   const canEditSchool = isAdministrator || isKepalaSekolah;
 
   // Temukan data sekolah aktif
+  const targetSchoolName = activeSchoolName || teacher?.schoolName || '';
   const currentSchoolData = registeredSchools.find(
-    s => s.name?.toLowerCase().trim() === (teacher?.schoolName || '').toLowerCase().trim()
+    s => s.name?.toLowerCase().trim() === targetSchoolName.toLowerCase().trim()
   ) || registeredSchools[0];
 
+  const [selectedSchoolId, setSelectedSchoolId] = useState<string>(() => currentSchoolData?.id || normalizeSchoolId(targetSchoolName || 'sma_diponegoro_wagir'));
+  const [originalSchoolName, setOriginalSchoolName] = useState<string>(() => currentSchoolData?.name || targetSchoolName);
+
   // Form states
-  const [schoolName, setSchoolName] = useState<string>(() => teacher?.schoolName || currentSchoolData?.name || 'SMA Islam Diponegoro Wagir');
-  const [npsn, setNpsn] = useState<string>(() => teacher?.npsn || currentSchoolData?.npsn || '20517834');
+  const [schoolName, setSchoolName] = useState<string>(() => currentSchoolData?.name || teacher?.schoolName || 'SMA Islam Diponegoro Wagir');
+  const [npsn, setNpsn] = useState<string>(() => currentSchoolData?.npsn || teacher?.npsn || '20517834');
   const [jenjang, setJenjang] = useState<string>(() => currentSchoolData?.jenjang || 'SMA');
   const [statusSekolah, setStatusSekolah] = useState<string>(() => currentSchoolData?.statusSekolah || 'Swasta');
   const [akreditasi, setAkreditasi] = useState<string>(() => currentSchoolData?.akreditasi || 'A (Unggul)');
   const [kurikulum, setKurikulum] = useState<string>(() => currentSchoolData?.kurikulum || 'Kurikulum Merdeka');
-  const [principalName, setPrincipalName] = useState<string>(() => teacher?.principalName || currentSchoolData?.principalName || 'H. Moh. Ridwan, S.Pd., M.Si.');
-  const [principalNip, setPrincipalNip] = useState<string>(() => teacher?.principalNip || currentSchoolData?.principalNip || '19691120 199403 1 003');
-  const [city, setCity] = useState<string>(() => teacher?.city || currentSchoolData?.city || 'Kab. Malang');
+  const [principalName, setPrincipalName] = useState<string>(() => currentSchoolData?.principalName || teacher?.principalName || 'H. Moh. Ridwan, S.Pd., M.Si.');
+  const [principalNip, setPrincipalNip] = useState<string>(() => currentSchoolData?.principalNip || teacher?.principalNip || '19691120 199403 1 003');
+  const [city, setCity] = useState<string>(() => currentSchoolData?.city || teacher?.city || 'Kab. Malang');
   const [address, setAddress] = useState<string>(() => currentSchoolData?.address || 'Jl. Raya Parangargo No. 1, Wagir, Kab. Malang');
   const [province, setProvince] = useState<string>(() => currentSchoolData?.province || 'Jawa Timur');
   const [postalCode, setPostalCode] = useState<string>(() => currentSchoolData?.postalCode || '65145');
   const [phone, setPhone] = useState<string>(() => currentSchoolData?.phone || '(0341) 551234');
   const [emailSekolah, setEmailSekolah] = useState<string>(() => currentSchoolData?.email || 'info@sman1indonesia.sch.id');
   const [website, setWebsite] = useState<string>(() => currentSchoolData?.website || 'https://sman1indonesia.sch.id');
-  const [academicYear, setAcademicYear] = useState<string>(() => teacher?.academicYear || currentSchoolData?.academicYear || '2026/2027');
-  const [semester, setSemester] = useState<string>(() => teacher?.semester || currentSchoolData?.semester || 'Ganjil');
+  const [academicYear, setAcademicYear] = useState<string>(() => currentSchoolData?.academicYear || teacher?.academicYear || '2026/2027');
+  const [semester, setSemester] = useState<string>(() => currentSchoolData?.semester || teacher?.semester || 'Ganjil');
 
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [feedback, setFeedback] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
@@ -129,6 +133,8 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
 
   const handleSelectSchool = (schoolObj: RegisteredSchool) => {
     if (!schoolObj) return;
+    setSelectedSchoolId(schoolObj.id);
+    setOriginalSchoolName(schoolObj.name);
     setSchoolName(schoolObj.name || '');
     setNpsn(schoolObj.npsn || '');
     setJenjang(schoolObj.jenjang || 'SMA');
@@ -144,6 +150,9 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
     setPhone(schoolObj.phone || '');
     setEmailSekolah(schoolObj.email || '');
     setWebsite(schoolObj.website || '');
+    if (schoolObj.academicYear) setAcademicYear(schoolObj.academicYear);
+    if (schoolObj.semester) setSemester(schoolObj.semester);
+    setFeedback(null);
   };
 
   const handleAddNewSchoolSubmit = async (e: React.FormEvent) => {
@@ -160,7 +169,7 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
     setIsSubmittingNewSchool(true);
     try {
       const sId = normalizeSchoolId(newSchoolData.name.trim());
-      const newSchoolPayload = {
+      const newSchoolPayload: RegisteredSchool = {
         id: sId,
         name: newSchoolData.name.trim(),
         npsn: newSchoolData.npsn.trim(),
@@ -185,15 +194,7 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
       }
 
       // Load new school details into active form
-      setSchoolName(newSchoolData.name.trim());
-      setNpsn(newSchoolData.npsn.trim());
-      setJenjang(newSchoolData.jenjang);
-      setStatusSekolah(newSchoolData.statusSekolah);
-      setAkreditasi(newSchoolData.akreditasi);
-      setPrincipalName(newSchoolData.principalName.trim() || 'Kepala Sekolah');
-      setPrincipalNip(newSchoolData.principalNip.trim() || '-');
-      setCity(newSchoolData.city.trim() || 'Kab. Malang');
-      setAddress(newSchoolData.address.trim() || '');
+      handleSelectSchool(newSchoolPayload);
 
       setFeedback({
         type: 'success',
@@ -222,14 +223,24 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
     }
   };
 
-  // Sync state if teacher prop updates
+  // Sync state if teacher prop updates and matches currently viewed school
   useEffect(() => {
-    if (teacher) {
+    if (teacher && (!selectedSchoolId || selectedSchoolId === normalizeSchoolId(teacher.schoolName || ''))) {
       if (teacher.schoolName) setSchoolName(teacher.schoolName);
       if (teacher.npsn) setNpsn(teacher.npsn);
       if (teacher.principalName) setPrincipalName(teacher.principalName);
       if (teacher.principalNip) setPrincipalNip(teacher.principalNip);
       if (teacher.city) setCity(teacher.city);
+      if (teacher.address) setAddress(teacher.address);
+      if (teacher.province) setProvince(teacher.province);
+      if (teacher.postalCode) setPostalCode(teacher.postalCode);
+      if (teacher.phone) setPhone(teacher.phone);
+      if (teacher.email) setEmailSekolah(teacher.email);
+      if (teacher.website) setWebsite(teacher.website);
+      if (teacher.jenjang) setJenjang(teacher.jenjang);
+      if (teacher.statusSekolah) setStatusSekolah(teacher.statusSekolah);
+      if (teacher.akreditasi) setAkreditasi(teacher.akreditasi);
+      if (teacher.kurikulum) setKurikulum(teacher.kurikulum);
       if (teacher.academicYear) setAcademicYear(teacher.academicYear);
       if (teacher.semester) setSemester(teacher.semester);
     }
@@ -241,12 +252,15 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
   ).length;
 
   const handleReset = () => {
-    if (teacher) {
-      setSchoolName(teacher.schoolName || 'SMA Negeri 1 Indonesia - Sekolah Penggerak');
-      setNpsn(teacher.npsn || '20500000');
-      setPrincipalName(teacher.principalName || 'Dr. Hj. Sri Wahyuni, M.Si.');
-      setPrincipalNip(teacher.principalNip || '19691120 199403 2 003');
-      setCity(teacher.city || 'Indonesia');
+    const target = registeredSchools.find(s => s.id === selectedSchoolId || s.name.toLowerCase().trim() === originalSchoolName.toLowerCase().trim()) || currentSchoolData;
+    if (target) {
+      handleSelectSchool(target);
+    } else if (teacher) {
+      setSchoolName(teacher.schoolName || 'SMA Islam Diponegoro Wagir');
+      setNpsn(teacher.npsn || '20517834');
+      setPrincipalName(teacher.principalName || 'H. Moh. Ridwan, S.Pd., M.Si.');
+      setPrincipalNip(teacher.principalNip || '19691120 199403 1 003');
+      setCity(teacher.city || 'Kab. Malang');
       setAcademicYear(teacher.academicYear || '2026/2027');
       setSemester(teacher.semester || 'Ganjil');
     }
@@ -287,47 +301,19 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
     setIsSaving(true);
 
     try {
-      // 1. Perbarui profil teacher aktif di state utama & localStorage
-      const updatedTeacher: TeacherProfile = {
-        ...(teacher || {}),
-        name: teacher?.name || 'Administrator SIMAK',
-        title: teacher?.title || 'Admin & Guru',
-        nip: teacher?.nip || '19900101 201501 1 001',
-        subjectRole: teacher?.subjectRole || 'Pendidik',
-        schoolName: schoolName.trim(),
-        npsn: npsn.trim(),
-        principalName: principalName.trim(),
-        principalNip: principalNip.trim(),
-        city: city.trim(),
-        address: address.trim(),
-        province: province.trim(),
-        postalCode: postalCode.trim(),
-        phone: phone.trim(),
-        email: emailSekolah.trim(),
-        website: website.trim(),
-        jenjang: jenjang,
-        statusSekolah: statusSekolah,
-        akreditasi: akreditasi,
-        kurikulum: kurikulum,
-        academicYear: academicYear.trim(),
-        semester: semester.trim(),
-        guardianClass: teacher?.guardianClass || 'X-IPA 1'
-      };
+      const newSchoolId = normalizeSchoolId(schoolName.trim());
+      const effectiveSchoolId = selectedSchoolId || newSchoolId;
 
-      if (onUpdateTeacherProfile) {
-        onUpdateTeacherProfile(updatedTeacher);
-      }
-
-      // 2. Sinkronisasikan ke Firebase Firestore /schools/{schoolId}
-      const schoolId = normalizeSchoolId(schoolName.trim());
-      await registerSchoolToFirebase({
-        id: schoolId,
+      const schoolPayload: RegisteredSchool = {
+        id: newSchoolId,
         name: schoolName.trim(),
         npsn: npsn.trim(),
+        jenjang,
+        statusSekolah,
+        akreditasi,
+        kurikulum,
         principalName: principalName.trim(),
         principalNip: principalNip.trim(),
-        academicYear: academicYear.trim(),
-        semester: semester.trim(),
         city: city.trim(),
         address: address.trim(),
         province: province.trim(),
@@ -335,26 +321,88 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
         phone: phone.trim(),
         email: emailSekolah.trim(),
         website: website.trim(),
-        jenjang: jenjang,
-        statusSekolah: statusSekolah,
-        akreditasi: akreditasi,
-        kurikulum: kurikulum
-      });
+        academicYear: academicYear.trim(),
+        semester: semester.trim(),
+        updatedAt: new Date().toISOString()
+      };
 
+      // 1. Sinkronisasi ke Firestore /schools/{schoolId}
+      await registerSchoolToFirebase(schoolPayload);
+
+      // 2. Simpan cache instan ke localStorage
+      try {
+        if (typeof window !== 'undefined') {
+          const raw = localStorage.getItem('simak_registered_schools');
+          let currentList: RegisteredSchool[] = raw ? JSON.parse(raw) : [...registeredSchools];
+          let found = false;
+          currentList = currentList.map(s => {
+            if (s.id === effectiveSchoolId || s.id === newSchoolId || s.name.toLowerCase().trim() === originalSchoolName.toLowerCase().trim()) {
+              found = true;
+              return { ...s, ...schoolPayload };
+            }
+            return s;
+          });
+          if (!found) {
+            currentList.push(schoolPayload);
+          }
+          localStorage.setItem('simak_registered_schools', JSON.stringify(currentList));
+        }
+      } catch (e) {}
+
+      // 3. Panggil onRegisterSchool ke parent App.tsx
       if (onRegisterSchool) {
         await onRegisterSchool({
-          id: schoolId,
-          name: schoolName.trim(),
+          ...schoolPayload,
+          oldId: effectiveSchoolId,
+          oldName: originalSchoolName
+        } as any);
+      }
+
+      // 4. Perbarui profil teacher aktif di state utama & localStorage jika sekolah yang diedit adalah sekolah aktif
+      const isEditingActiveSchool = !teacher?.schoolName || 
+        teacher.schoolName.toLowerCase().trim() === originalSchoolName.toLowerCase().trim() ||
+        teacher.schoolName.toLowerCase().trim() === schoolName.trim().toLowerCase() ||
+        effectiveSchoolId === normalizeSchoolId(teacher.schoolName || '');
+
+      if (isEditingActiveSchool) {
+        const updatedTeacher: TeacherProfile = {
+          ...(teacher || {}),
+          name: teacher?.name || 'Administrator SIMAK',
+          title: teacher?.title || 'Admin & Guru',
+          nip: teacher?.nip || '19900101 201501 1 001',
+          subjectRole: teacher?.subjectRole || 'Pendidik',
+          schoolName: schoolName.trim(),
           npsn: npsn.trim(),
           principalName: principalName.trim(),
+          principalNip: principalNip.trim(),
+          city: city.trim(),
+          address: address.trim(),
+          province: province.trim(),
+          postalCode: postalCode.trim(),
+          phone: phone.trim(),
+          email: emailSekolah.trim(),
+          website: website.trim(),
+          jenjang: jenjang,
+          statusSekolah: statusSekolah,
+          akreditasi: akreditasi,
+          kurikulum: kurikulum,
           academicYear: academicYear.trim(),
-          semester: semester.trim()
-        });
+          semester: semester.trim(),
+          guardianClass: teacher?.guardianClass || 'X-IPA 1'
+        };
+
+        if (onUpdateTeacherProfile) {
+          onUpdateTeacherProfile(updatedTeacher);
+        }
       }
+
+      // Update state identifier lokal
+      setSelectedSchoolId(newSchoolId);
+      setOriginalSchoolName(schoolName.trim());
 
       setFeedback({
         type: 'success',
-        message: `Detail Satuan Pendidikan "${schoolName.trim()}" berhasil disimpan & disinkronkan oleh ${isAdministrator ? 'Administrator' : 'Kepala Sekolah'}!`
+        message: `Perubahan Detail Satuan Pendidikan "${schoolName.trim()}" (NPSN: ${npsn.trim()}) berhasil disimpan dan diperbarui di seluruh sistem!`
       });
     } catch (err: any) {
       console.error('Error saving school details:', err);
@@ -382,7 +430,7 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
                   Detail Satuan Pendidikan & Data Kelembagaan
                 </h1>
                 <span className="px-2 py-0.5 text-[10px] font-bold bg-cyan-100 text-cyan-900 border border-cyan-200">
-                  NPSN: {npsn}
+                  NPSN: {npsn === '20500000' ? '20500000 (Belum Terverifikasi)' : npsn}
                 </span>
                 <span className="px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-200">
                   {statusSekolah} • {jenjang}
@@ -399,16 +447,16 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
               <div className="flex items-center gap-1.5">
                 <span className="text-[11px] font-bold text-slate-500 hidden md:inline">Pilih Sekolah:</span>
                 <select
-                  value={schoolName}
+                  value={selectedSchoolId}
                   onChange={(e) => {
-                    const sel = registeredSchools.find(s => s.name === e.target.value);
+                    const sel = registeredSchools.find(s => s.id === e.target.value || s.name === e.target.value);
                     if (sel) handleSelectSchool(sel);
                   }}
                   className="px-2.5 py-1.5 bg-slate-50 border border-slate-300 text-slate-800 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer"
                 >
                   {registeredSchools.map((sch, i) => (
-                    <option key={sch.id || i} value={sch.name}>
-                      {sch.name}
+                    <option key={sch.id || i} value={sch.id || sch.name}>
+                      {sch.name} {sch.npsn ? `(${sch.npsn})` : ''}
                     </option>
                   ))}
                 </select>

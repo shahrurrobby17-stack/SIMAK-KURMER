@@ -668,21 +668,15 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
       subtitle: 'Residu Data & Verval',
       icon: AlertOctagon,
       badge: null
-    },
-    {
-      id: 'ai-assistant' as NavTab,
-      label: 'Asisten AI',
-      subtitle: 'Tersedia',
-      icon: Sparkles,
-      badge: null
     }
   ];
 
-  // Pada halaman/akses Kepala Sekolah, sembunyikan menu Asisten AI dan Residu, dan sertakan menu Daftar GTK
+  // Sembunyikan menu Residu untuk Kepala Sekolah dan sertakan menu Daftar GTK
   const displayedMainNavItems = [
     ...(isKepalaSekolah ? [gtkItem] : []),
     ...mainNavItems.filter(item => {
-      if (isKepalaSekolah && (item.id === 'ai-assistant' || item.id === 'residu')) return false;
+      if (item.id === 'ai-assistant') return false;
+      if (isKepalaSekolah && item.id === 'residu') return false;
       return true;
     })
   ];
@@ -842,11 +836,6 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
             <span>NAVIGASI SISWA</span>
           </div>
         )}
-        {!isStudentRole && !isGuruRole && !isGuruOnlyMode && !isKurikulumOnlyMode && !isTuOnlyMode && !isKesiswaanOnlyMode && item.id === 'ai-assistant' && (
-          <div className="pt-3 pb-1 px-2.5 text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1">
-            <span>AI & Sistem</span>
-          </div>
-        )}
         <motion.button 
           type="button" 
           onClick={() => {
@@ -855,8 +844,8 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
               onClose();
             }
           }}
-          whileHover={item.id === 'ai-assistant' ? undefined : { x: 2 }}
-          whileTap={item.id === 'ai-assistant' ? undefined : { scale: 0.98 }}
+          whileHover={{ x: 2 }}
+          whileTap={{ scale: 0.98 }}
           transition={{ type: "spring", stiffness: 400, damping: 25 }}
           title={health.tooltip}
           className={`relative w-full text-left px-3 py-2 rounded-none transition-colors flex items-center justify-between group cursor-pointer overflow-hidden ${
@@ -881,9 +870,7 @@ export const SidebarNavigation: React.FC<SidebarNavigationProps> = ({
           {item.badge && (
             <div className="relative z-10 flex items-center shrink-0">
               <span className={`text-[9px] font-bold px-1.5 py-0.2 rounded-none ${
-                item.id === 'ai-assistant'
-                  ? 'bg-amber-400 text-slate-950 font-black'
-                  : isActive ? 'bg-[#337ab7] text-white' : 'bg-[#1e252e] text-slate-300 border border-slate-600/40'
+                isActive ? 'bg-[#337ab7] text-white' : 'bg-[#1e252e] text-slate-300 border border-slate-600/40'
               }`}>
                 {item.badge}
               </span>

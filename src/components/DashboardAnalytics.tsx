@@ -183,14 +183,6 @@ export const DashboardAnalytics: React.FC<DashboardAnalyticsProps> = ({
       color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
       iconBg: 'bg-[#164e63] text-white'
     }] : []),
-    ...(!isKepalaSekolah && !isGuruRole ? [{
-      id: 'ai-assistant' as NavTab,
-      label: 'Asisten AI',
-      desc: 'Generator Modul',
-      icon: Sparkles,
-      color: 'bg-cyan-50/80 hover:bg-cyan-100/80 border-cyan-200/80',
-      iconBg: 'bg-[#164e63] text-white'
-    }] : []),
     {
       id: 'settings' as NavTab,
       label: 'Pengaturan',
