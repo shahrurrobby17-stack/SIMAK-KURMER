@@ -67,7 +67,9 @@ import {
   Zap,
   Megaphone,
   Bell,
-  Pin
+  Pin,
+  AlertTriangle,
+  Clock
 } from 'lucide-react';
 import { UserAccount, TeacherProfile, TeachingScheduleItem, Student, StudentGrade, Subject, AttendanceRecord, TeachingLog, InfoAnnouncement, InfoAnnouncementItem, LoginBackgroundConfig, RegisteredSchool, defaultLoginBackgroundConfig, PpdbRegistration, getAnnouncementItems } from '../types';
 import { PRESET_THEMES } from './LoginBackgroundSettings';
@@ -179,6 +181,28 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const [isPpdbRegistration, setIsPpdbRegistration] = useState<boolean>(false);
   const [isHeaderLight, setIsHeaderLight] = useState<boolean>(false);
   const [activeAnnouncementIdx, setActiveAnnouncementIdx] = useState<number>(0);
+
+  // Floating Maintenance Popup State ( muncul sebelum ke halaman awal )
+  const [showMaintenancePopup, setShowMaintenancePopup] = useState<boolean>(true);
+  const [popupCountdown, setPopupCountdown] = useState<number>(5);
+  const [canClosePopup, setCanClosePopup] = useState<boolean>(false);
+
+  useEffect(() => {
+    if (!showMaintenancePopup) return;
+
+    const timer = setInterval(() => {
+      setPopupCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          setCanClosePopup(true);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+
+    return () => clearInterval(timer);
+  }, [showMaintenancePopup]);
 
   // Format tanggal pengumuman dalam Bahasa Indonesia sesuai tanggal pengumuman di-upload/diperbarui
   const formatAnnouncementDate = (dateVal?: string): string => {
@@ -3077,11 +3101,11 @@ export const LoginView: React.FC<LoginViewProps> = ({
             {/* HERO TEXT AND SYNC CARD ROW */}
             <div className="lg:col-span-12 space-y-2 sm:space-y-3 text-left">
               
-              {/* Desktop Layout: Left = Title & Details, Right = Kotak Kartu Pengumuman */}
+              {/* Desktop Layout: Title & Details */}
               <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8 xl:gap-12">
                 
-                {/* Left: Title, Description, Laptop note, Timestamp, Action Buttons */}
-                <div className="space-y-2 sm:space-y-2.5 max-w-xl lg:max-w-2xl pl-4 sm:pl-8 lg:pl-12 xl:pl-16">
+                {/* Title, Description, Laptop note */}
+                <div className="space-y-2 sm:space-y-2.5 max-w-xl lg:max-w-3xl pl-4 sm:pl-8 lg:pl-12 xl:pl-16">
                   {/* Main Display Headline */}
                   <h1 className="font-jakarta text-xl sm:text-2xl lg:text-3xl xl:text-[2.25rem] font-black text-white tracking-tight leading-[1.15]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900 }}>
                     Sistem Informasi Akademik <br />
@@ -3104,127 +3128,8 @@ export const LoginView: React.FC<LoginViewProps> = ({
                   </div>
 
                 </div>
-
-                {/* Right: KOTAK KARTU PENGUMUMAN RESMI */}
-                <div className="w-full lg:w-[410px] xl:w-[450px] shrink-0 lg:ml-auto pr-1 sm:pr-2 lg:pr-3 xl:pr-4">
-                  <div className="relative group">
-                    
-                    {/* Tombol Navigasi Kiri di Sisi Kiri Kartu */}
-                    {announcementList.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => setActiveAnnouncementIdx(prev => (prev - 1 + announcementList.length) % announcementList.length)}
-                        className="absolute -left-3.5 sm:-left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white text-slate-700 hover:text-[#0066b2] hover:bg-sky-50 shadow-lg border border-slate-200/90 flex items-center justify-center transition-all cursor-pointer active:scale-90"
-                        title="Pengumuman Sebelumnya"
-                        aria-label="Pengumuman Sebelumnya"
-                      >
-                        <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
-                      </button>
-                    )}
-
-                    {/* Tombol Navigasi Kanan di Sisi Kanan Kartu */}
-                    {announcementList.length > 1 && (
-                      <button
-                        type="button"
-                        onClick={() => setActiveAnnouncementIdx(prev => (prev + 1) % announcementList.length)}
-                        className="absolute -right-3.5 sm:-right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white text-slate-700 hover:text-[#0066b2] hover:bg-sky-50 shadow-lg border border-slate-200/90 flex items-center justify-center transition-all cursor-pointer active:scale-90"
-                        title="Pengumuman Berikutnya"
-                        aria-label="Pengumuman Berikutnya"
-                      >
-                        <ChevronRight className="w-4 h-4 stroke-[2.5]" />
-                      </button>
-                    )}
-
-                    <div className="bg-white/95 backdrop-blur-md rounded-2xl border-2 border-white/50 shadow-2xl shadow-blue-950/40 overflow-hidden text-slate-800 transition-all hover:shadow-cyan-950/50">
-                      
-                      {/* Header Card Pengumuman */}
-                      <div className="bg-gradient-to-r from-[#004b87] via-[#0066b2] to-[#0284c7] px-4 py-3 text-white flex items-center justify-between shadow-xs">
-                        <div className="flex items-center gap-2.5">
-                          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-xs text-white">
-                            <Megaphone className="w-4 h-4 stroke-[2.5]" />
-                          </div>
-                          <div>
-                            <span className="text-xs font-black tracking-wide uppercase">
-                              PENGUMUMAN RESMI
-                            </span>
-                            <p className="text-[10px] text-white/80 font-medium">
-                              Papan Informasi Akademik & Pengumuman
-                            </p>
-                          </div>
-                        </div>
-
-                        {announcementList.length > 1 && (
-                          <span className="text-[10px] font-bold text-white/90 px-2 py-0.5 rounded-full bg-white/20 font-mono">
-                            {activeAnnouncementIdx + 1}/{announcementList.length}
-                          </span>
-                        )}
-                      </div>
-
-                    {/* Announcement Active Body Card */}
-                    {(() => {
-                      const currentItem = announcementList[activeAnnouncementIdx] || announcementList[0];
-
-                      return (
-                        <div className="p-4 sm:p-5 space-y-3">
-                          {/* Timestamp & Authority Row */}
-                          <div className="flex items-center justify-between gap-2 flex-wrap">
-                            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
-                              <Calendar className="w-3.5 h-3.5 text-slate-400" />
-                              <span>{formatAnnouncementDate(currentItem?.updatedAt || currentItem?.createdAt || infoAnnouncement?.updatedAt)}</span>
-                            </span>
-
-                            <div className="flex items-center gap-1 text-[10px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
-                              <School className="w-3 h-3 text-sky-600" />
-                              <span className="truncate max-w-[130px]">SIMAK Terpadu</span>
-                            </div>
-                          </div>
-
-                          {/* Headline / Judul Pengumuman */}
-                          {currentItem?.title && (
-                            <h3 className="text-sm font-extrabold text-slate-900 leading-snug">
-                              {currentItem.title}
-                            </h3>
-                          )}
-
-                          {/* Isi Pesan Pengumuman */}
-                          <div className="p-3 bg-slate-50/90 rounded-xl border border-slate-200 text-xs text-slate-700 leading-relaxed max-h-[140px] overflow-y-auto scrollbar-thin">
-                            <p className="font-medium whitespace-pre-line">
-                              {currentItem?.text || 'Selamat Datang di SIMAK MERDEKA - Sistem Informasi Manajemen Akademik & Kepegawaian Kurikulum Merdeka.'}
-                            </p>
-                          </div>
-
-                          {/* Tab Mini Indicators */}
-                          {announcementList.length > 1 && (
-                            <div className="flex items-center justify-center pt-1">
-                              <div className="flex items-center gap-1.5">
-                                {announcementList.map((item, idx) => (
-                                  <button
-                                    key={item.id || idx}
-                                    type="button"
-                                    onClick={() => setActiveAnnouncementIdx(idx)}
-                                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
-                                      idx === activeAnnouncementIdx
-                                        ? 'w-6 bg-sky-600'
-                                        : 'w-2 bg-slate-300 hover:bg-slate-400'
-                                    }`}
-                                    title={`Buka pengumuman ${idx + 1}`}
-                                  />
-                                ))}
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })()}
-
-                    </div>
-                  </div>
-                </div>
-
               </div>
-
             </div>
-
           </div>
         </div>
 
@@ -5853,6 +5758,73 @@ export const LoginView: React.FC<LoginViewProps> = ({
           </div>
         </div>
       )}
+
+      {/* POPUP PENGUMUMAN MELAYANG / MAINTENANCE BANNER (SEBELUM HALAMAN AWAL) */}
+      <AnimatePresence>
+        {showMaintenancePopup && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/35 backdrop-blur-xs animate-fadeIn select-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              transition={{ type: 'spring', stiffness: 350, damping: 25 }}
+              className="bg-white rounded-3xl shadow-2xl border-2 border-sky-500/80 max-w-lg w-full overflow-hidden text-slate-800 relative"
+            >
+              {/* Header Banner Gradient Rich Blue */}
+              <div className="bg-gradient-to-r from-[#004b87] via-[#0066b2] to-[#0284c7] px-5 py-4 text-white flex items-center justify-between shadow-md">
+                <div className="flex items-center gap-3">
+                  <div className="p-2.5 bg-white/20 rounded-2xl backdrop-blur-xs text-white border border-white/20 shrink-0">
+                    <AlertTriangle className="w-6 h-6 stroke-[2.5]" />
+                  </div>
+                  <div>
+                    <h3 className="text-base sm:text-lg font-black tracking-wider text-white leading-tight uppercase font-jakarta">
+                      PENGUMUMAN
+                    </h3>
+                  </div>
+                </div>
+              </div>
+
+              {/* Popup Content Body */}
+              <div className="p-5 sm:p-6 space-y-4">
+                {/* Maintenance Highlight Box */}
+                <div className="p-4 bg-sky-50/90 border-l-4 border-sky-600 rounded-r-2xl text-sky-950 font-bold text-xs sm:text-sm leading-relaxed flex items-start gap-3 shadow-xs">
+                  <ShieldAlert className="w-5 h-5 text-sky-600 shrink-0 mt-0.5" />
+                  <p className="font-semibold text-slate-800">
+                    <span className="text-sky-700 font-black uppercase tracking-wide block mb-1">PERHATIAN:</span>
+                    Saat ini penyimpanan database Simak Merdeka dalam tahap maintenance, beberapa data mungkin tidak dapat tersimpan.
+                  </p>
+                </div>
+
+                {/* Primary Bottom Action Button */}
+                <div className="pt-1">
+                  <button
+                    type="button"
+                    disabled={!canClosePopup}
+                    onClick={() => setShowMaintenancePopup(false)}
+                    className={`w-full py-3 px-4 rounded-2xl font-black text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all ${
+                      canClosePopup
+                        ? 'bg-gradient-to-r from-[#004b87] via-[#0066b2] to-[#0284c7] hover:from-[#003865] hover:to-[#005291] text-white cursor-pointer active:scale-98 hover:shadow-xl ring-2 ring-sky-400/50'
+                        : 'bg-slate-200 text-slate-500 border border-slate-300 cursor-not-allowed'
+                    }`}
+                  >
+                    {canClosePopup ? (
+                      <>
+                        <Check className="w-4 h-4 stroke-[3]" />
+                        <span>Saya Mengerti</span>
+                      </>
+                    ) : (
+                      <>
+                        <Clock className="w-4 h-4 animate-spin text-slate-500" />
+                        <span>Saya Mengerti ({popupCountdown}s)</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
     </div>
   );
