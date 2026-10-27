@@ -70,17 +70,28 @@ interface DapodikValidationReportProps {
   syncValidationElapsedSeconds?: number;
 }
 
-const resolveTargetTab = (issue: DapodikIssue): NavTab => {
-  if (issue.targetTab) return issue.targetTab;
+const resolveTargetTab = (issue: DapodikIssue, isKepalaSekolah?: boolean, isAdministrator?: boolean): NavTab => {
+  if (issue.targetTab) {
+    if (isKepalaSekolah && (issue.targetTab === 'master-data' || issue.category === 'gtk')) {
+      return 'system-guru';
+    }
+    if (isKepalaSekolah && (issue.targetTab === 'system-schools' || issue.category === 'sekolah')) {
+      return 'settings';
+    }
+    if (isAdministrator && issue.category === 'sekolah' && issue.targetTab === 'settings') {
+      return 'system-schools';
+    }
+    return issue.targetTab;
+  }
   switch (issue.category) {
     case 'sekolah':
-      return 'settings';
+      return isAdministrator ? 'system-schools' : 'settings';
     case 'sarpras':
       return 'system-sarpras';
     case 'peserta_didik':
       return 'students';
     case 'gtk':
-      return 'master-data';
+      return isKepalaSekolah ? 'system-guru' : 'master-data';
     case 'rombel_jadwal':
       return 'schedule';
     case 'pembelajaran':
@@ -100,8 +111,12 @@ const resolveTargetTab = (issue: DapodikIssue): NavTab => {
 
 const getTargetTabLabel = (tab: NavTab): string => {
   switch (tab) {
+    case 'system-schools':
+      return 'Data Sekolah';
+    case 'system-registered-schools':
+      return 'Sekolah Terdaftar';
     case 'settings':
-      return 'Pengaturan';
+      return 'Pengaturan & Profil Sekolah';
     case 'system-sarpras':
       return 'Sarpras';
     case 'system-tu':
@@ -109,7 +124,9 @@ const getTargetTabLabel = (tab: NavTab): string => {
     case 'system-perpustakaan':
       return 'Perpustakaan';
     case 'system-kurikulum':
-      return 'Kurikulum';
+      return 'Kurikulum Merdeka';
+    case 'system-guru':
+      return 'Daftar GTK';
     case 'students':
       return 'Data Siswa';
     case 'grades':
@@ -147,6 +164,21 @@ export const DapodikValidationReport: React.FC<DapodikValidationReportProps> = (
   const [refreshMessage, setRefreshMessage] = useState<string | null>(null);
   const [sortAsc, setSortAsc] = useState(true);
 
+  const isKepalaSekolah = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('kepala') ||
+      currentUser.role.toLowerCase().includes('principal')
+    )
+  );
+
+  const isAdministrator = Boolean(
+    currentUser?.role && (
+      currentUser.role.toLowerCase().includes('admin') ||
+      currentUser.role.toLowerCase().includes('master') ||
+      currentUser.role.toLowerCase().includes('super')
+    ) || currentUser?.email === 'shahrurrobby17@gmail.com'
+  );
+
   // Compute all issues per category
   const validationData = useMemo(() => {
     const issuesByCategory: Record<DapodikCategory, DapodikIssue[]> = {
@@ -172,8 +204,10 @@ export const DapodikValidationReport: React.FC<DapodikValidationReportProps> = (
       category: 'sekolah',
       type: 'invalid',
       description: `Data Rinci Periodik Sekolah utk Periode ${semester} / ${academicYear.split('/')[0]} belum diisi.`,
-      targetTab: 'settings',
-      actionHint: 'Lengkapi rincian data periodik sekolah di menu Pengaturan'
+      targetTab: isAdministrator ? 'system-schools' : 'settings',
+      actionHint: isAdministrator 
+        ? 'Lengkapi rincian data periodik sekolah di menu Data Sekolah (Master Data)' 
+        : 'Lengkapi rincian data periodik sekolah di menu Pengaturan'
     });
 
     issuesByCategory.sekolah.push({
@@ -267,8 +301,10 @@ export const DapodikValidationReport: React.FC<DapodikValidationReportProps> = (
       category: 'gtk',
       type: 'warning',
       description: `NIP / NUPTK GTK Guru Pengampu (${teacher?.name || 'Pendidik'}) belum diverifikasi standar BKN 18 digit resmi`,
-      targetTab: 'master-data',
-      actionHint: 'Perbarui nomor NIP/NUPTK di Master Data GTK'
+      targetTab: isKepalaSekolah ? 'system-guru' : 'master-data',
+      actionHint: isKepalaSekolah 
+        ? 'Perbarui nomor NIP/NUPTK di menu Daftar GTK' 
+        : 'Perbarui nomor NIP/NUPTK di menu Master Data GTK'
     });
 
     // 5. ROMBONGAN BELAJAR & JADWAL (Warning: 1, Invalid: 0)
@@ -622,7 +658,7 @@ export const DapodikValidationReport: React.FC<DapodikValidationReportProps> = (
             ) : (
               currentIssues.map((issue) => {
                 const isInvalid = issue.type === 'invalid';
-                const destination = resolveTargetTab(issue);
+                const destination = resolveTargetTab(issue, isKepalaSekolah, isAdministrator);
                 const destinationLabel = getTargetTabLabel(destination);
 
                 return (

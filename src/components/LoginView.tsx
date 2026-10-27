@@ -64,14 +64,17 @@ import {
   Package,
   ShieldAlert,
   Award,
-  Zap
+  Zap,
+  Megaphone,
+  Bell,
+  Pin
 } from 'lucide-react';
-import { UserAccount, TeacherProfile, TeachingScheduleItem, Student, StudentGrade, Subject, AttendanceRecord, TeachingLog, InfoAnnouncement, LoginBackgroundConfig, RegisteredSchool, defaultLoginBackgroundConfig, PpdbRegistration } from '../types';
+import { UserAccount, TeacherProfile, TeachingScheduleItem, Student, StudentGrade, Subject, AttendanceRecord, TeachingLog, InfoAnnouncement, InfoAnnouncementItem, LoginBackgroundConfig, RegisteredSchool, defaultLoginBackgroundConfig, PpdbRegistration, getAnnouncementItems } from '../types';
 import { PRESET_THEMES } from './LoginBackgroundSettings';
 import { TutWuriHandayaniLogo } from './TutWuriHandayaniLogo';
 import { DashboardAnalytics } from './DashboardAnalytics';
 import { SscasnRegisterForm } from './SscasnRegisterForm';
-import { subscribeToEncryptionCode, subscribeToRegisteredSchools, initialRegisteredSchools, deduplicateSchools, filterDeletedSchools } from '../lib/firebaseService';
+import { subscribeToEncryptionCode, subscribeToRegisteredSchools, initialRegisteredSchools, deduplicateSchools, filterDeletedSchools, isDiponegoroWagirSchool } from '../lib/firebaseService';
 import { recordUserLoginLog } from '../lib/userLoginLogService';
 import { setUserOnlinePresence } from '../lib/userPresenceService';
 import { 
@@ -175,6 +178,80 @@ export const LoginView: React.FC<LoginViewProps> = ({
   const [activeTab, setActiveTab] = useState<'login' | 'register' | 'demo'>('login');
   const [isPpdbRegistration, setIsPpdbRegistration] = useState<boolean>(false);
   const [isHeaderLight, setIsHeaderLight] = useState<boolean>(false);
+  const [activeAnnouncementIdx, setActiveAnnouncementIdx] = useState<number>(0);
+
+  // Format tanggal pengumuman dalam Bahasa Indonesia sesuai tanggal pengumuman di-upload/diperbarui
+  const formatAnnouncementDate = (dateVal?: string): string => {
+    const target = dateVal || infoAnnouncement?.updatedAt || new Date().toISOString();
+    if (!target) return '26 Oktober 2026';
+
+    // Jika sudah dalam format teks berbahasa Indonesia
+    if (/[a-zA-Z]/.test(target) && !target.includes('T') && !target.includes('Z')) {
+      return target;
+    }
+
+    try {
+      const d = new Date(target);
+      if (!isNaN(d.getTime())) {
+        return new Intl.DateTimeFormat('id-ID', {
+          day: 'numeric',
+          month: 'long',
+          year: 'numeric'
+        }).format(d);
+      }
+    } catch {
+      // fallback
+    }
+    return target;
+  };
+
+  // Daftar pengumuman aktif untuk kotak kartu pengumuman di halaman awal
+  const announcementList: InfoAnnouncementItem[] = useMemo(() => {
+    const rawItems = getAnnouncementItems(infoAnnouncement);
+    const activeRaw = rawItems.filter(i => i.isActive && i.text && i.text.trim().length > 0);
+    if (activeRaw.length > 0) {
+      return activeRaw.map(item => ({
+        ...item,
+        updatedAt: item.updatedAt || item.createdAt || infoAnnouncement?.updatedAt,
+        createdAt: item.createdAt || item.updatedAt || infoAnnouncement?.updatedAt
+      }));
+    }
+
+    const currentUploadedDate = formatAnnouncementDate(infoAnnouncement?.updatedAt);
+
+    return [
+      {
+        id: 'ann-1',
+        title: 'Pemberitahuan Sistem SIMAK Merdeka',
+        text: infoAnnouncement?.text?.trim() || 'Selamat Datang di Portal SIMAK MERDEKA - Sistem Informasi Manajemen Akademik & Kepegawaian Kurikulum Merdeka Terintegrasi.',
+        category: (infoAnnouncement?.category || 'Pengumuman') as any,
+        isActive: true,
+        createdAt: currentUploadedDate,
+        updatedAt: currentUploadedDate,
+        author: 'Administrator SIMAK'
+      },
+      {
+        id: 'ann-2',
+        title: 'Validasi & Sinkronisasi Data Siswa',
+        text: 'Batas akhir pemeriksaan kelengkapan NISN 10-digit dan penguncian rombongan belajar peserta didik aktif semester ini dapat diakses melalui modul sinkronisasi.',
+        category: 'Penting' as any,
+        isActive: true,
+        createdAt: currentUploadedDate,
+        updatedAt: currentUploadedDate,
+        author: 'Pusat Data Kemendikdasmen'
+      },
+      {
+        id: 'ann-3',
+        title: 'Kalender Akademik & Instrumen Kurikulum',
+        text: 'Pengisian capaian tujuan pembelajaran, nilai asesmen sumatif, dan rekap kehadiran harian kelas binaan telah dibuka.',
+        category: 'Informasi' as any,
+        isActive: true,
+        createdAt: currentUploadedDate,
+        updatedAt: currentUploadedDate,
+        author: 'Tim Pengembang Kurikulum'
+      }
+    ];
+  }, [infoAnnouncement]);
 
   // Detect when scrolled down even slightly to immediately change header style and text colors
   useEffect(() => {
@@ -1241,6 +1318,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
       'sma muhammadiyah 1 jakarta'
     ];
     const nonExcluded = cleaned.filter(s => {
+      if (isDiponegoroWagirSchool(s)) return true;
       const name = (s.name || '').toLowerCase().trim();
       const id = (s.id || '').toLowerCase().trim();
       const npsn = (s.npsn || '').trim();
@@ -1248,19 +1326,11 @@ export const LoginView: React.FC<LoginViewProps> = ({
       return !excludedPatterns.some(p => name.includes(p) || id.includes(p.replace(/\s+/g, '_')));
     });
 
-    const isDiponegoroWagir = (name: string, id: string, npsn: string) => {
-      const lower = (name || '').toLowerCase().trim();
-      const rawNpsn = (npsn || '').trim();
-      const rawId = (id || '').toLowerCase().trim();
-      return (lower.includes('diponegoro') && lower.includes('wagir')) || rawNpsn === '20517834' || rawId.includes('diponegoro');
-    };
-
-    const hasDiponegoro = nonExcluded.some(s => isDiponegoroWagir(s.name, s.id, s.npsn || ''));
     const hasBedali3 = nonExcluded.some(s => (s.name || '').toLowerCase().includes('bedalisodo') && (s.name || '').includes('3'));
     const hasBedali4 = nonExcluded.some(s => (s.name || '').toLowerCase().includes('bedalisodo') && (s.name || '').includes('4'));
 
     const missingFeatured = initialRegisteredSchools.filter(s => {
-      if (isDiponegoroWagir(s.name, s.id, s.npsn || '') && hasDiponegoro) return false;
+      if (isDiponegoroWagirSchool(s)) return false;
       if ((s.name || '').includes('3') && hasBedali3) return false;
       if ((s.name || '').includes('4') && hasBedali4) return false;
       return !excludedPatterns.some(p => (s.name || '').toLowerCase().includes(p));
@@ -1270,19 +1340,25 @@ export const LoginView: React.FC<LoginViewProps> = ({
       if ((s.name || '').includes('Bedalisodo')) {
         return { ...s, npsn: '20500000' };
       }
-      if (isDiponegoroWagir(s.name, s.id, s.npsn || '')) {
+      if (isDiponegoroWagirSchool(s)) {
         return {
           ...s,
           id: 'sma_diponegoro_wagir',
           name: 'SMA Islam Diponegoro Wagir',
-          npsn: s.npsn && s.npsn !== '20500000' ? s.npsn : '20517834',
+          npsn: (s.npsn && s.npsn !== '20500000') ? s.npsn : '20517834',
+          principalName: (s.principalName && s.principalName !== 'Kepala Sekolah') ? s.principalName : 'H. Moh. Ridwan, S.Pd., M.Si.',
           jenjang: s.jenjang || 'SMA',
           statusSekolah: s.statusSekolah || 'Swasta'
         };
       }
       return s;
     });
-    return deduplicateSchools(merged);
+
+    const dedupedList = deduplicateSchools(merged);
+    if (!dedupedList.some(s => isDiponegoroWagirSchool(s))) {
+      return [initialRegisteredSchools[0], ...dedupedList];
+    }
+    return dedupedList;
   }, [liveSchools, propsRegisteredSchools]);
 
   const filteredDisplaySchools = useMemo(() => {
@@ -1666,7 +1742,64 @@ export const LoginView: React.FC<LoginViewProps> = ({
     return true;
   };
 
+  const handleQuickAdminLogin = () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+    
+    let localRegUsers: UserAccount[] = [];
+    try {
+      if (typeof window !== 'undefined') {
+        const stored = localStorage.getItem('simak_registered_users');
+        if (stored) localRegUsers = JSON.parse(stored);
+      }
+    } catch (e) {}
 
+    const allRegistered = [...registeredUsers, ...localRegUsers];
+    const matchedRegistered = allRegistered.find(u => 
+      u.email?.toLowerCase() === 'shahrurrobby17@gmail.com' ||
+      u.nip?.replace(/\s+/g, '') === '199001012015011001' ||
+      u.uid === 'USER-ADMIN' ||
+      (u.role && (u.role.toLowerCase().includes('admin') || u.role.toLowerCase().includes('master')))
+    );
+
+    const activeName = matchedRegistered?.name || 'Shahrur Robby, S.Pd.';
+    const activeNip = matchedRegistered?.nip || '19900101 201501 1 001';
+    const activeSchool = matchedRegistered?.schoolName || 'SMA Islam Diponegoro Wagir';
+    const activeEmail = matchedRegistered?.email || 'shahrurrobby17@gmail.com';
+
+    const adminUser: UserAccount = {
+      uid: matchedRegistered?.uid || 'USER-ADMIN',
+      email: activeEmail,
+      password: matchedRegistered?.password || '12345678',
+      name: activeName,
+      schoolName: activeSchool,
+      role: 'Administrator',
+      nip: activeNip,
+      profileId: matchedRegistered?.profileId || 'PROF-ADMIN',
+      status: 'Aktif',
+      isMaintenance: false
+    };
+
+    recordUserLoginLog({
+      userId: adminUser.uid,
+      name: adminUser.name,
+      email: adminUser.email,
+      nip: adminUser.nip,
+      role: adminUser.role,
+      schoolName: adminUser.schoolName,
+      status: 'Berhasil',
+      authMethod: 'Akses Masuk Cepat Administrator'
+    });
+
+    setUserOnlinePresence(adminUser, true).catch(() => {});
+
+    setSuccessNotification(`Akses Masuk Cepat Berhasil: Selamat datang, ${activeName}! Mengarahkan ke Dashboard Administrator...`);
+
+    setTimeout(() => {
+      setIsLoading(false);
+      onLoginSuccess(adminUser, 'PROF-ADMIN', 'master-data');
+    }, 450);
+  };
 
   const handleDirectStudentLogin = (studentToLogin?: Student) => {
     setIsLoading(true);
@@ -2701,7 +2834,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               onClick={() => setShowLoginDropdown(prev => !prev)}
               className={`flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-xs sm:text-sm transition-all shadow-md active:scale-95 cursor-pointer shrink-0 ${
                 isHeaderLight 
-                  ? 'bg-[#0066b2] hover:bg-[#005291] text-white border border-[#0066b2]' 
+                  ? 'bg-sky-500 hover:bg-sky-600 text-white border border-sky-400/50' 
                   : 'bg-white/20 hover:bg-white/30 text-white border border-white/40 backdrop-blur-xs'
               }`}
             >
@@ -2843,6 +2976,17 @@ export const LoginView: React.FC<LoginViewProps> = ({
               SIMAK Merdeka
             </p>
 
+            {/* Mobile Announcement Card Box */}
+            <div className="mt-5 mb-1 w-full max-w-xs bg-white/95 backdrop-blur-md rounded-2xl p-3.5 text-left border border-white/50 shadow-xl text-slate-800">
+              <div className="flex items-center gap-1.5 mb-2 pb-1.5 border-b border-slate-100">
+                <Megaphone className="w-3.5 h-3.5 text-[#0066b2] shrink-0" />
+                <span className="text-[11px] font-black text-slate-900 uppercase tracking-tight">Pengumuman Resmi</span>
+              </div>
+              <p className="text-[11px] text-slate-700 font-medium leading-relaxed line-clamp-3">
+                {announcementList[activeAnnouncementIdx]?.text || 'Selamat Datang di SIMAK MERDEKA - Sistem Informasi Manajemen Akademik & Kepegawaian.'}
+              </p>
+            </div>
+
             {/* Tombol Masuk ke Sistem Mobile */}
             <div className="mt-7 w-full max-w-xs relative space-y-2.5">
               <button
@@ -2852,7 +2996,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
               >
                 <LogIn className="w-4 h-4 text-[#0066b2] stroke-[2.5]" />
                 <span>Masuk ke Sistem</span>
-                <ChevronDown className={`w-4 h-4 text-slate-500 transition-transform duration-200 ${showLoginDropdown ? 'rotate-180' : ''}`} />
+                <ChevronDown className={`w-4 h-4 text-[#0066b2]/80 transition-transform duration-200 ${showLoginDropdown ? 'rotate-180' : ''}`} />
               </button>
 
               {showLoginDropdown && (
@@ -2914,17 +3058,17 @@ export const LoginView: React.FC<LoginViewProps> = ({
         </div>
 
         {/* DESKTOP CONTENT AREA (hidden sm:block) */}
-        <div className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full mt-2 sm:mt-3 lg:mt-5 mb-auto pt-1 sm:pt-1.5 pb-8 sm:pb-12 lg:pb-16">
+        <div className="hidden sm:block max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 w-full mt-2 sm:mt-3 lg:mt-4 pt-1 sm:pt-1.5 pb-5 sm:pb-6 lg:pb-7">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 sm:gap-4 lg:gap-8 items-center">
             
             {/* HERO TEXT AND SYNC CARD ROW */}
             <div className="lg:col-span-12 space-y-2 sm:space-y-3 text-left">
               
-              {/* Desktop Layout: Left = Title & Details, Right = Tingkat Sinkronisasi Data Card */}
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-12">
+              {/* Desktop Layout: Left = Title & Details, Right = Kotak Kartu Pengumuman */}
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 lg:gap-8 xl:gap-12">
                 
                 {/* Left: Title, Description, Laptop note, Timestamp, Action Buttons */}
-                <div className="space-y-2 sm:space-y-2.5 max-w-xl lg:max-w-3xl pl-4 sm:pl-12 lg:pl-16 xl:pl-20">
+                <div className="space-y-2 sm:space-y-2.5 max-w-xl lg:max-w-2xl pl-4 sm:pl-8 lg:pl-12 xl:pl-16">
                   {/* Main Display Headline */}
                   <h1 className="font-jakarta text-xl sm:text-2xl lg:text-3xl xl:text-[2.25rem] font-black text-white tracking-tight leading-[1.15]" style={{ fontFamily: "'Plus Jakarta Sans', sans-serif", fontWeight: 900 }}>
                     Sistem Informasi Akademik <br />
@@ -2946,12 +3090,122 @@ export const LoginView: React.FC<LoginViewProps> = ({
                     <span className="whitespace-nowrap"><span className="font-bold text-white">Catatan:</span> Buka Website SIMAK Merdeka pada Laptop/PC windows 10 keatas untuk performa lebih optimal.</span>
                   </div>
 
-                  {/* Last Update Date */}
-                  <div className="flex items-center space-x-2 text-xs lg:text-sm text-white/95 font-semibold whitespace-nowrap pt-1">
-                    <Calendar className="w-4 h-4 text-white shrink-0" />
-                    <span className="whitespace-nowrap">Pembaruan Terakhir : Sabtu, 24 Oktober 2026</span>
-                  </div>
+                </div>
 
+                {/* Right: KOTAK KARTU PENGUMUMAN RESMI */}
+                <div className="w-full lg:w-[410px] xl:w-[450px] shrink-0 lg:ml-auto pr-1 sm:pr-2 lg:pr-3 xl:pr-4">
+                  <div className="relative group">
+                    
+                    {/* Tombol Navigasi Kiri di Sisi Kiri Kartu */}
+                    {announcementList.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveAnnouncementIdx(prev => (prev - 1 + announcementList.length) % announcementList.length)}
+                        className="absolute -left-3.5 sm:-left-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white text-slate-700 hover:text-[#0066b2] hover:bg-sky-50 shadow-lg border border-slate-200/90 flex items-center justify-center transition-all cursor-pointer active:scale-90"
+                        title="Pengumuman Sebelumnya"
+                        aria-label="Pengumuman Sebelumnya"
+                      >
+                        <ChevronLeft className="w-4 h-4 stroke-[2.5]" />
+                      </button>
+                    )}
+
+                    {/* Tombol Navigasi Kanan di Sisi Kanan Kartu */}
+                    {announcementList.length > 1 && (
+                      <button
+                        type="button"
+                        onClick={() => setActiveAnnouncementIdx(prev => (prev + 1) % announcementList.length)}
+                        className="absolute -right-3.5 sm:-right-4 top-1/2 -translate-y-1/2 z-20 w-8 h-8 rounded-full bg-white text-slate-700 hover:text-[#0066b2] hover:bg-sky-50 shadow-lg border border-slate-200/90 flex items-center justify-center transition-all cursor-pointer active:scale-90"
+                        title="Pengumuman Berikutnya"
+                        aria-label="Pengumuman Berikutnya"
+                      >
+                        <ChevronRight className="w-4 h-4 stroke-[2.5]" />
+                      </button>
+                    )}
+
+                    <div className="bg-white/95 backdrop-blur-md rounded-2xl border-2 border-white/50 shadow-2xl shadow-blue-950/40 overflow-hidden text-slate-800 transition-all hover:shadow-cyan-950/50">
+                      
+                      {/* Header Card Pengumuman */}
+                      <div className="bg-gradient-to-r from-[#004b87] via-[#0066b2] to-[#0284c7] px-4 py-3 text-white flex items-center justify-between shadow-xs">
+                        <div className="flex items-center gap-2.5">
+                          <div className="p-2 bg-white/20 rounded-xl backdrop-blur-xs text-white">
+                            <Megaphone className="w-4 h-4 stroke-[2.5]" />
+                          </div>
+                          <div>
+                            <span className="text-xs font-black tracking-wide uppercase">
+                              PENGUMUMAN RESMI
+                            </span>
+                            <p className="text-[10px] text-white/80 font-medium">
+                              Papan Informasi Akademik & Pengumuman
+                            </p>
+                          </div>
+                        </div>
+
+                        {announcementList.length > 1 && (
+                          <span className="text-[10px] font-bold text-white/90 px-2 py-0.5 rounded-full bg-white/20 font-mono">
+                            {activeAnnouncementIdx + 1}/{announcementList.length}
+                          </span>
+                        )}
+                      </div>
+
+                    {/* Announcement Active Body Card */}
+                    {(() => {
+                      const currentItem = announcementList[activeAnnouncementIdx] || announcementList[0];
+
+                      return (
+                        <div className="p-4 sm:p-5 space-y-3">
+                          {/* Timestamp & Authority Row */}
+                          <div className="flex items-center justify-between gap-2 flex-wrap">
+                            <span className="text-[11px] font-semibold text-slate-500 flex items-center gap-1">
+                              <Calendar className="w-3.5 h-3.5 text-slate-400" />
+                              <span>{formatAnnouncementDate(currentItem?.updatedAt || currentItem?.createdAt || infoAnnouncement?.updatedAt)}</span>
+                            </span>
+
+                            <div className="flex items-center gap-1 text-[10px] font-bold text-sky-700 bg-sky-50 px-2 py-0.5 rounded border border-sky-200">
+                              <School className="w-3 h-3 text-sky-600" />
+                              <span className="truncate max-w-[130px]">SIMAK Terpadu</span>
+                            </div>
+                          </div>
+
+                          {/* Headline / Judul Pengumuman */}
+                          {currentItem?.title && (
+                            <h3 className="text-sm font-extrabold text-slate-900 leading-snug">
+                              {currentItem.title}
+                            </h3>
+                          )}
+
+                          {/* Isi Pesan Pengumuman */}
+                          <div className="p-3 bg-slate-50/90 rounded-xl border border-slate-200 text-xs text-slate-700 leading-relaxed max-h-[140px] overflow-y-auto scrollbar-thin">
+                            <p className="font-medium whitespace-pre-line">
+                              {currentItem?.text || 'Selamat Datang di SIMAK MERDEKA - Sistem Informasi Manajemen Akademik & Kepegawaian Kurikulum Merdeka.'}
+                            </p>
+                          </div>
+
+                          {/* Tab Mini Indicators */}
+                          {announcementList.length > 1 && (
+                            <div className="flex items-center justify-center pt-1">
+                              <div className="flex items-center gap-1.5">
+                                {announcementList.map((item, idx) => (
+                                  <button
+                                    key={item.id || idx}
+                                    type="button"
+                                    onClick={() => setActiveAnnouncementIdx(idx)}
+                                    className={`h-1.5 rounded-full transition-all cursor-pointer ${
+                                      idx === activeAnnouncementIdx
+                                        ? 'w-6 bg-sky-600'
+                                        : 'w-2 bg-slate-300 hover:bg-slate-400'
+                                    }`}
+                                    title={`Buka pengumuman ${idx + 1}`}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })()}
+
+                    </div>
+                  </div>
                 </div>
 
               </div>
@@ -2962,7 +3216,7 @@ export const LoginView: React.FC<LoginViewProps> = ({
         </div>
 
         {/* ALUR GARIS LENGKAP: PENDAFTARAN SAMPAI LOGIN - FORMAT RESMI SEPERTI SSCASN (Background #F8FAFC Bersih & Menyatu) */}
-        <div className="hidden sm:block relative z-20 w-full pt-8 sm:pt-10 pb-10 transition-all bg-[#F8FAFC]">
+        <div className="hidden sm:block relative z-20 w-full pt-6 sm:pt-8 pb-10 transition-all bg-[#F8FAFC]">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             {/* Header Line Tag (Style SSCASN: TIMELINE PENDAFTARAN dengan garis biru bawah) */}
             <div className="text-center mb-6 mt-2">
@@ -4803,6 +5057,24 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
 
 
+
+                    {/* Tombol Akses Masuk Cepat Administrator didalam Modal */}
+                    {!isStudentLogin && (
+                      <div className="mt-3">
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowLoginModal(false);
+                            handleQuickAdminLogin();
+                          }}
+                          disabled={isLoading}
+                          className="w-full py-2.5 px-4 bg-sky-50 hover:bg-sky-100 text-[#004b87] border border-sky-200 hover:border-sky-300 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 shadow-2xs"
+                        >
+                          <ShieldCheck className="w-4 h-4 text-[#0066b2]" />
+                          <span>Akses Masuk Cepat Administrator</span>
+                        </button>
+                      </div>
+                    )}
 
                     {!isStudentLogin && (
                       <div className="text-center mt-3 pt-3 border-t border-slate-100">

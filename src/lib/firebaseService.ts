@@ -33,6 +33,14 @@ export const normalizeSchoolId = (schoolName: string): string => {
     .trim()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_+|_+$/g, '');
+  if (
+    clean.includes('diponegoro') ||
+    clean.includes('sma_diponegoro_wagir') ||
+    clean.includes('sma_islam_diponegoro_wagir') ||
+    clean.includes('smas_islam_diponegoro_wagir')
+  ) {
+    return 'sma_diponegoro_wagir';
+  }
   if (clean.includes('sma_negeri_1_indonesia') || clean.includes('sman_1_indonesia')) {
     return 'sman_1_indonesia';
   }
@@ -61,12 +69,23 @@ export const getActiveSchoolContext = () => ({
   schoolId: currentActiveSchoolId
 });
 
+export const isDiponegoroWagirSchool = (s: { name?: string; id?: string; npsn?: string } | null | undefined): boolean => {
+  if (!s) return false;
+  const name = (s.name || '').toLowerCase().trim();
+  const id = (s.id || '').toLowerCase().trim();
+  const npsn = (s.npsn || '').trim();
+  return (
+    (name.includes('diponegoro') && name.includes('wagir')) ||
+    npsn === '20517834' ||
+    id === 'sma_diponegoro_wagir' ||
+    id === 'sma_islam_diponegoro_wagir' ||
+    id === 'smas_islam_diponegoro_wagir' ||
+    (id.includes('diponegoro') && id.includes('wagir'))
+  );
+};
+
 export const deduplicateSchools = (schools: RegisteredSchool[]): RegisteredSchool[] => {
-  const seenCanonicalKeys = new Set<string>();
-  const seenNames = new Set<string>();
-  const seenNpsn = new Set<string>();
-  const seenIds = new Set<string>();
-  const result: RegisteredSchool[] = [];
+  const schoolMap = new Map<string, RegisteredSchool>();
 
   const getCanonicalKey = (s: RegisteredSchool): string => {
     const rawName = (s.name || '').trim().toLowerCase().replace(/\s+/g, ' ');
@@ -74,11 +93,12 @@ export const deduplicateSchools = (schools: RegisteredSchool[]): RegisteredSchoo
     const rawId = (s.id || '').trim().toLowerCase();
 
     if (
+      isDiponegoroWagirSchool(s) ||
       (rawName.includes('diponegoro') && rawName.includes('wagir')) ||
       rawNpsn === '20517834' ||
       rawId.includes('diponegoro')
     ) {
-      return 'sma_islam_diponegoro_wagir';
+      return 'sma_diponegoro_wagir';
     }
     if ((rawName.includes('bedalisodo') && rawName.includes('3')) || rawId.includes('bedalisodo_3') || rawId === 'sd_negeri_3_bedalisodo') {
       return 'sd_negeri_3_bedalisodo';
@@ -91,39 +111,46 @@ export const deduplicateSchools = (schools: RegisteredSchool[]): RegisteredSchoo
 
   for (const s of schools) {
     if (!s || !s.name) continue;
-    const normName = s.name.trim().toLowerCase().replace(/\s+/g, ' ');
-    const rawNpsn = (s.npsn || '').trim();
-    const rawId = (s.id || '').trim().toLowerCase();
     const canonicalKey = getCanonicalKey(s);
+    const existing = schoolMap.get(canonicalKey);
 
-    const hasValidNpsn = Boolean(rawNpsn && rawNpsn !== '20500000' && rawNpsn !== '-' && rawNpsn !== '');
-
-    const isDuplicate = 
-      seenCanonicalKeys.has(canonicalKey) ||
-      (rawId && seenIds.has(rawId)) ||
-      seenNames.has(normName) ||
-      (hasValidNpsn && seenNpsn.has(rawNpsn));
-
-    if (!isDuplicate) {
-      seenCanonicalKeys.add(canonicalKey);
-      if (rawId) seenIds.add(rawId);
-      seenNames.add(normName);
-      if (hasValidNpsn) seenNpsn.add(rawNpsn);
-
-      let canonicalItem = s;
-      if (canonicalKey === 'sma_islam_diponegoro_wagir') {
+    if (existing) {
+      // Merge with existing record so newest fields are never lost
+      schoolMap.set(canonicalKey, mergeSchoolObjects(existing, s));
+    } else {
+      let canonicalItem: RegisteredSchool = { ...s };
+      if (canonicalKey === 'sma_diponegoro_wagir') {
+        const rawNpsn = (s.npsn || '').trim();
+        const hasValidNpsn = Boolean(rawNpsn && rawNpsn !== '20500000' && rawNpsn !== '-' && rawNpsn !== '');
         canonicalItem = {
           ...s,
           id: 'sma_diponegoro_wagir',
-          name: 'SMA Islam Diponegoro Wagir',
-          npsn: hasValidNpsn ? rawNpsn : '20517834',
+          name: s.name?.trim() || 'SMA Islam Diponegoro Wagir',
+          npsn: (hasValidNpsn && rawNpsn !== '20500000') ? rawNpsn : '20517834',
+          principalName: (s.principalName && s.principalName.trim() !== '' && s.principalName !== 'Kepala Sekolah') ? s.principalName.trim() : 'H. Moh. Ridwan, S.Pd., M.Si.',
+          principalNip: (s.principalNip && s.principalNip.trim() !== '' && s.principalNip !== '-') ? s.principalNip.trim() : '19691120 199403 1 003',
+          address: s.address || 'Jl. Raya Parangargo No. 1, Wagir',
+          city: s.city || 'Kab. Malang',
+          province: s.province || 'Jawa Timur',
           jenjang: s.jenjang || 'SMA',
-          statusSekolah: s.statusSekolah || 'Swasta'
+          statusSekolah: s.statusSekolah || 'Swasta',
+          akreditasi: s.akreditasi || 'A (Unggul)',
+          academicYear: s.academicYear || '2026/2027',
+          semester: s.semester || 'Ganjil'
         };
       }
-      result.push(canonicalItem);
+      schoolMap.set(canonicalKey, canonicalItem);
     }
   }
+
+  const result = Array.from(schoolMap.values());
+  // Ensure SMA Islam Diponegoro Wagir is always the first school in the list
+  const dipoIdx = result.findIndex(s => isDiponegoroWagirSchool(s));
+  if (dipoIdx > 0) {
+    const [dipoItem] = result.splice(dipoIdx, 1);
+    result.unshift(dipoItem);
+  }
+
   return result;
 };
 
@@ -177,7 +204,24 @@ export const getDeletedSchoolKeys = (): Set<string> => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('simak_deleted_school_ids');
       if (saved) {
-        return new Set(JSON.parse(saved));
+        const arr = JSON.parse(saved);
+        if (Array.isArray(arr)) {
+          // Never allow Diponegoro Wagir to be treated as deleted
+          const sanitized = arr.filter(k => {
+            const kl = String(k || '').toLowerCase().trim();
+            return !(
+              (kl.includes('diponegoro') && kl.includes('wagir')) ||
+              kl === 'sma_diponegoro_wagir' ||
+              kl === 'sma_islam_diponegoro_wagir' ||
+              kl === 'smas_islam_diponegoro_wagir' ||
+              kl === '20517834'
+            );
+          });
+          if (sanitized.length !== arr.length) {
+            localStorage.setItem('simak_deleted_school_ids', JSON.stringify(sanitized));
+          }
+          return new Set(sanitized);
+        }
       }
     }
   } catch (e) {}
@@ -185,6 +229,10 @@ export const getDeletedSchoolKeys = (): Set<string> => {
 };
 
 export const addDeletedSchoolKey = (schoolId: string, schoolName?: string, npsn?: string) => {
+  // SMA Islam Diponegoro Wagir is the official induk school and must NEVER be deleted
+  if (isDiponegoroWagirSchool({ id: schoolId, name: schoolName, npsn })) {
+    return;
+  }
   try {
     if (typeof window !== 'undefined') {
       const keys = getDeletedSchoolKeys();
@@ -198,27 +246,21 @@ export const addDeletedSchoolKey = (schoolId: string, schoolName?: string, npsn?
 
 export const filterDeletedSchools = (schools: RegisteredSchool[]): RegisteredSchool[] => {
   const deletedKeys = getDeletedSchoolKeys();
-  let savedLocalList: RegisteredSchool[] | null = null;
-  try {
-    if (typeof window !== 'undefined') {
-      const saved = localStorage.getItem('simak_registered_schools');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          savedLocalList = parsed;
-        }
-      }
-    }
-  } catch (e) {}
-
   const deduped = deduplicateSchools(schools || []);
 
-  return deduped.filter(s => {
+  const filtered = deduped.filter(s => {
+    if (!s || !s.name) return false;
+
+    // SMA Islam Diponegoro Wagir must NEVER be filtered out
+    if (isDiponegoroWagirSchool(s)) {
+      return true;
+    }
+
     const idNorm = (s.id || '').toLowerCase().trim();
     const nameNorm = (s.name || '').toLowerCase().trim();
     const npsnNorm = (s.npsn || '').toLowerCase().trim();
 
-    // Explicitly exclude unwanted schools requested by user
+    // Explicitly exclude unwanted placeholder schools requested by user
     if (
       nameNorm.includes('sd negeri 1 wagir') ||
       nameNorm.includes('sdn 1 wagir') ||
@@ -244,17 +286,98 @@ export const filterDeletedSchools = (schools: RegisteredSchool[]): RegisteredSch
       if (npsnNorm && deletedKeys.has(npsnNorm)) return false;
     }
 
-    if (savedLocalList && savedLocalList.length > 0) {
-      const isInLocal = savedLocalList.some(local => 
-        (local.id && local.id.toLowerCase().trim() === idNorm) ||
-        (local.name && local.name.toLowerCase().trim() === nameNorm) ||
-        (local.npsn && local.npsn.toLowerCase().trim() === npsnNorm)
-      );
-      if (!isInLocal) return false;
-    }
-
     return true;
   });
+
+  // Guarantee that SMA Islam Diponegoro Wagir is always present in the returned list
+  const hasDiponegoro = filtered.some(s => isDiponegoroWagirSchool(s));
+  if (!hasDiponegoro) {
+    const primaryDiponegoro: RegisteredSchool = initialRegisteredSchools.find(s => isDiponegoroWagirSchool(s)) || {
+      id: 'sma_diponegoro_wagir',
+      name: 'SMA Islam Diponegoro Wagir',
+      npsn: '20517834',
+      principalName: 'H. Moh. Ridwan, S.Pd., M.Si.',
+      address: 'Jl. Raya Parangargo No. 1, Wagir',
+      city: 'Kab. Malang',
+      province: 'Jawa Timur',
+      jenjang: 'SMA',
+      statusSekolah: 'Swasta',
+      akreditasi: 'A (Unggul)',
+      academicYear: '2026/2027',
+      semester: 'Ganjil'
+    };
+    return [primaryDiponegoro, ...filtered];
+  }
+
+  return filtered;
+};
+
+export const mergeSchoolObjects = (base: RegisteredSchool | undefined, patch: RegisteredSchool | undefined): RegisteredSchool => {
+  const isDipoBase = base ? isDiponegoroWagirSchool(base) : false;
+  const isDipoPatch = patch ? isDiponegoroWagirSchool(patch) : false;
+
+  if (!base && !patch) {
+    return {
+      id: 'sma_diponegoro_wagir',
+      name: 'SMA Islam Diponegoro Wagir',
+      npsn: '20517834',
+      principalName: 'H. Moh. Ridwan, S.Pd., M.Si.',
+      address: 'Jl. Raya Parangargo No. 1, Wagir',
+      city: 'Kab. Malang',
+      province: 'Jawa Timur',
+      jenjang: 'SMA',
+      statusSekolah: 'Swasta',
+      akreditasi: 'A (Unggul)',
+      academicYear: '2026/2027',
+      semester: 'Ganjil'
+    };
+  }
+  if (!base) return patch!;
+  if (!patch) return base;
+
+  const baseTime = base.updatedAt ? new Date(base.updatedAt).getTime() : 0;
+  const patchTime = patch.updatedAt ? new Date(patch.updatedAt).getTime() : 0;
+
+  const primary = patchTime >= baseTime ? patch : base;
+  const secondary = patchTime >= baseTime ? base : patch;
+
+  const pickVal = (pVal?: string, sVal?: string, fallback: string = '', ignorePlaceholders: string[] = []) => {
+    if (pVal !== undefined && pVal !== null && pVal.trim() !== '' && !ignorePlaceholders.includes(pVal.trim())) {
+      return pVal.trim();
+    }
+    if (sVal !== undefined && sVal !== null && sVal.trim() !== '' && !ignorePlaceholders.includes(sVal.trim())) {
+      return sVal.trim();
+    }
+    if (pVal !== undefined && pVal !== null && pVal.trim() !== '') return pVal.trim();
+    if (sVal !== undefined && sVal !== null && sVal.trim() !== '') return sVal.trim();
+    return fallback.trim();
+  };
+
+  const isDipo = isDipoBase || isDipoPatch;
+
+  return {
+    ...secondary,
+    ...primary,
+    id: isDipo ? 'sma_diponegoro_wagir' : (primary.id || secondary.id),
+    name: pickVal(primary.name, secondary.name, isDipo ? 'SMA Islam Diponegoro Wagir' : 'Sekolah'),
+    npsn: pickVal(primary.npsn, secondary.npsn, isDipo ? '20517834' : '20500000'),
+    principalName: pickVal(primary.principalName, secondary.principalName, isDipo ? 'H. Moh. Ridwan, S.Pd., M.Si.' : 'Kepala Sekolah', ['Kepala Sekolah']),
+    principalNip: pickVal(primary.principalNip, secondary.principalNip, '-', ['-']),
+    address: pickVal(primary.address, secondary.address, isDipo ? 'Jl. Raya Parangargo No. 1, Wagir' : ''),
+    city: pickVal(primary.city, secondary.city, 'Kab. Malang'),
+    province: pickVal(primary.province, secondary.province, 'Jawa Timur'),
+    postalCode: pickVal(primary.postalCode, secondary.postalCode, ''),
+    phone: pickVal(primary.phone, secondary.phone, ''),
+    email: pickVal(primary.email, secondary.email, ''),
+    website: pickVal(primary.website, secondary.website, ''),
+    jenjang: pickVal(primary.jenjang, secondary.jenjang, isDipo ? 'SMA' : 'SD'),
+    statusSekolah: pickVal(primary.statusSekolah, secondary.statusSekolah, 'Swasta'),
+    akreditasi: pickVal(primary.akreditasi, secondary.akreditasi, 'A (Unggul)'),
+    kurikulum: pickVal(primary.kurikulum, secondary.kurikulum, 'Kurikulum Merdeka'),
+    academicYear: pickVal(primary.academicYear, secondary.academicYear, '2026/2027'),
+    semester: pickVal(primary.semester, secondary.semester, 'Ganjil'),
+    updatedAt: new Date(Math.max(baseTime, patchTime) || Date.now()).toISOString()
+  };
 };
 
 export const subscribeToRegisteredSchools = (callback: (schools: RegisteredSchool[]) => void) => {
@@ -280,7 +403,7 @@ export const subscribeToRegisteredSchools = (callback: (schools: RegisteredSchoo
       const name = (s.name || '').toLowerCase().trim();
       const npsn = (s.npsn || '').trim();
       const id = (s.id || '').toLowerCase().trim();
-      if ((name.includes('diponegoro') && name.includes('wagir')) || npsn === '20517834' || id.includes('diponegoro')) {
+      if (isDiponegoroWagirSchool(s) || (name.includes('diponegoro') && name.includes('wagir')) || npsn === '20517834' || id.includes('diponegoro')) {
         return 'sma_diponegoro_wagir';
       }
       if ((name.includes('bedalisodo') && name.includes('3')) || id.includes('bedalisodo_3') || id === 'sd_negeri_3_bedalisodo') {
@@ -300,14 +423,14 @@ export const subscribeToRegisteredSchools = (callback: (schools: RegisteredSchoo
       cachedLocal.forEach(s => {
         const key = getCanonicalSchoolKey(s);
         const exist = schoolMap.get(key);
-        schoolMap.set(key, { ...(exist || {}), ...s, id: exist?.id || s.id });
+        schoolMap.set(key, mergeSchoolObjects(exist, s));
       });
     }
     // 3. Remote firestore data
     list.forEach(s => {
       const key = getCanonicalSchoolKey(s);
       const exist = schoolMap.get(key);
-      schoolMap.set(key, { ...(exist || {}), ...s, id: exist?.id || s.id });
+      schoolMap.set(key, mergeSchoolObjects(exist, s));
     });
 
     const finalSchools = Array.from(schoolMap.values());
@@ -336,34 +459,52 @@ export const subscribeToRegisteredSchools = (callback: (schools: RegisteredSchoo
 export const registerSchoolToFirebase = async (school: Partial<RegisteredSchool> & { name: string }) => {
   const schoolId = school.id || normalizeSchoolId(school.name);
   const docRef = doc(db, 'schools', schoolId);
-  const payload: RegisteredSchool = {
+
+  // Look up existing school in local storage to preserve non-empty fields
+  let existing: RegisteredSchool | undefined;
+  try {
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('simak_registered_schools');
+      if (raw) {
+        const list: RegisteredSchool[] = JSON.parse(raw);
+        existing = list.find(s => s.id === schoolId || (isDiponegoroWagirSchool(s) && isDiponegoroWagirSchool(school)));
+      }
+    }
+  } catch (e) {}
+
+  const merged = mergeSchoolObjects(existing, {
+    ...school,
     id: schoolId,
     name: school.name.trim(),
-    npsn: school.npsn !== undefined ? String(school.npsn).trim() : '20500000',
-    jenjang: school.jenjang || 'SMA',
-    statusSekolah: school.statusSekolah || 'Swasta',
-    akreditasi: school.akreditasi || 'A (Unggul)',
-    kurikulum: school.kurikulum || 'Kurikulum Merdeka',
-    principalName: school.principalName !== undefined ? school.principalName.trim() : 'Kepala Sekolah',
-    principalNip: school.principalNip !== undefined ? school.principalNip.trim() : '-',
-    academicYear: school.academicYear || '2026/2027',
-    semester: school.semester || 'Ganjil',
-    city: school.city !== undefined ? school.city.trim() : 'Kab. Malang',
-    address: school.address !== undefined ? school.address.trim() : '',
-    province: school.province !== undefined ? school.province.trim() : 'Jawa Timur',
-    postalCode: school.postalCode !== undefined ? school.postalCode.trim() : '',
-    phone: school.phone !== undefined ? school.phone.trim() : '',
-    email: school.email !== undefined ? school.email.trim() : '',
-    website: school.website !== undefined ? school.website.trim() : '',
-    createdAt: school.createdAt || new Date().toISOString(),
     updatedAt: new Date().toISOString()
-  };
+  } as RegisteredSchool);
+
+  // Instantly update local cache
   try {
-    await setDoc(docRef, payload, { merge: true });
+    if (typeof window !== 'undefined') {
+      const raw = localStorage.getItem('simak_registered_schools');
+      let list: RegisteredSchool[] = raw ? JSON.parse(raw) : [];
+      let found = false;
+      list = list.map(s => {
+        if (s.id === schoolId || (isDiponegoroWagirSchool(s) && isDiponegoroWagirSchool(merged))) {
+          found = true;
+          return mergeSchoolObjects(s, merged);
+        }
+        return s;
+      });
+      if (!found) {
+        list.push(merged);
+      }
+      localStorage.setItem('simak_registered_schools', JSON.stringify(deduplicateSchools(list)));
+    }
+  } catch (e) {}
+
+  try {
+    await setDoc(docRef, merged, { merge: true });
   } catch (err) {
     console.warn('Firebase setDoc failed, continuing with local persistence:', err);
   }
-  return payload;
+  return merged;
 };
 
 export const deleteSchoolFromFirebase = async (schoolId: string, schoolName?: string) => {
@@ -533,12 +674,12 @@ export const saveStudentsBatchToFirebase = async (items: any[], explicitSchoolId
     await clearAllStudentsFromFirebase(explicitSchoolId);
     return;
   }
-  const sId = explicitSchoolId || (items[0]?.schoolName ? normalizeSchoolId(items[0].schoolName) : currentActiveSchoolId);
-  const sName = items[0]?.schoolName || currentActiveSchoolName;
   const batch = writeBatch(db);
   items.forEach(item => {
     if (item.id) {
-      const cleanItem = JSON.parse(JSON.stringify({ ...item, schoolId: sId, schoolName: item.schoolName || sName }));
+      const sId = explicitSchoolId || (item.schoolName ? normalizeSchoolId(item.schoolName) : currentActiveSchoolId);
+      const sName = item.schoolName || currentActiveSchoolName;
+      const cleanItem = JSON.parse(JSON.stringify({ ...item, schoolId: sId, schoolName: sName }));
       batch.set(doc(db, 'schools', sId, 'students', item.id), cleanItem, { merge: true });
       batch.set(doc(db, 'students', item.id), cleanItem, { merge: true });
     }
@@ -569,13 +710,13 @@ export const saveGradeToFirebase = async (item: any, explicitSchoolId?: string) 
 
 export const saveGradesBatchToFirebase = async (items: any[], explicitSchoolId?: string) => {
   if (!items || items.length === 0) return;
-  const sId = explicitSchoolId || (items[0]?.schoolName ? normalizeSchoolId(items[0].schoolName) : currentActiveSchoolId);
-  const sName = items[0]?.schoolName || currentActiveSchoolName;
   const batch = writeBatch(db);
   items.forEach(item => {
     const docId = item.id || `${item.studentId}_${item.subjectId}`;
     if (docId) {
-      const cleanItem = JSON.parse(JSON.stringify({ ...item, schoolId: sId, schoolName: item.schoolName || sName }));
+      const sId = explicitSchoolId || (item.schoolName ? normalizeSchoolId(item.schoolName) : currentActiveSchoolId);
+      const sName = item.schoolName || currentActiveSchoolName;
+      const cleanItem = JSON.parse(JSON.stringify({ ...item, schoolId: sId, schoolName: sName }));
       batch.set(doc(db, 'schools', sId, 'grades', docId), cleanItem, { merge: true });
       batch.set(doc(db, 'grades', docId), cleanItem, { merge: true });
     }
@@ -597,12 +738,12 @@ export const saveAttendanceRecordToFirebase = async (item: any, explicitSchoolId
 
 export const saveAttendanceRecordsBatchToFirebase = async (items: any[], explicitSchoolId?: string) => {
   if (!items || items.length === 0) return;
-  const sId = explicitSchoolId || (items[0]?.schoolName ? normalizeSchoolId(items[0].schoolName) : currentActiveSchoolId);
-  const sName = items[0]?.schoolName || currentActiveSchoolName;
   const batch = writeBatch(db);
   items.forEach(item => {
     if (item.id) {
-      const cleanItem = JSON.parse(JSON.stringify({ ...item, schoolId: sId, schoolName: item.schoolName || sName }));
+      const sId = explicitSchoolId || (item.schoolName ? normalizeSchoolId(item.schoolName) : currentActiveSchoolId);
+      const sName = item.schoolName || currentActiveSchoolName;
+      const cleanItem = JSON.parse(JSON.stringify({ ...item, schoolId: sId, schoolName: sName }));
       batch.set(doc(db, 'schools', sId, 'attendance', item.id), cleanItem, { merge: true });
       batch.set(doc(db, 'attendance', item.id), cleanItem, { merge: true });
     }

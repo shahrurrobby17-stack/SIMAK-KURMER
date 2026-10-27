@@ -25,7 +25,7 @@ import {
   X
 } from 'lucide-react';
 import { TeacherProfile, UserAccount, RegisteredSchool } from '../../types';
-import { registerSchoolToFirebase, normalizeSchoolId, deleteSchoolFromFirebase } from '../../lib/firebaseService';
+import { registerSchoolToFirebase, normalizeSchoolId, deleteSchoolFromFirebase, mergeSchoolObjects, isDiponegoroWagirSchool, deduplicateSchools } from '../../lib/firebaseService';
 
 interface SchoolDetailSystemViewProps {
   teacher?: TeacherProfile;
@@ -86,11 +86,21 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
   // Temukan data sekolah aktif
   const targetSchoolName = activeSchoolName || teacher?.schoolName || '';
   const currentSchoolData = registeredSchools.find(
-    s => s.name?.toLowerCase().trim() === targetSchoolName.toLowerCase().trim()
-  ) || registeredSchools[0];
+    s => s.name?.toLowerCase().trim() === targetSchoolName.toLowerCase().trim() ||
+         s.id === normalizeSchoolId(targetSchoolName) ||
+         (isDiponegoroWagirSchool(s) && isDiponegoroWagirSchool({ name: targetSchoolName }))
+  ) || registeredSchools.find(s => isDiponegoroWagirSchool(s)) || registeredSchools[0];
 
   const [selectedSchoolId, setSelectedSchoolId] = useState<string>(() => currentSchoolData?.id || normalizeSchoolId(targetSchoolName || 'sma_diponegoro_wagir'));
   const [originalSchoolName, setOriginalSchoolName] = useState<string>(() => currentSchoolData?.name || targetSchoolName);
+
+  const isTargetSchoolActive = Boolean(
+    targetSchoolName && (
+      currentSchoolData?.name?.toLowerCase().trim() === targetSchoolName.toLowerCase().trim() ||
+      currentSchoolData?.id === normalizeSchoolId(targetSchoolName) ||
+      (isDiponegoroWagirSchool(currentSchoolData) && isDiponegoroWagirSchool({ name: targetSchoolName }))
+    )
+  );
 
   // Form states
   const [schoolName, setSchoolName] = useState<string>(() => currentSchoolData?.name || teacher?.schoolName || 'SMA Islam Diponegoro Wagir');
@@ -99,8 +109,20 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
   const [statusSekolah, setStatusSekolah] = useState<string>(() => currentSchoolData?.statusSekolah || 'Swasta');
   const [akreditasi, setAkreditasi] = useState<string>(() => currentSchoolData?.akreditasi || 'A (Unggul)');
   const [kurikulum, setKurikulum] = useState<string>(() => currentSchoolData?.kurikulum || 'Kurikulum Merdeka');
-  const [principalName, setPrincipalName] = useState<string>(() => currentSchoolData?.principalName || teacher?.principalName || 'H. Moh. Ridwan, S.Pd., M.Si.');
-  const [principalNip, setPrincipalNip] = useState<string>(() => currentSchoolData?.principalNip || teacher?.principalNip || '19691120 199403 1 003');
+  const [principalName, setPrincipalName] = useState<string>(() => 
+    (isTargetSchoolActive && teacher?.principalName?.trim())
+      ? teacher.principalName.trim()
+      : ((currentSchoolData?.principalName && currentSchoolData.principalName.trim() !== '' && currentSchoolData.principalName !== 'Kepala Sekolah')
+          ? currentSchoolData.principalName.trim()
+          : (teacher?.principalName || 'H. Moh. Ridwan, S.Pd., M.Si.'))
+  );
+  const [principalNip, setPrincipalNip] = useState<string>(() => 
+    (isTargetSchoolActive && teacher?.principalNip?.trim())
+      ? teacher.principalNip.trim()
+      : ((currentSchoolData?.principalNip && currentSchoolData.principalNip.trim() !== '' && currentSchoolData.principalNip !== '-')
+          ? currentSchoolData.principalNip.trim()
+          : (teacher?.principalNip || '19691120 199403 1 003'))
+  );
   const [city, setCity] = useState<string>(() => currentSchoolData?.city || teacher?.city || 'Kab. Malang');
   const [address, setAddress] = useState<string>(() => currentSchoolData?.address || 'Jl. Raya Parangargo No. 1, Wagir, Kab. Malang');
   const [province, setProvince] = useState<string>(() => currentSchoolData?.province || 'Jawa Timur');
@@ -223,28 +245,46 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
     }
   };
 
-  // Sync state if teacher prop updates and matches currently viewed school
+  // Sync state if currentSchoolData or registeredSchools or targetSchoolName updates
   useEffect(() => {
-    if (teacher && (!selectedSchoolId || selectedSchoolId === normalizeSchoolId(teacher.schoolName || ''))) {
-      if (teacher.schoolName) setSchoolName(teacher.schoolName);
-      if (teacher.npsn) setNpsn(teacher.npsn);
-      if (teacher.principalName) setPrincipalName(teacher.principalName);
-      if (teacher.principalNip) setPrincipalNip(teacher.principalNip);
-      if (teacher.city) setCity(teacher.city);
-      if (teacher.address) setAddress(teacher.address);
-      if (teacher.province) setProvince(teacher.province);
-      if (teacher.postalCode) setPostalCode(teacher.postalCode);
-      if (teacher.phone) setPhone(teacher.phone);
-      if (teacher.email) setEmailSekolah(teacher.email);
-      if (teacher.website) setWebsite(teacher.website);
-      if (teacher.jenjang) setJenjang(teacher.jenjang);
-      if (teacher.statusSekolah) setStatusSekolah(teacher.statusSekolah);
-      if (teacher.akreditasi) setAkreditasi(teacher.akreditasi);
-      if (teacher.kurikulum) setKurikulum(teacher.kurikulum);
-      if (teacher.academicYear) setAcademicYear(teacher.academicYear);
-      if (teacher.semester) setSemester(teacher.semester);
+    if (currentSchoolData) {
+      setSelectedSchoolId(currentSchoolData.id);
+      setOriginalSchoolName(currentSchoolData.name);
+      setSchoolName(currentSchoolData.name || '');
+      setNpsn(currentSchoolData.npsn || '20517834');
+      setJenjang(currentSchoolData.jenjang || 'SMA');
+      setStatusSekolah(currentSchoolData.statusSekolah || 'Swasta');
+      setAkreditasi(currentSchoolData.akreditasi || 'A (Unggul)');
+      setKurikulum(currentSchoolData.kurikulum || 'Kurikulum Merdeka');
+
+      const isTargetActive = Boolean(
+        targetSchoolName && (
+          currentSchoolData.name.toLowerCase().trim() === targetSchoolName.toLowerCase().trim() ||
+          currentSchoolData.id === normalizeSchoolId(targetSchoolName) ||
+          (isDiponegoroWagirSchool(currentSchoolData) && isDiponegoroWagirSchool({ name: targetSchoolName }))
+        )
+      );
+
+      const effectivePName = (isTargetActive && teacher?.principalName?.trim())
+        ? teacher.principalName.trim()
+        : (currentSchoolData.principalName || '');
+      const effectivePNip = (isTargetActive && teacher?.principalNip?.trim())
+        ? teacher.principalNip.trim()
+        : (currentSchoolData.principalNip || '');
+
+      if (effectivePName) setPrincipalName(effectivePName);
+      if (effectivePNip) setPrincipalNip(effectivePNip);
+      if (currentSchoolData.city) setCity(currentSchoolData.city);
+      if (currentSchoolData.address) setAddress(currentSchoolData.address);
+      if (currentSchoolData.province) setProvince(currentSchoolData.province);
+      if (currentSchoolData.postalCode) setPostalCode(currentSchoolData.postalCode);
+      if (currentSchoolData.phone) setPhone(currentSchoolData.phone);
+      if (currentSchoolData.email) setEmailSekolah(currentSchoolData.email);
+      if (currentSchoolData.website) setWebsite(currentSchoolData.website);
+      if (currentSchoolData.academicYear) setAcademicYear(currentSchoolData.academicYear);
+      if (currentSchoolData.semester) setSemester(currentSchoolData.semester);
     }
-  }, [teacher]);
+  }, [currentSchoolData?.id, currentSchoolData?.name, currentSchoolData?.updatedAt, currentSchoolData?.principalName, currentSchoolData?.principalNip, targetSchoolName, teacher?.principalName, teacher?.principalNip]);
 
   // Hitung jumlah akun dan PTK di sekolah ini
   const schoolUsersCount = registeredUsers.filter(u => 
@@ -336,7 +376,12 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
           let currentList: RegisteredSchool[] = raw ? JSON.parse(raw) : [...registeredSchools];
           let found = false;
           currentList = currentList.map(s => {
-            if (s.id === effectiveSchoolId || s.id === newSchoolId || s.name.toLowerCase().trim() === originalSchoolName.toLowerCase().trim()) {
+            const isMatch = s.id === effectiveSchoolId || 
+              s.id === newSchoolId || 
+              s.name.toLowerCase().trim() === originalSchoolName.toLowerCase().trim() ||
+              s.name.toLowerCase().trim() === schoolName.toLowerCase().trim() ||
+              (isDiponegoroWagirSchool(s) && (isDiponegoroWagirSchool({ id: effectiveSchoolId, name: originalSchoolName }) || isDiponegoroWagirSchool(schoolPayload)));
+            if (isMatch) {
               found = true;
               return { ...s, ...schoolPayload };
             }
@@ -345,6 +390,7 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
           if (!found) {
             currentList.push(schoolPayload);
           }
+          currentList = deduplicateSchools(currentList);
           localStorage.setItem('simak_registered_schools', JSON.stringify(currentList));
         }
       } catch (e) {}
@@ -362,7 +408,8 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
       const isEditingActiveSchool = !teacher?.schoolName || 
         teacher.schoolName.toLowerCase().trim() === originalSchoolName.toLowerCase().trim() ||
         teacher.schoolName.toLowerCase().trim() === schoolName.trim().toLowerCase() ||
-        effectiveSchoolId === normalizeSchoolId(teacher.schoolName || '');
+        effectiveSchoolId === normalizeSchoolId(teacher.schoolName || '') ||
+        (isDiponegoroWagirSchool({ name: teacher.schoolName }) && isDiponegoroWagirSchool(schoolPayload));
 
       if (isEditingActiveSchool) {
         const updatedTeacher: TeacherProfile = {
@@ -380,7 +427,7 @@ export const SchoolDetailSystemView: React.FC<SchoolDetailSystemViewProps> = ({
           province: province.trim(),
           postalCode: postalCode.trim(),
           phone: phone.trim(),
-          email: emailSekolah.trim(),
+          email: teacher?.email || 'shahrurrobby17@gmail.com',
           website: website.trim(),
           jenjang: jenjang,
           statusSekolah: statusSekolah,

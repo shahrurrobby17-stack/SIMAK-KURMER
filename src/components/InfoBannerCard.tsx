@@ -130,13 +130,18 @@ export const InfoBannerCard: React.FC<InfoBannerCardProps> = ({
     }
 
     const firstValid = validItems.find(i => i.isActive) || validItems[0];
+    const nowIso = new Date().toISOString();
 
     const updated: InfoAnnouncement = {
       text: firstValid?.text || '',
       category: firstValid?.category || 'Informasi',
       isActive: formIsActive,
-      items: validItems,
-      updatedAt: new Date().toISOString(),
+      items: validItems.map(item => ({
+        ...item,
+        createdAt: item.createdAt || nowIso,
+        updatedAt: nowIso
+      })),
+      updatedAt: nowIso,
       updatedBy: currentUser?.name || 'Master Data Account (Shahrur Robby)'
     };
 

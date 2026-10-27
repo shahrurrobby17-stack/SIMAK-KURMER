@@ -54,7 +54,7 @@ import {
   Wifi
 } from 'lucide-react';
 import { UserAccount, TeacherProfile, RegisteredSchool, InfoAnnouncement, InfoAnnouncementItem, getAnnouncementItems } from '../types';
-import { normalizeSchoolId, deleteSchoolFromFirebase } from '../lib/firebaseService';
+import { normalizeSchoolId, deleteSchoolFromFirebase, isDiponegoroWagirSchool } from '../lib/firebaseService';
 import { SaveSuccessModal } from './SaveSuccessModal';
 import { UserLoginLog, subscribeToUserLoginLogs, getLocalLoginLogs } from '../lib/userLoginLogService';
 import { UserPresence, subscribeToUserPresence, getLocalPresenceMap } from '../lib/userPresenceService';
@@ -757,12 +757,38 @@ export const MasterDataView: React.FC<MasterDataViewProps> = ({
           activeSchoolName={activeSchoolName || 'SMA Diponegoro Wagir'}
           onSelectSchoolStorage={(sch) => {
             if (onRegisterSchool) onRegisterSchool(sch);
+            if (onUpdateTeacherProfile && teacher) {
+              onUpdateTeacherProfile({
+                ...teacher,
+                schoolName: sch.name,
+                npsn: sch.npsn || '20500000',
+                principalName: sch.principalName || teacher.principalName,
+                principalNip: sch.principalNip || teacher.principalNip,
+                city: sch.city || teacher.city,
+                address: sch.address || teacher.address,
+                province: sch.province || teacher.province,
+                postalCode: sch.postalCode || teacher.postalCode,
+                phone: sch.phone || teacher.phone,
+                email: sch.email || teacher.email,
+                website: sch.website || teacher.website,
+                jenjang: sch.jenjang || teacher.jenjang,
+                statusSekolah: sch.statusSekolah || teacher.statusSekolah,
+                akreditasi: sch.akreditasi || teacher.akreditasi,
+                kurikulum: sch.kurikulum || teacher.kurikulum,
+                academicYear: sch.academicYear || teacher.academicYear,
+                semester: sch.semester || teacher.semester
+              });
+            }
             setSelectedCategory('DetailSekolah');
           }}
           onRegisterSchool={onRegisterSchool}
           onDeleteSchoolStorage={onDeleteSchoolStorage}
           onNavigateToDetail={(schName) => {
-            const targetSchool = registeredSchools.find(s => s.name === schName || s.id === schName);
+            const targetSchool = registeredSchools.find(s => 
+              s.name?.toLowerCase().trim() === schName.toLowerCase().trim() || 
+              s.id === schName || 
+              (isDiponegoroWagirSchool(s) && isDiponegoroWagirSchool({ name: schName }))
+            );
             if (targetSchool && onUpdateTeacherProfile && teacher) {
               onUpdateTeacherProfile({
                 ...teacher,

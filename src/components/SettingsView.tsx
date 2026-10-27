@@ -764,7 +764,7 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
   // Success toast
   const [saveSuccess, setSaveSuccess] = useState<boolean>(false);
 
-  // Sync local inputs when teacher profile ID changes
+  // Sync local inputs when teacher profile updates
   useEffect(() => {
     if (teacher) {
       setTeacherName(teacher.name || '');
@@ -780,7 +780,21 @@ export const SettingsView: React.FC<SettingsViewProps> = ({
       setSemester(teacher.semester || 'Ganjil');
       setDefaultKkm(teacher.kkm || 75);
     }
-  }, [teacher?.id]);
+  }, [
+    teacher?.id, 
+    teacher?.name, 
+    teacher?.title, 
+    teacher?.nip, 
+    teacher?.npsn, 
+    teacher?.subjectRole, 
+    teacher?.schoolName, 
+    teacher?.principalName, 
+    teacher?.principalNip, 
+    teacher?.city, 
+    teacher?.academicYear, 
+    teacher?.semester, 
+    teacher?.kkm
+  ]);
 
   const handleSaveSchoolDetails = (e: React.FormEvent) => {
     e.preventDefault();

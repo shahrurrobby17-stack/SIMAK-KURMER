@@ -232,12 +232,14 @@ export interface UserAccount {
 
 export interface InfoAnnouncementItem {
   id: string;
+  title?: string;
   text: string;
   category?: 'Informasi' | 'Penting' | 'Pengumuman' | 'Fitur Baru';
   isActive: boolean;
   createdAt?: string;
   updatedAt?: string;
   updatedBy?: string;
+  author?: string;
 }
 
 export interface InfoAnnouncement {

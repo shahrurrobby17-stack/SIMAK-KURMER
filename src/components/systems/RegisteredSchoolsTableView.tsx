@@ -17,7 +17,7 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { RegisteredSchool, UserAccount, TeacherProfile } from '../../types';
-import { normalizeSchoolId, deduplicateSchools } from '../../lib/firebaseService';
+import { normalizeSchoolId, deduplicateSchools, isDiponegoroWagirSchool } from '../../lib/firebaseService';
 
 interface RegisteredSchoolsTableViewProps {
   registeredSchools: RegisteredSchool[];
@@ -74,7 +74,33 @@ export const RegisteredSchoolsTableView: React.FC<RegisteredSchoolsTableViewProp
   // Filtered schools
   const filteredSchools = useMemo(() => {
     const list = deduplicateSchools(registeredSchools || []);
-    return list.filter((s) => {
+
+    // Sinkronkan data kepala sekolah dari profil aktif jika cocok dengan sekolah aktif
+    const synchronizedList = list.map(s => {
+      const isCurrentActive = Boolean(
+        (activeSchoolName && (
+          s.name.toLowerCase().trim() === activeSchoolName.toLowerCase().trim() ||
+          s.id === normalizeSchoolId(activeSchoolName) ||
+          (isDiponegoroWagirSchool(s) && isDiponegoroWagirSchool({ name: activeSchoolName }))
+        )) ||
+        (teacher?.schoolName && (
+          s.name.toLowerCase().trim() === teacher.schoolName.toLowerCase().trim() ||
+          s.id === normalizeSchoolId(teacher.schoolName) ||
+          (isDiponegoroWagirSchool(s) && isDiponegoroWagirSchool({ name: teacher.schoolName }))
+        ))
+      );
+
+      if (isCurrentActive && teacher) {
+        return {
+          ...s,
+          principalName: (teacher.principalName && teacher.principalName.trim() !== '') ? teacher.principalName.trim() : s.principalName,
+          principalNip: (teacher.principalNip && teacher.principalNip.trim() !== '') ? teacher.principalNip.trim() : s.principalNip
+        };
+      }
+      return s;
+    });
+
+    return synchronizedList.filter((s) => {
       const nameMatch = 
         (s.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
         (s.npsn || '').includes(searchTerm) ||
@@ -91,7 +117,7 @@ export const RegisteredSchoolsTableView: React.FC<RegisteredSchoolsTableViewProp
 
       return nameMatch && jenjangMatch && statusMatch;
     });
-  }, [registeredSchools, searchTerm, filterJenjang, filterStatus]);
+  }, [registeredSchools, activeSchoolName, teacher?.principalName, teacher?.principalNip, teacher?.schoolName, searchTerm, filterJenjang, filterStatus]);
 
   const handleCreateSchool = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -293,7 +319,26 @@ export const RegisteredSchoolsTableView: React.FC<RegisteredSchoolsTableViewProp
                 </tr>
               ) : (
                 filteredSchools.map((sch, idx) => {
-                  const isActive = sch.name.toLowerCase().trim() === activeSchoolName.toLowerCase().trim();
+                  const isActive = Boolean(
+                    (activeSchoolName && (
+                      sch.name.toLowerCase().trim() === activeSchoolName.toLowerCase().trim() ||
+                      sch.id === normalizeSchoolId(activeSchoolName) ||
+                      (isDiponegoroWagirSchool(sch) && isDiponegoroWagirSchool({ name: activeSchoolName }))
+                    )) ||
+                    (teacher?.schoolName && (
+                      sch.name.toLowerCase().trim() === teacher.schoolName.toLowerCase().trim() ||
+                      sch.id === normalizeSchoolId(teacher.schoolName) ||
+                      (isDiponegoroWagirSchool(sch) && isDiponegoroWagirSchool({ name: teacher.schoolName }))
+                    ))
+                  );
+
+                  const displayPrincipalName = (isActive && teacher?.principalName?.trim())
+                    ? teacher.principalName.trim()
+                    : (sch.principalName?.trim() || 'Kepala Sekolah');
+
+                  const displayPrincipalNip = (isActive && teacher?.principalNip?.trim())
+                    ? teacher.principalNip.trim()
+                    : (sch.principalNip?.trim() || '-');
 
                   return (
                     <tr 
@@ -354,9 +399,9 @@ export const RegisteredSchoolsTableView: React.FC<RegisteredSchoolsTableViewProp
 
                       {/* Kepala Sekolah */}
                       <td className="py-3 px-3.5 border-r border-slate-200">
-                        <div className="font-bold text-slate-900">{sch.principalName || 'Kepala Sekolah'}</div>
+                        <div className="font-bold text-slate-900">{displayPrincipalName}</div>
                         <div className="text-[10px] text-slate-500 font-mono mt-0.5">
-                          NIP: {sch.principalNip || '-'}
+                          NIP: {displayPrincipalNip}
                         </div>
                       </td>
 
