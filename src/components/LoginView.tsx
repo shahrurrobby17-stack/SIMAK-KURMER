@@ -5054,28 +5054,6 @@ export const LoginView: React.FC<LoginViewProps> = ({
                       )}
                     </button>
 
-
-
-
-
-                    {/* Tombol Akses Masuk Cepat Administrator didalam Modal */}
-                    {!isStudentLogin && (
-                      <div className="mt-3">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowLoginModal(false);
-                            handleQuickAdminLogin();
-                          }}
-                          disabled={isLoading}
-                          className="w-full py-2.5 px-4 bg-sky-50 hover:bg-sky-100 text-[#004b87] border border-sky-200 hover:border-sky-300 rounded-xl text-xs sm:text-sm font-bold transition-all flex items-center justify-center gap-2 cursor-pointer active:scale-98 shadow-2xs"
-                        >
-                          <ShieldCheck className="w-4 h-4 text-[#0066b2]" />
-                          <span>Akses Masuk Cepat Administrator</span>
-                        </button>
-                      </div>
-                    )}
-
                     {!isStudentLogin && (
                       <div className="text-center mt-3 pt-3 border-t border-slate-100">
                         <p className="text-xs text-slate-500 font-medium">
