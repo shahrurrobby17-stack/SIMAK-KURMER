@@ -891,7 +891,16 @@ export const saveInfoAnnouncementToFirebase = async (data: any, scope: string = 
   const docId = 'infoAnnouncement' + scope;
   const payload = Array.isArray(data) ? { items: data } : data;
   const cleanPayload = JSON.parse(JSON.stringify(payload));
-  await setDoc(doc(db, 'settings', docId), cleanPayload, { merge: true });
+  try {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('simak_info_announcement', JSON.stringify(cleanPayload));
+    }
+  } catch (e) {}
+  try {
+    await setDoc(doc(db, 'settings', docId), cleanPayload, { merge: true });
+  } catch (err) {
+    console.warn('Error saving info Announcement to Firebase:', err);
+  }
 };
 
 export const saveLastSyncedTimeToFirebase = async (data: any, scope: string = '', explicitSchoolId?: string) => {

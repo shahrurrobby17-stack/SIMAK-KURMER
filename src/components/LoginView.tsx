@@ -207,17 +207,30 @@ export const LoginView: React.FC<LoginViewProps> = ({
 
   // Daftar pengumuman aktif untuk kotak kartu pengumuman di halaman awal
   const announcementList: InfoAnnouncementItem[] = useMemo(() => {
-    const rawItems = getAnnouncementItems(infoAnnouncement);
+    let effectiveInfo = infoAnnouncement;
+    if (!effectiveInfo || (!effectiveInfo.text && (!effectiveInfo.items || effectiveInfo.items.length === 0))) {
+      try {
+        if (typeof window !== 'undefined') {
+          const saved = localStorage.getItem('simak_info_announcement');
+          if (saved) {
+            const parsed = JSON.parse(saved);
+            if (parsed && typeof parsed === 'object') effectiveInfo = parsed;
+          }
+        }
+      } catch (e) {}
+    }
+
+    const rawItems = getAnnouncementItems(effectiveInfo);
     const activeRaw = rawItems.filter(i => i.isActive && i.text && i.text.trim().length > 0);
     if (activeRaw.length > 0) {
       return activeRaw.map(item => ({
         ...item,
-        updatedAt: item.updatedAt || item.createdAt || infoAnnouncement?.updatedAt,
-        createdAt: item.createdAt || item.updatedAt || infoAnnouncement?.updatedAt
+        updatedAt: item.updatedAt || item.createdAt || effectiveInfo?.updatedAt,
+        createdAt: item.createdAt || item.updatedAt || effectiveInfo?.updatedAt
       }));
     }
 
-    const currentUploadedDate = formatAnnouncementDate(infoAnnouncement?.updatedAt);
+    const currentUploadedDate = formatAnnouncementDate(effectiveInfo?.updatedAt);
 
     return [
       {

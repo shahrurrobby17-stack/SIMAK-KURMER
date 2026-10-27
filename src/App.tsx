@@ -930,11 +930,16 @@ export default function App() {
 
   // Info Terkini Announcement state (running text below header)
   const [infoAnnouncement, setInfoAnnouncement] = useState<InfoAnnouncement>(() => {
-    const saved = null;
+    let saved: string | null = null;
+    try {
+      if (typeof window !== 'undefined') {
+        saved = localStorage.getItem('simak_info_announcement');
+      }
+    } catch (e) {}
     if (saved) {
       try {
         const parsed = JSON.parse(saved);
-        if (parsed) return parsed;
+        if (parsed && typeof parsed === 'object') return parsed;
       } catch (e) {
         console.error('Failed to parse info announcement:', e);
       }
@@ -962,8 +967,30 @@ export default function App() {
     };
   });
 
+  // Global realtime listener for Info Announcement
+  useEffect(() => {
+    const unsub = subscribeToInfoAnnouncement((remoteInfo) => {
+      if (remoteInfo) {
+        setInfoAnnouncement(remoteInfo);
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('simak_info_announcement', JSON.stringify(remoteInfo));
+          }
+        } catch (e) {}
+      }
+    });
+    return () => unsub();
+  }, []);
+
   const handleUpdateInfoAnnouncement = (updated: InfoAnnouncement) => {
     setInfoAnnouncement(updated);
+    try {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('simak_info_announcement', JSON.stringify(updated));
+      }
+    } catch (e) {
+      console.warn('Error saving info announcement to localStorage:', e);
+    }
     saveInfoAnnouncementToFirebase(updated);
   };
 
@@ -1596,8 +1623,13 @@ export default function App() {
     }, `_${activeSchoolId}`);
 
     const unsubInfo = subscribeToInfoAnnouncement((remoteInfo) => {
-      if (remoteInfo && remoteInfo.text) {
+      if (remoteInfo) {
         setInfoAnnouncement(remoteInfo);
+        try {
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('simak_info_announcement', JSON.stringify(remoteInfo));
+          }
+        } catch (e) {}
       }
     });
 
